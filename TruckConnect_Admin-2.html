@@ -3,6 +3,33 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#0b1220"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="TC Admin"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="icon" type="image/png" href="icon-192.png"/>
+<script>
+/* TC-PWA: installable-app manifest, built from this page's own address so it keeps working
+   whatever the file is called or whichever folder it is uploaded to. */
+(function(){try{
+  var u=location.href.split('#')[0].split('?')[0];
+  var base=u.slice(0,u.lastIndexOf('/')+1);
+  var ic='icon';
+  var m={name:'TruckConnect Admin',short_name:'TC Admin',id:'truckconnect-admin',start_url:u,scope:base,
+    display:'standalone',orientation:'portrait',background_color:'#0b1220',theme_color:'#0b1220',lang:'en-ZA',
+    icons:[
+      {src:base+ic+'-192.png',sizes:'192x192',type:'image/png',purpose:'any'},
+      {src:base+ic+'-512.png',sizes:'512x512',type:'image/png',purpose:'any'},
+      {src:base+ic+'-192.png',sizes:'192x192',type:'image/png',purpose:'maskable'},
+      {src:base+ic+'-512.png',sizes:'512x512',type:'image/png',purpose:'maskable'}
+    ]};
+  var l=document.querySelector('link[rel="manifest"]');
+  if(!l){l=document.createElement('link');l.rel='manifest';document.head.appendChild(l);}
+  l.href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(m));
+}catch(e){}})();
+</script>
+
 <title>TruckConnect · Admin Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"/>
@@ -288,7 +315,7 @@ input,select,button,textarea{font-family:-apple-system,BlinkMacSystemFont,Roboto
 .map-full-btn:hover{background:var(--blue2);}
 
 /* CHAT */
-.chat-win{display:flex;flex-direction:column;height:300px;}
+.chat-win{display:flex;flex-direction:column;height:min(62vh,520px);min-height:300px;}
 .chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:7px;}
 .chat-bubble{max-width:78%;padding:8px 12px;border-radius:12px;font-size:12px;line-height:1.5;}
 .chat-bubble.me{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;align-self:flex-end;border-radius:12px 12px 3px 12px;}
@@ -355,6 +382,19 @@ input,select,button,textarea{font-family:-apple-system,BlinkMacSystemFont,Roboto
 
 /* LOADING SPINNER */
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--sky);border-radius:50%;animation:spinAnim .7s linear infinite;vertical-align:middle;}
+
+/* ── ADMIN PUSH ALERTS (Settings) ── */
+.ap-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;}
+.ap-row:last-of-type{border-bottom:none;}
+.ap-sw{position:relative;width:46px;height:27px;flex-shrink:0;display:inline-block;}
+.ap-sw input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;z-index:2;cursor:pointer;}
+.ap-sw span{position:absolute;inset:0;background:rgba(255,255,255,.14);border-radius:20px;transition:background .2s;}
+.ap-sw span::after{content:'';position:absolute;top:3px;left:3px;width:21px;height:21px;background:#fff;border-radius:50%;transition:transform .2s;}
+.ap-sw input:checked + span{background:var(--blue);}
+.ap-sw input:checked + span::after{transform:translateX(19px);}
+.ap-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.ap-grid .btn{padding:11px 8px;font-size:12px;}
+#ap-msg{margin-top:12px;font-size:12px;line-height:1.55;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -363,9 +403,21 @@ input,select,button,textarea{font-family:-apple-system,BlinkMacSystemFont,Roboto
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import{getFirestore,collection,updateDoc,addDoc,doc,onSnapshot,query,where,orderBy,getDocs,serverTimestamp,deleteDoc}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-const app=initializeApp({apiKey:"AIzaSyD0dRuRqbsJr0-Kv29xcpQGjW-1DiYPNLo",authDomain:"truck-connect-c0c67.firebaseapp.com",projectId:"truck-connect-c0c67",storageBucket:"truck-connect-c0c67.firebasestorage.app",messagingSenderId:"313065662016",appId:"1:313065662016:web:a43aecfce5d7db205d61a5"});
-window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,signOut,onAuthStateChanged,collection,updateDoc,addDoc,doc,onSnapshot,query,where,orderBy,getDocs,serverTimestamp,deleteDoc};
+import{getFirestore,collection,updateDoc,addDoc,setDoc,getDoc,doc,onSnapshot,query,where,orderBy,getDocs,serverTimestamp,deleteDoc}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getStorage,ref as storageRef,getDownloadURL}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+const app=initializeApp({apiKey:"AIzaSyD0dRuRqbsJr0-Kv29xcpQGjW-1DiYPNLo",authDomain:"truck-connect-c0c67.firebaseapp.com",projectId:"truck-connect-c0c67",storageBucket:"truck-connect-c0c67.firebasestorage.app",messagingSenderId:"313065662016",appId:"1:313065662016:web:a43aecfce5d7db205d61a5"}, 'tc-admin');
+window._FB={app:app,auth:getAuth(app),db:getFirestore(app),storage:getStorage(app),storageRef,getDownloadURL,signInWithEmailAndPassword,signOut,onAuthStateChanged,collection,updateDoc,addDoc,setDoc,getDoc,doc,onSnapshot,query,where,orderBy,getDocs,serverTimestamp,deleteDoc};
+// Driver documents are stored in Firestore (driverPrivate/{uid}/files/{name}), not Cloud Storage.
+(function(){
+  var F=window._FB;
+  F.storageRef=function(st,path){return {fullPath:path};};
+  F.getDownloadURL=async function(ref){
+    var m=/^driver-docs\/([^\/]+)\/(.+)$/.exec(ref.fullPath||'');if(!m)throw new Error('bad path');
+    var s=await F.getDoc(F.doc(F.db,'driverPrivate',m[1],'files',m[2].replace(/[^A-Za-z0-9._-]/g,'_')));
+    if(!s.exists())throw new Error('not found');
+    var b=await (await fetch(s.data().data)).blob();return URL.createObjectURL(b);
+  };
+})();
 </script>
 
 <div class="toast" id="toast"></div>
@@ -447,13 +499,11 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
 
   <div class="topbar">
     <div class="topbar-brand">
-      <button id="hamburger-btn" style="background:transparent;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px 8px 4px 0;line-height:1;">☰</button>
-      <div class="topbar-dot"></div>
-      <div class="topbar-name">Truck<em>Connect</em> · Admin</div>
+      <button id="hamburger-btn" aria-label="Menu" style="background:transparent;border:none;color:var(--text);font-size:24px;cursor:pointer;padding:6px 10px 6px 0;line-height:1;">☰</button>
+      <div class="topbar-name" id="screen-title">Dashboard</div>
     </div>
     <div class="topbar-right">
       <div class="live-pill"><div class="live-pip"></div> LIVE</div>
-      <button class="signout-btn" id="signout-btn">Sign Out</button>
     </div>
   </div>
 
@@ -464,47 +514,48 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
       <div style="font-size:16px;font-weight:800;color:var(--text);">Truck<span style="color:var(--sky);">Connect</span></div>
       <button id="drawer-close-btn" style="background:transparent;border:none;color:var(--muted2);font-size:20px;cursor:pointer;">✕</button>
     </div>
-    <div style="flex:1;overflow-y:auto;padding:10px 0;">
-      <button class="drawer-item" onclick="goTab('settings',null);closeDrawer();"><span class="drawer-item-icon">⚙️</span> Settings</button>
-      <button class="drawer-item" onclick="goTab('roles',null);closeDrawer();"><span class="drawer-item-icon">🔐</span> Roles &amp; Admins</button>
-      <button class="drawer-item" onclick="goTab('revenue',null);closeDrawer();"><span class="drawer-item-icon">💰</span> Revenue</button>
-      <button class="drawer-item" onclick="goTab('analytics',null);closeDrawer();"><span class="drawer-item-icon">📈</span> Analytics</button>
-      <div style="height:1px;background:var(--border2);margin:10px 18px;"></div>
+    <div style="flex:1;overflow-y:auto;padding:6px 0 10px;">
+      <div class="drawer-grp">Overview</div>
+      <button class="drawer-item" data-tab="dashboard" data-title="Dashboard" onclick="goTab('dashboard',null)"><span class="drawer-item-icon">📊</span> Dashboard</button>
+      <div class="drawer-grp">People</div>
+      <button class="drawer-item" data-tab="drivers" data-title="Drivers" onclick="goTab('drivers',null)"><span class="drawer-item-icon">🚚</span> Drivers<span class="nav-badge" id="badge-drivers"></span></button>
+      <button class="drawer-item" data-tab="customers" data-title="Customers" onclick="goTab('customers',null)"><span class="drawer-item-icon">👤</span> Customers</button>
+      <button class="drawer-item" data-tab="docreview" data-title="Document Review" onclick="goTab('docreview',null)"><span class="drawer-item-icon">📄</span> Document Review<span class="nav-badge" id="badge-docreview-inline"></span></button>
+      <div class="drawer-grp">Jobs</div>
+      <button class="drawer-item" data-tab="bookings" data-title="Bookings" onclick="goTab('bookings',null)"><span class="drawer-item-icon">📦</span> Bookings</button>
+      <button class="drawer-item" data-tab="tracking" data-title="Live Tracking" onclick="goTab('tracking',null)"><span class="drawer-item-icon">📍</span> Live Tracking</button>
+      <button class="drawer-item" data-tab="disputes" data-title="Disputes" onclick="goTab('disputes',null)"><span class="drawer-item-icon">⚖️</span> Disputes<span class="nav-badge" id="badge-disputes"></span></button>
+      <button class="drawer-item" data-tab="ratings" data-title="Ratings" onclick="goTab('ratings',null)"><span class="drawer-item-icon">⭐</span> Ratings</button>
+      <div class="drawer-grp">Communication</div>
+      <button class="drawer-item" data-tab="notifications" data-title="Notifications" onclick="goTab('notifications',null)"><span class="drawer-item-icon">🔔</span> Notifications</button>
+      <button class="drawer-item" data-tab="chat" data-title="Chat" onclick="goTab('chat',null)"><span class="drawer-item-icon">💬</span> Chat</button>
+      <button class="drawer-item" data-tab="ai" data-title="AI Assistant" onclick="goTab('ai',null)"><span class="drawer-item-icon">🤖</span> AI Assistant</button>
+      <button class="drawer-item" data-tab="errors" data-title="Error Reports" onclick="goTab('errors',null)"><span class="drawer-item-icon">🐞</span> Error Reports<span class="nav-badge" id="badge-errors"></span></button>
+      <div class="drawer-grp">Business</div>
+      <button class="drawer-item" data-tab="vehicles" data-title="Fleet" onclick="goTab('vehicles',null)"><span class="drawer-item-icon">🚛</span> Fleet</button>
+      <button class="drawer-item" data-tab="analytics" data-title="Analytics" onclick="goTab('analytics',null)"><span class="drawer-item-icon">📈</span> Analytics</button>
+      <button class="drawer-item" data-tab="revenue" data-title="Revenue" onclick="goTab('revenue',null)"><span class="drawer-item-icon">💰</span> Revenue</button>
+      <button class="drawer-item" data-tab="payments" data-title="Payments" onclick="goTab('payments',null)"><span class="drawer-item-icon">💳</span> Payments<span class="nav-badge" id="badge-payments"></span></button>
+      <button class="drawer-item" data-tab="pricing" data-title="Pricing" onclick="goTab('pricing',null)"><span class="drawer-item-icon">R</span> Pricing</button>
+      <div class="drawer-grp">Admin</div>
+      <button class="drawer-item" data-tab="datareq" data-title="Data Requests" onclick="goTab('datareq',null)"><span class="drawer-item-icon">🗂️</span> Data Requests<span class="nav-badge" id="badge-datareq"></span></button>
+      <button class="drawer-item" data-tab="roles" data-title="Roles &amp; Admins" onclick="goTab('roles',null)"><span class="drawer-item-icon">🔐</span> Roles &amp; Admins</button>
+      <button class="drawer-item" data-tab="settings" data-title="Settings" onclick="goTab('settings',null)"><span class="drawer-item-icon">⚙️</span> Settings</button>
+      <div class="drawer-grp">Danger zone</div>
       <button class="drawer-item" id="drawer-clear-data-btn" style="color:#f87171;"><span class="drawer-item-icon">🗑️</span> Clear All Data</button>
     </div>
-    <div style="padding:16px 18px;border-top:1px solid var(--border2);font-size:10px;color:var(--muted2);">TruckConnect Admin v7</div>
+    <div style="padding:16px 18px;border-top:1px solid var(--border2);font-size:10px;color:var(--muted2);"><button class="drawer-item" id="signout-btn" style="padding:10px 0;color:#f87171;"><span class="drawer-item-icon">🚪</span> Sign Out</button><div id="drawer-uid" style="margin-top:6px;word-break:break-all;font-size:10px;"></div><div style="margin-top:6px;">TruckConnect Admin v8</div></div>
   </div>
   <style>
     .drawer-item{display:flex;align-items:center;gap:12px;width:100%;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:600;padding:14px 18px;cursor:pointer;text-align:left;font-family:inherit;transition:background .15s;}
     .drawer-item:active{background:var(--card2);}
     .drawer-item-icon{font-size:17px;width:22px;text-align:center;}
+    .drawer-item.active{background:var(--card2);color:var(--sky);box-shadow:inset 3px 0 0 var(--sky);}
+    .drawer-item .nav-badge{position:static;margin-left:auto;}
+    .drawer-grp{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);padding:14px 18px 4px;}
   </style>
 
   <div class="admin-main">
-
-    <div class="subtabs" id="subtabs-people">
-      <button class="subtab active" data-tab="drivers" onclick="goTab('drivers')">Drivers</button>
-      <button class="subtab" data-tab="customers" onclick="goTab('customers')">Customers</button>
-    </div>
-    <div class="subtabs" id="subtabs-jobs">
-      <button class="subtab active" data-tab="bookings" onclick="goTab('bookings')">Bookings</button>
-      <button class="subtab" data-tab="tracking" onclick="goTab('tracking')">Tracking</button>
-      <button class="subtab" data-tab="disputes" onclick="goTab('disputes')">Disputes</button>
-      <button class="subtab" data-tab="ratings" onclick="goTab('ratings')">Ratings</button>
-    </div>
-    <div class="subtabs" id="subtabs-comms">
-      <button class="subtab active" data-tab="notifications" onclick="goTab('notifications')">Notify</button>
-      <button class="subtab" data-tab="chat" onclick="goTab('chat')">Chat</button>
-      <button class="subtab" data-tab="errors" onclick="goTab('errors')">Errors</button>
-      <button class="subtab" data-tab="ai" onclick="goTab('ai')">AI Assistant</button>
-    </div>
-    <div class="subtabs" id="subtabs-business">
-      <button class="subtab active" data-tab="vehicles" onclick="goTab('vehicles')">Fleet</button>
-      <button class="subtab" data-tab="analytics" onclick="goTab('analytics')">Analytics</button>
-      <button class="subtab" data-tab="revenue" onclick="goTab('revenue')">Revenue</button>
-      <button class="subtab" data-tab="roles" onclick="goTab('roles')">Roles</button>
-      <button class="subtab" data-tab="settings" onclick="goTab('settings')">Settings</button>
-    </div>
 
     <!-- ── DASHBOARD ── -->
     <div class="tab active" id="tab-dashboard">
@@ -514,7 +565,7 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
       <div class="rev-hero">
         <div class="rev-eyebrow">Total Revenue</div>
         <div class="rev-big" id="h-rev">R0</div>
-        <div class="rev-note">Subscriptions + 20% booking commission</div>
+        <div class="rev-note">Driver subscriptions (<span class="tc-sub-price"></span>/month) · no commission</div>
         <div class="rev-row">
           <div class="rev-cell"><div class="rev-cell-n" id="h-subrev">R0</div><div class="rev-cell-l">Plans</div></div>
           <div class="rev-cell"><div class="rev-cell-n" id="h-commrev">R0</div><div class="rev-cell-l">Commission</div></div>
@@ -595,6 +646,13 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
       <div class="pg-sub">All registered customer accounts.</div>
       <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-inp" id="customer-search" placeholder="Search name or email..." oninput="renderCustomers()"/></div>
       <div class="card"><div id="customers-list"><div class="empty"><div class="empty-ico">👥</div><div class="empty-txt">Loading...</div></div></div></div>
+    </div>
+
+    <!-- ── VEHICLE DOCUMENT REVIEW QUEUE ── -->
+    <div class="tab" id="tab-docreview">
+      <div class="pg-title">Document Review Queue</div>
+      <div class="pg-sub">Vehicle licence discs flagged for manual review.</div>
+      <div class="card"><div id="docreview-list"><div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">Loading...</div></div></div></div>
     </div>
 
     <!-- ── BOOKINGS ── -->
@@ -767,7 +825,7 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
 
     <!-- ── AI ASSISTANT (full screen, was a floating bubble/panel) ── -->
     <div class="tab" id="tab-ai">
-      <div style="display:flex;flex-direction:column;height:calc(100vh - 210px);min-height:420px;background:var(--card);border-radius:16px;border:1px solid var(--border2);overflow:hidden;">
+      <div style="display:flex;flex-direction:column;height:calc(100dvh - 100px);min-height:420px;background:var(--card);border-radius:16px;border:1px solid var(--border2);overflow:hidden;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border2);flex-shrink:0;background:linear-gradient(180deg,rgba(30,58,95,.25),transparent);">
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:38px;height:38px;border-radius:50%;background:#1e3a5f;display:flex;align-items:center;justify-content:center;position:relative;">
@@ -831,29 +889,115 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
     <div class="tab" id="tab-revenue">
       <div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button class="btn-secondary" onclick="exportRevenueCSV()" style="font-size:12px;padding:8px 16px;">📥 Export CSV</button></div>
       <div class="pg-title">💰 Revenue</div>
-      <div class="pg-sub">Subscription and commission breakdown.</div>
+      <div class="pg-sub">Driver subscription income (drivers keep 100% of fares).</div>
 
       <div class="rev-hero">
         <div class="rev-eyebrow">Platform Lifetime Earnings</div>
         <div class="rev-big" id="rv-total">R0</div>
-        <div class="rev-note">Subscriptions + 20% booking commission</div>
+        <div class="rev-note">Driver subscriptions (<span class="tc-sub-price"></span>/month) · no commission</div>
       </div>
 
       <div class="stats-grid">
-        <div class="stat"><div class="stat-lbl">Mover Plans</div><div class="stat-n" id="rv-basic-n">0</div><div class="stat-note" id="rv-basic-note">R0/mo</div></div>
-        <div class="stat"><div class="stat-lbl">Standard Plans</div><div class="stat-n" id="rv-std-n">0</div><div class="stat-note" id="rv-std-note">R0/mo</div></div>
+        <div class="stat"><div class="stat-lbl">Paying Drivers</div><div class="stat-n" id="rv-basic-n">0</div><div class="stat-note" id="rv-basic-note">R0/mo</div></div>
+        <div class="stat"><div class="stat-lbl">On Free Trial</div><div class="stat-n" id="rv-std-n">0</div><div class="stat-note" id="rv-std-note">R0/mo</div></div>
       </div>
 
       <div class="card">
         <div class="card-head"><div class="card-head-title">Breakdown</div></div>
-        <div class="srow"><span class="skey">Mover Plans · R699/mo</span><span class="sval" id="rv-basic-detail">—</span></div>
-        <div class="srow"><span class="skey">Standard Plans · R899/mo</span><span class="sval" id="rv-std-detail">—</span></div>
-        <div class="srow"><span class="skey">Booking Commission · 20%</span><span class="sval" id="rv-comm-detail">—</span></div>
+        <div class="srow"><span class="skey">Paying drivers · <span class="tc-sub-price"></span>/mo</span><span class="sval" id="rv-basic-detail">—</span></div>
+        <div class="srow"><span class="skey">Free-trial drivers · R0</span><span class="sval" id="rv-std-detail">—</span></div>
+        <div class="srow"><span class="skey">Booking commission · none</span><span class="sval" id="rv-comm-detail">—</span></div>
         <div class="srow" style="border-top:1px solid var(--border2);"><span class="skey" style="font-size:15px;font-weight:900;color:#fff;">Grand Total</span><span class="sval" style="font-size:15px;font-weight:900;color:#fff;font-family:var(--mono);" id="rv-grand">R0</span></div>
       </div>
     </div>
 
     <!-- ── ROLES ── -->
+    <!-- PAYMENTS (EFT proofs) -->
+    <div class="tab" id="tab-payments">
+      <div class="pg-title">Payments</div>
+      <div class="pg-sub">Proofs of payment uploaded by drivers. Always check your bank before approving.</div>
+      <div class="card"><div id="payments-list"><div class="empty"><div class="empty-ico">💳</div><div class="empty-txt">Loading...</div></div></div></div>
+    </div>
+
+    <div class="tab" id="tab-datareq">
+      <div class="pg-title">Data Requests</div>
+      <div class="pg-sub">POPIA requests from drivers and customers. Requests must be handled within 30 days.</div>
+      <div class="card"><div id="datareq-list"><div class="empty"><div class="empty-ico">🗂️</div><div class="empty-txt">Loading...</div></div></div></div>
+    </div>
+
+    <div class="tab" id="tab-pricing">
+      <div class="pg-title">Pricing</div>
+      <div class="pg-sub">Standard prices are fixed. A special lowers every customer price for a while. The most you can give is 15%, and only on trips up to 50 km.</div>
+
+      <div class="card" id="sp-card">
+        <div class="card-head"><div class="card-head-title">Specials pop-up (customer app)</div></div>
+        <div class="srow"><span class="skey">Status</span><span class="sval" id="sp-status" style="font-family:var(--mono);">Loading...</span></div>
+        <div style="padding:6px 16px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 4px;">
+            <div>
+              <div style="font-size:14px;font-weight:700;">Show pop-up to customers</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4;">ON = customers see the pop-up when they open the app. OFF = they see nothing.</div>
+            </div>
+            <button type="button" id="sp-switch" role="switch" aria-checked="false" style="flex:0 0 auto;width:54px;height:30px;border-radius:99px;border:none;background:#6b7280;position:relative;cursor:pointer;transition:background .2s;padding:0;"><span id="sp-knob" style="position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;"></span></button>
+          </div>
+          <div style="height:1px;background:var(--border);margin:14px 0 4px;"></div>
+
+          <div class="skey" style="margin:12px 0 6px;">Pictures (up to 3)</div>
+          <div id="sp-imgs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
+          <input type="file" id="sp-file" accept="image/*" multiple style="display:none;"/>
+          <button type="button" class="btn-primary" id="sp-add" style="background:transparent;border:1px dashed var(--border2);color:var(--text);margin-top:0;">+ Add picture</button>
+
+          <div class="skey" style="margin:14px 0 6px;">Small tag on top (optional)</div>
+          <input class="fi" id="sp-badge" type="text" maxlength="30" placeholder="e.g. WEEKEND SPECIAL"/>
+          <div class="skey" style="margin:12px 0 6px;">Big heading</div>
+          <input class="fi" id="sp-title" type="text" maxlength="70" placeholder="e.g. 10% off all trips this weekend"/>
+          <div class="skey" style="margin:12px 0 6px;">Details</div>
+          <textarea class="fi" id="sp-body" rows="5" maxlength="600" placeholder="Write what the customer must know: what the special is, rules, how long it lasts..." style="resize:vertical;"></textarea>
+          <div class="skey" style="margin:12px 0 6px;">Button text (optional)</div>
+          <input class="fi" id="sp-cta" type="text" maxlength="24" placeholder="e.g. Book now"/>
+          <div class="skey" style="margin:12px 0 6px;">When the customer taps the button</div>
+          <select class="fi" id="sp-action"><option value="book">Open the booking screen</option><option value="close">Just close the pop-up</option></select>
+          <div class="skey" style="margin:12px 0 6px;">Hide automatically after (optional)</div>
+          <input class="fi" id="sp-until" type="date"/>
+          <div id="sp-msg" style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;"></div>
+          <button class="btn-primary" id="sp-save">Save pop-up</button>
+          <button class="btn-primary" id="sp-preview" style="background:transparent;border:1px solid var(--border2);color:var(--text);">Preview how customers see it</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-head-title">Special offer</div></div>
+        <div class="srow"><span class="skey">Status</span><span class="sval" id="pr-status" style="font-family:var(--mono);">Loading...</span></div>
+        <div style="padding:6px 16px 16px;">
+          <div class="skey" style="margin:10px 0 6px;">Discount % (0 to 15)</div>
+          <input class="fi" id="pr-pct" type="number" min="0" max="15" step="1" placeholder="e.g. 10"/>
+          <div class="skey" style="margin:12px 0 6px;">Name shown to customers (optional)</div>
+          <input class="fi" id="pr-label" type="text" maxlength="40" placeholder="e.g. Weekend special"/>
+          <div class="skey" style="margin:12px 0 6px;">Ends on (optional)</div>
+          <input class="fi" id="pr-until" type="date"/>
+          <div id="pr-hint" style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;"></div>
+          <button class="btn-primary" id="pr-save">Save special</button>
+          <button class="btn-primary" id="pr-off" style="background:transparent;border:1px solid var(--border2);color:var(--text);">Turn special off</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-head-title">Fuel adjustment</div></div>
+        <div class="srow"><span class="skey">Status</span><span class="sval" id="pr-fuel-status" style="font-family:var(--mono);">Loading...</span></div>
+        <div style="padding:6px 16px 16px;">
+          <div class="skey" style="margin:10px 0 6px;">Add % to every standard price (0 to 25)</div>
+          <input class="fi" id="pr-fuel" type="number" min="0" max="25" step="1" placeholder="e.g. 10"/>
+          <div id="pr-fuel-hint" style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;"></div>
+          <button class="btn-primary" id="pr-fuel-save">Save fuel adjustment</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-head-title">Standard prices (locked)</div></div>
+        <div id="pr-table" style="padding:4px 16px 14px;"></div>
+      </div>
+    </div>
+
     <div class="tab" id="tab-roles">
       <div class="pg-title">🔐 Admin Roles</div>
       <div class="pg-sub">Team access levels and permissions.</div>
@@ -876,7 +1020,7 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
             <div class="li-av p">A</div>
             <div class="li-info">
               <div class="li-name">Super Admin</div>
-              <div class="li-meta" id="admin-email">Loading...</div>
+              <div class="li-meta" id="admin-email">Loading...</div><div class="li-meta" id="admin-uid" style="user-select:all;-webkit-user-select:all;word-break:break-all;margin-top:6px;font-size:11px;opacity:.85;">UID: …</div>
             </div>
             <div class="li-right"><span class="rbadge rb-super">SUPER</span></div>
           </div>
@@ -912,9 +1056,9 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
 
       <div class="card">
         <div class="card-head"><div class="card-head-title">Subscription Pricing</div></div>
-        <div class="srow"><span class="skey">Mover Plan</span><span class="sval" style="font-family:var(--mono);color:var(--sky);">R699 / month</span></div>
-        <div class="srow"><span class="skey">Standard Plan</span><span class="sval" style="font-family:var(--mono);color:var(--sky);">R899 / month</span></div>
-        <div class="srow"><span class="skey">Commission Rate</span><span class="sval" style="font-family:var(--mono);color:var(--sky);">20% per trip</span></div>
+        <div class="srow"><span class="skey">Driver Subscription</span><span class="sval" style="font-family:var(--mono);color:var(--sky);"><span class="tc-sub-price"></span> / month</span></div>
+        <div class="srow"><span class="skey">Free Trial</span><span class="sval" style="font-family:var(--mono);color:var(--sky);">3 months</span></div>
+        <div class="srow"><span class="skey">Commission Rate</span><span class="sval" style="font-family:var(--mono);color:var(--sky);">None (drivers keep 100%)</span></div>
       </div>
 
       <div class="card">
@@ -927,6 +1071,36 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
           <input class="fi" id="os-rest-key" type="password" placeholder="Enter your admin API secret here…" autocomplete="off"/>
           <button class="btn-secondary" style="margin-top:8px;" onclick="saveOsKey()">💾 Save API Key</button>
           <p style="font-size:10px;color:var(--muted);margin-top:8px;">Stored in your browser only · Never uploaded anywhere · This must match the ADMIN_API_SECRET set on the Worker.</p>
+        </div>
+      </div>
+
+      <div class="card" id="ap-card">
+        <div class="card-head"><div class="card-head-title">📲 Admin Push Alerts</div><div class="chip chip-amber" id="ap-chip">Off</div></div>
+        <div style="padding:14px 15px;">
+          <div style="font-size:11px;line-height:1.6;color:var(--muted2);margin-bottom:12px;">Get a push on this phone for new customers, new driver applications, and completed or cancelled loads, even when the app is closed. Sent by your separate <b style="color:var(--text);">truckconnect-admin-notify</b> worker.</div>
+          <label class="fl">Notify key</label>
+          <input class="fi" id="ap-key" type="password" placeholder="Same as ADMIN_NOTIFY_SECRET in Cloudflare" autocomplete="off"/>
+          <button class="btn-secondary" id="ap-savekey" style="margin-top:8px;">💾 Save key</button>
+          <p style="font-size:10px;color:var(--muted);margin-top:8px;">Stored in this browser only.</p>
+          <button class="btn-primary" id="ap-enable">🔔 Enable on this phone</button>
+          <button class="btn-secondary" id="ap-disable" style="display:none;">Turn off on this phone</button>
+          <div id="ap-msg" style="display:none;"></div>
+
+          <div class="msec-lbl">Tell me about</div>
+          <label class="ap-row"><span>New customer signs up</span><span class="ap-sw"><input type="checkbox" id="ap-t-customer" checked/><span></span></span></label>
+          <label class="ap-row"><span>New driver application</span><span class="ap-sw"><input type="checkbox" id="ap-t-driver" checked/><span></span></span></label>
+          <label class="ap-row"><span>Load completed</span><span class="ap-sw"><input type="checkbox" id="ap-t-completed" checked/><span></span></span></label>
+          <label class="ap-row"><span>Load cancelled</span><span class="ap-sw"><input type="checkbox" id="ap-t-cancelled" checked/><span></span></span></label>
+
+          <div class="msec-lbl">Send a test to this phone</div>
+          <div class="ap-grid">
+            <button class="btn btn-view" data-aptest="customer">New customer</button>
+            <button class="btn btn-view" data-aptest="driver">New driver</button>
+            <button class="btn btn-view" data-aptest="completed">Load completed</button>
+            <button class="btn btn-view" data-aptest="cancelled">Load cancelled</button>
+          </div>
+          <button class="btn-secondary" id="ap-check">🔄 Check for new activity now</button>
+          <p id="ap-info" style="font-size:10px;color:var(--muted);margin-top:8px;"></p>
         </div>
       </div>
 
@@ -965,26 +1139,14 @@ window._FB={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,si
 
   </div><!-- /admin-main -->
 
-  <!-- BOTTOM NAV -->
-  <div class="btm-nav-wrap">
-    <div class="btm-nav" id="btm-nav">
-    <button class="nav-btn active" data-group="dashboard" onclick="goTab('dashboard')"><div class="nav-btn-icon">📊</div><div class="nav-btn-lbl">Dashboard</div></button>
-    <button class="nav-btn" data-group="people" onclick="goTab('drivers')"><div class="nav-btn-icon">👥</div><div class="nav-btn-lbl">People</div><div class="nav-badge" id="badge-drivers"></div></button>
-    <button class="nav-btn" data-group="jobs" onclick="goTab('bookings')"><div class="nav-btn-icon">📦</div><div class="nav-btn-lbl">Jobs</div><div class="nav-badge" id="badge-disputes"></div></button>
-    <button class="nav-btn" data-group="comms" onclick="goTab('notifications')"><div class="nav-btn-icon">💬</div><div class="nav-btn-lbl">Comms</div><div class="nav-badge" id="badge-errors"></div></button>
-    <button class="nav-btn" data-group="business" onclick="goTab('vehicles')"><div class="nav-btn-icon">⚙️</div><div class="nav-btn-lbl">Business</div></button>
-  </div>
-  <div class="btm-nav-fade" id="btm-nav-fade" style="display:none;"><span class="btm-nav-fade-arrow">›</span></div>
-  </div>
-
-</div><!-- /s-admin -->
+  </div><!-- /s-admin -->
 
 <script>
 (function(){
 'use strict';
 
 /* ── STATE ── */
-var allDrivers=[],allCustomers=[],allBookings=[],allDisputes=[],allRatings=[],allErrorReports=[];
+var allDrivers=[],allCustomers=[],allBookings=[],allDisputes=[],allRatings=[],allErrorReports=[],allDocReviews=[],allPaymentProofs=[];
 var filters={driverFilter:'all',bookingFilter:'all',vehicleFilter:'all',disputeFilter:'all',errorFilter:'all'};
 var listenersOn=false;
 // This is a password YOU make up yourself (not from Firebase or Google) —
@@ -996,6 +1158,7 @@ var ADMIN_API_SECRET=localStorage.getItem('tc_admin_api_secret')||'';
 // Update this if your Worker's subdomain differs from what you deployed.
 var TC_FCM_WORKER_URL='https://truckconnect-fcm.madibasphiwe50.workers.dev';
 var notifTarget='drivers';
+var allDataRequests=[];
 var chatUid=null,chatName='',chatUnsub=null;
 
 /* ── UTILS ── */
@@ -1034,10 +1197,15 @@ window.setFilter=function(btn,key,val,renderFn){
 };
 
 /* ── TAB NAVIGATION ── */
-var GROUP_MAP={drivers:'people',customers:'people',bookings:'jobs',tracking:'jobs',disputes:'jobs',ratings:'jobs',notifications:'comms',chat:'comms',errors:'comms',ai:'comms',vehicles:'business',analytics:'business',revenue:'business',roles:'business',settings:'business'};
+var GROUP_MAP={drivers:'people',customers:'people',docreview:'people',bookings:'jobs',tracking:'jobs',disputes:'jobs',ratings:'jobs',notifications:'comms',chat:'comms',errors:'comms',ai:'comms',vehicles:'business',analytics:'business',revenue:'business',payments:'business',pricing:'business',roles:'business',settings:'business',datareq:'business'};
 
 window.goTab=function(tab,btn){
   var group=GROUP_MAP[tab]||'dashboard';
+  document.querySelectorAll('.drawer-item').forEach(function(b){b.classList.remove('active');});
+  var _it=document.querySelector('.drawer-item[data-tab="'+tab+'"]');
+  if(_it){_it.classList.add('active');var _st=$('screen-title');if(_st)_st.textContent=_it.getAttribute('data-title')||'';}
+  try{if(window.closeDrawer)window.closeDrawer();}catch(e){}
+  var _am=document.querySelector('.admin-main');if(_am)_am.scrollTop=0;
 
   // Nav bar — activate the right top-level button
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
@@ -1061,10 +1229,14 @@ window.goTab=function(tab,btn){
   // lazy render on tab open
   if(tab==='drivers')renderDrivers();
   if(tab==='customers')renderCustomers();
+  if(tab==='docreview')renderDocReview();
   if(tab==='bookings')renderBookings();
   if(tab==='vehicles')renderVehicles();
   if(tab==='analytics')renderAnalytics();
   if(tab==='revenue')renderRevenue();
+  if(tab==='payments')renderPayments();
+  if(tab==='datareq')renderDataRequests();
+  if(tab==='pricing'){initPricing();try{initSpecialsPopup();}catch(e){}}
   if(tab==='ratings')renderRatings();
   if(tab==='disputes')renderDisputes();
   if(tab==='errors')renderErrorReports();
@@ -1173,26 +1345,293 @@ async function _fcmSendToUser(title, body, uid_, role, data){
 
 // Write broadcast record to Firestore (in-app real-time fallback)
 async function _firestoreBroadcast(title, body, target) {
-  var FB = window._FB; if (!FB) return;
+  var FB = window._FB; if (!FB) return {ok:false,reason:'not_ready'};
   try {
     await FB.addDoc(FB.collection(FB.db, 'adminBroadcasts'), {
       title: title, body: body, target: target,
       sentAt: new Date().toISOString(), read: false
     });
-  } catch(e) {}
+    return {ok:true};
+  } catch(e) { return {ok:false,reason:(e&&e.message)?e.message:String(e)}; }
 }
+
+
+/* ── PRICING & SPECIALS ── */
+var _prUnsub=null,_prData={};
+var PR_MAX=15,PR_FUEL_MAX=25;
+function _prTon(t){return {base:Math.round(386.17+(t-1)*110.3344),rs:Math.round((13.2401+(t-1)*2.2067)*100)/100,rl:[8.28,9.38,10.48,12.14,13.79,15.45][t-1]};}
+function _prHint(){
+  var p=Number(($('pr-pct')||{}).value)||0;
+  var h=$('pr-hint');if(!h)return;
+  if(p<=0){h.textContent='No special. Customers see the standard prices.';return;}
+  var ex=800,sp=Math.round(ex*(1-p/100)),lo=Math.round(sp*0.85);
+  h.textContent='Example (trip up to 50 km): R'+ex+' becomes R'+sp+'. A customer can still offer 15% less than that, so the lowest offer would be R'+lo+' ('+Math.round(lo/ex*100)+'% of the standard price). Trips over 50 km never get a special. Drivers earn less on every special trip.';
+}
+function _prFuelHint(){
+  var f=Number(($('pr-fuel')||{}).value)||0,h=$('pr-fuel-hint');if(!h)return;
+  if(f<=0){h.textContent='No fuel adjustment. Customers see the standard prices.';return;}
+  var ex=1931;h.textContent='Example: a 5-ton trip of 50 km is R'+ex.toLocaleString()+' at the standard price and becomes R'+Math.round(ex*(1+f/100)).toLocaleString()+'. It applies to every trip, short and long.';
+}
+function _prRenderStatus(){
+  var fs=$('pr-fuel-status');
+  if(fs){var fp=Number(_prData.fuelPct)||0;fs.textContent=fp>0?'ON: +'+fp+'%':'OFF: standard prices';fs.style.color=fp>0?'var(--green,#22c55e)':'var(--muted)';}
+  var st=$('pr-status');if(!st)return;
+  var p=Number(_prData.discountPct)||0,until=_prData.until?Date.parse(_prData.until):0;
+  var live=_prData.active!==false&&p>0&&(!until||Date.now()<=until);
+  if(live)st.textContent='ON: '+p+'% off'+(_prData.label?' ('+_prData.label+')':'')+(until?' until '+new Date(until).toLocaleDateString('en-ZA'):'');
+  else st.textContent=p>0&&until&&Date.now()>until?'Ended (past end date)':'OFF: standard prices';
+  st.style.color=live?'var(--green,#22c55e)':'var(--muted)';
+}
+function initPricing(){
+  var FB=window._FB;if(!FB)return;
+  var t=$('pr-table');
+  if(t){
+    var h='<div class="srow"><span class="skey">Truck</span><span class="skey">Base / per km (50 km or less) / per km (over 50 km)</span></div>';
+    for(var i=1;i<=6;i++){var x=_prTon(i);h+='<div class="srow"><span class="skey">'+i+' Ton</span><span class="sval" style="font-family:var(--mono);">R'+x.base+' / R'+x.rs.toFixed(2)+' / R'+x.rl.toFixed(2)+'</span></div>';}
+    t.innerHTML=h;
+  }
+  var pi=$('pr-pct');if(pi&&!pi._b){pi._b=1;pi.addEventListener('input',_prHint);}
+  var fi=$('pr-fuel');if(fi&&!fi._b){fi._b=1;fi.addEventListener('input',_prFuelHint);}
+  if(!_prUnsub){
+    _prUnsub=FB.onSnapshot(FB.doc(FB.db,'config','pricing'),function(snap){
+      _prData=snap.exists()?snap.data():{};
+      var p=$('pr-pct'),l=$('pr-label'),u=$('pr-until');
+      if(p&&document.activeElement!==p)p.value=_prData.discountPct?_prData.discountPct:'';
+      if(l&&document.activeElement!==l)l.value=_prData.label||'';
+      if(u&&document.activeElement!==u)u.value=_prData.until?String(_prData.until).slice(0,10):'';
+      var fu=$('pr-fuel');if(fu&&document.activeElement!==fu)fu.value=_prData.fuelPct?_prData.fuelPct:'';
+      _prRenderStatus();_prHint();_prFuelHint();
+    },function(e){var st=$('pr-status');if(st)st.textContent='Could not load: '+(e&&e.message?e.message:e);});
+  }
+  _prHint();_prFuelHint();
+}
+function _prSaveFuel(){
+  var FB=window._FB;if(!FB)return;
+  var f=Number(($('pr-fuel')||{}).value)||0;
+  if(f<0||f>PR_FUEL_MAX){toast('Fuel adjustment must be between 0 and '+PR_FUEL_MAX+'.');return;}
+  var u=FB.auth.currentUser;
+  FB.setDoc(FB.doc(FB.db,'config','pricing'),{fuelPct:f,updatedAt:new Date().toISOString(),updatedBy:(u&&u.email)||'admin'},{merge:true})
+    .then(function(){toast(f>0?'Fuel adjustment saved: +'+f+'%.':'Fuel adjustment turned off.');})
+    .catch(function(e){toast('Could not save: '+(e&&e.message?e.message:e));});
+}
+function _prSave(off){
+  var FB=window._FB;if(!FB)return;
+  var pct=off?0:Number(($('pr-pct')||{}).value);
+  if(!off&&(isNaN(pct)||pct<0||pct>PR_MAX)){toast('Discount must be between 0 and '+PR_MAX+'.');return;}
+  var label=off?'':String(($('pr-label')||{}).value||'').trim().slice(0,40);
+  var ud=off?'':String(($('pr-until')||{}).value||'');
+  var until=ud?(ud+'T23:59:59'):null;
+  var u=FB.auth.currentUser;
+  FB.setDoc(FB.doc(FB.db,'config','pricing'),{discountPct:pct,label:label,until:until,active:pct>0,updatedAt:new Date().toISOString(),updatedBy:(u&&u.email)||'admin'},{merge:true})
+    .then(function(){toast(off||pct<=0?'Special turned off.':'Special saved: '+pct+'% off.');})
+    .catch(function(e){toast('Could not save: '+(e&&e.message?e.message:e));});
+}
+document.addEventListener('click',function(e){
+  var t=e.target&&e.target.closest?e.target.closest('#pr-save,#pr-off,#pr-fuel-save'):null;
+  if(!t)return;
+  if(t.id==='pr-fuel-save')_prSaveFuel();else if(t.id==='pr-save')_prSave(false);else _prSave(true);
+});
+
+/* ── SPECIALS POP-UP: shared renderer (same code in admin preview and customer app) ── */
+function tcspEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function tcspSafeImg(u){u=String(u||'');return (/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(u)||/^https:\/\//.test(u))?u:'';}
+function tcspBuild(d,onCta,onClose){
+  if(!document.getElementById('tcsp-style')){
+    var st=document.createElement('style');st.id='tcsp-style';
+    st.textContent='@keyframes tcspFade{from{opacity:0}to{opacity:1}}@keyframes tcspUp{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}#tcsp-overlay .tcsp-imgs::-webkit-scrollbar{display:none}#tcsp-overlay button{font-family:inherit}';
+    document.head.appendChild(st);
+  }
+  var imgs=(d.images||[]).map(tcspSafeImg).filter(Boolean);
+  var ov=document.createElement('div');
+  ov.id='tcsp-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(5,12,28,.68);display:flex;align-items:center;justify-content:center;padding:18px;animation:tcspFade .25s ease;font-family:Roboto,system-ui,-apple-system,sans-serif;';
+  var h='<div id="tcsp-card" role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:360px;max-height:92vh;overflow-y:auto;background:#fff;color:#0B1730;border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,.45);animation:tcspUp .32s cubic-bezier(.2,.8,.2,1);">';
+  h+='<button id="tcsp-x" aria-label="Close" style="position:absolute;top:10px;right:10px;z-index:3;width:34px;height:34px;border-radius:50%;border:none;background:rgba(11,23,48,.62);color:#fff;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>';
+  if(imgs.length){
+    h+='<div class="tcsp-imgs" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:24px 24px 0 0;background:#EAF3FF;">';
+    imgs.forEach(function(s){h+='<img src="'+s+'" alt="" style="flex:0 0 100%;width:100%;max-height:300px;object-fit:cover;scroll-snap-align:center;display:block;">';});
+    h+='</div>';
+    if(imgs.length>1){
+      h+='<div id="tcsp-dots" style="display:flex;justify-content:center;gap:6px;padding:10px 0 0;">';
+      imgs.forEach(function(_,i){h+='<span style="width:7px;height:7px;border-radius:50%;background:'+(i?'#C9D6E8':'#1677F2')+';transition:background .2s;"></span>';});
+      h+='</div>';
+    }
+  }
+  h+='<div style="padding:'+(imgs.length?'14px':'48px')+' 20px 20px;text-align:center;">';
+  if(d.badge)h+='<div style="display:inline-block;background:#EAF3FF;color:#1677F2;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:99px;margin-bottom:10px;">'+tcspEsc(d.badge)+'</div>';
+  if(d.title)h+='<div style="font-size:22px;font-weight:800;line-height:1.2;margin-bottom:8px;">'+tcspEsc(d.title)+'</div>';
+  if(d.body)h+='<div style="font-size:14px;line-height:1.55;color:#4A5B75;white-space:pre-wrap;margin-bottom:16px;">'+tcspEsc(d.body)+'</div>';
+  if(d.cta)h+='<button id="tcsp-cta" style="width:100%;background:#1677F2;color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">'+tcspEsc(d.cta)+'</button>';
+  h+='<button id="tcsp-no" style="width:100%;background:none;border:none;color:#66758F;font-size:13px;font-weight:600;padding:'+(d.cta?'12px':'6px')+' 0 0;cursor:pointer;">'+(d.cta?'Not now':'Close')+'</button>';
+  h+='</div></div>';
+  ov.innerHTML=h;
+  function close(){if(ov.parentNode)ov.parentNode.removeChild(ov);if(onClose)try{onClose();}catch(e){}}
+  ov.addEventListener('click',function(e){if(e.target===ov)close();});
+  ov.querySelector('#tcsp-x').onclick=close;
+  ov.querySelector('#tcsp-no').onclick=close;
+  var cta=ov.querySelector('#tcsp-cta');
+  if(cta)cta.onclick=function(){close();if(onCta)try{onCta();}catch(e){}};
+  var sc=ov.querySelector('.tcsp-imgs');
+  if(sc&&imgs.length>1)sc.addEventListener('scroll',function(){
+    var i=Math.round(sc.scrollLeft/sc.clientWidth),ds=ov.querySelectorAll('#tcsp-dots span');
+    for(var k=0;k<ds.length;k++)ds[k].style.background=k===i?'#1677F2':'#C9D6E8';
+  });
+  return ov;
+}
+
+/* ── SPECIALS POP-UP (admin) ── stored in config/pricing → field "popup" */
+var _spUnsub=null,_spData={},_spImgs=[],_spDirty=false,_spBusy=false;
+var SP_MAX_CHARS=780000;
+function _spFields(){return {badge:$('sp-badge'),title:$('sp-title'),body:$('sp-body'),cta:$('sp-cta'),action:$('sp-action'),until:$('sp-until')};}
+function _spUntilLive(d){var u=d.until?Date.parse(d.until+'T23:59:59'):0;return !u||Date.now()<=u;}
+function _spHasContent(d){return !!((d.title||'').trim()||(d.body||'').trim()||(d.images||[]).length);}
+function _spRenderSwitch(on){
+  var s=$('sp-switch'),k=$('sp-knob');if(!s||!k)return;
+  s.setAttribute('aria-checked',on?'true':'false');
+  s.style.background=on?'#16a34a':'#6b7280';
+  k.style.transform=on?'translateX(24px)':'none';
+}
+function _spRenderStatus(){
+  var st=$('sp-status');if(!st)return;
+  var on=_spData.active===true,live=on&&_spUntilLive(_spData);
+  _spRenderSwitch(on);
+  if(live)st.textContent='ON: customers see the pop-up';
+  else if(on)st.textContent='Ended (past the date you set)';
+  else st.textContent='OFF: customers see nothing';
+  st.style.color=live?'var(--green,#22c55e)':'var(--muted)';
+}
+function _spRenderImgs(){
+  var box=$('sp-imgs');if(!box)return;
+  box.innerHTML='';
+  _spImgs.forEach(function(src,i){
+    var w=document.createElement('div');w.style.cssText='position:relative;width:86px;height:86px;border-radius:10px;overflow:hidden;border:1px solid var(--border2);';
+    var im=document.createElement('img');im.src=src;im.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+    var x=document.createElement('button');x.type='button';x.textContent='×';x.setAttribute('aria-label','Remove picture');
+    x.style.cssText='position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.7);color:#fff;font-size:15px;line-height:1;cursor:pointer;padding:0;';
+    x.onclick=function(){_spImgs.splice(i,1);_spDirty=true;_spRenderImgs();};
+    w.appendChild(im);w.appendChild(x);box.appendChild(w);
+  });
+  var add=$('sp-add');if(add)add.style.display=_spImgs.length>=3?'none':'block';
+}
+function _spFill(d){
+  var f=_spFields();
+  f.badge.value=d.badge||'';f.title.value=d.title||'';f.body.value=d.body||'';f.cta.value=d.cta||'';
+  f.action.value=d.ctaAction==='close'?'close':'book';f.until.value=d.until||'';
+  _spImgs=(d.images||[]).slice(0,3);_spRenderImgs();
+}
+function _spCollect(){
+  var f=_spFields();
+  return {badge:f.badge.value.trim(),title:f.title.value.trim(),body:f.body.value.trim(),cta:f.cta.value.trim(),ctaAction:f.action.value==='close'?'close':'book',until:f.until.value||'',images:_spImgs.slice()};
+}
+function _spEncode(im,max,q){
+  var s=Math.min(1,max/Math.max(im.width,im.height));
+  var c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*s));c.height=Math.max(1,Math.round(im.height*s));
+  var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg',q);
+}
+function _spReadImg(file){
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onerror=function(){rej(new Error('read'));};
+    fr.onload=function(){
+      var im=new Image();
+      im.onerror=function(){rej(new Error('img'));};
+      im.onload=function(){
+        var out=_spEncode(im,900,0.78);
+        if(out.length>260000)out=_spEncode(im,760,0.62);
+        if(out.length>260000)out=_spEncode(im,640,0.5);
+        res(out);
+      };
+      im.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+function _spAddFiles(files){
+  var list=Array.prototype.slice.call(files||[]).filter(function(f){return /^image\//.test(f.type);});
+  var room=3-_spImgs.length;
+  if(!list.length)return;
+  if(list.length>room){toast('Only 3 pictures allowed. Extra ones were skipped.');list=list.slice(0,room);}
+  var msg=$('sp-msg');if(msg)msg.textContent='Adding picture...';
+  list.reduce(function(p,f){
+    return p.then(function(){return _spReadImg(f).then(function(d){_spImgs.push(d);_spDirty=true;_spRenderImgs();});});
+  },Promise.resolve()).then(function(){if(msg)msg.textContent='';})
+   .catch(function(){if(msg)msg.textContent='';toast('Could not read that picture. Try another one.');});
+}
+function _spWrite(patch,okMsg){
+  var FB=window._FB;if(!FB||_spBusy)return Promise.resolve();
+  _spBusy=true;
+  var u=FB.auth.currentUser;
+  patch.updatedAt=new Date().toISOString();patch.updatedBy=(u&&u.email)||'admin';
+  return FB.setDoc(FB.doc(FB.db,'config','pricing'),{popup:patch},{merge:true})
+    .then(function(){_spBusy=false;if(okMsg)toast(okMsg);})
+    .catch(function(e){_spBusy=false;_spRenderStatus();toast('Could not save: '+(e&&e.message?e.message:e));});
+}
+function _spSave(){
+  var d=_spCollect();
+  if(!d.title&&!d.body&&!d.images.length){toast('Add a picture, a heading or details first.');return;}
+  var total=d.images.reduce(function(a,s){return a+s.length;},0);
+  if(total>SP_MAX_CHARS){toast('Pictures are too big together. Remove one or use simpler pictures.');return;}
+  d.version=Date.now();
+  _spWrite(d,'Pop-up saved.').then(function(){_spDirty=false;});
+}
+function _spToggle(){
+  var on=_spData.active===true,next=!on;
+  if(next){
+    if(_spDirty){toast('Tap "Save pop-up" first, then switch it ON.');return;}
+    if(!_spHasContent(_spData)){toast('Fill in the pop-up and tap "Save pop-up" first.');return;}
+    if(!_spUntilLive(_spData)){toast('The end date has passed. Change or clear the date and save first.');return;}
+  }
+  _spRenderSwitch(next);
+  _spWrite({active:next,version:Date.now()},next?'Specials pop-up is ON. Customers will see it.':'Specials pop-up is OFF.');
+}
+function _spPreview(){
+  var old=document.getElementById('tcsp-overlay');if(old)old.remove();
+  var d=_spCollect();
+  if(!d.title&&!d.body&&!d.images.length){toast('Add a picture, a heading or details first.');return;}
+  document.body.appendChild(tcspBuild(d,null,null));
+}
+function initSpecialsPopup(){
+  var FB=window._FB;if(!FB||!$('sp-card'))return;
+  var sw=$('sp-switch');
+  if(sw&&!sw._b){
+    sw._b=1;
+    sw.addEventListener('click',_spToggle);
+    $('sp-add').addEventListener('click',function(){$('sp-file').click();});
+    $('sp-file').addEventListener('change',function(e){_spAddFiles(e.target.files);e.target.value='';});
+    $('sp-save').addEventListener('click',_spSave);
+    $('sp-preview').addEventListener('click',_spPreview);
+    ['sp-badge','sp-title','sp-body','sp-cta','sp-action','sp-until'].forEach(function(id){
+      var el=$(id);el.addEventListener('input',function(){_spDirty=true;});el.addEventListener('change',function(){_spDirty=true;});
+    });
+  }
+  if(!_spUnsub){
+    _spUnsub=FB.onSnapshot(FB.doc(FB.db,'config','pricing'),function(snap){
+      _spData=(snap.exists()&&snap.data().popup)||{};
+      if(!_spDirty)_spFill(_spData);
+      _spRenderStatus();
+    },function(e){var st=$('sp-status');if(st)st.textContent='Could not load: '+(e&&e.message?e.message:e);});
+  }
+}
+
 
 /* ── FIRESTORE LISTENERS ── */
 function startListeners(){
   if(listenersOn)return;listenersOn=true;
   var FB=window._FB;if(!FB)return;
-  FB.onSnapshot(FB.collection(FB.db,'drivers'),function(s){allDrivers=[];s.forEach(function(d){allDrivers.push(Object.assign({id:d.id},d.data()));});updateDash();renderDrivers();renderVehicles();renderRatings();updateBadges();updateAdminMapMarkers();},function(e){toast('⚠️ Drivers: '+e.message);});
+  var _drvPub=[],_drvPriv={};
+  function _mergeDrivers(){allDrivers=_drvPub.map(function(d){return Object.assign({},d,_drvPriv[d.id]||{},{id:d.id});});updateDash();renderDrivers();renderVehicles();renderRatings();updateBadges();try{updateAdminMapMarkers();}catch(e){}}
+  FB.onSnapshot(FB.collection(FB.db,'driverPrivate'),function(s){_drvPriv={};s.forEach(function(d){_drvPriv[d.id]=d.data();});_mergeDrivers();},function(e){toast('⚠️ Driver documents: '+e.message);});
+  FB.onSnapshot(FB.collection(FB.db,'drivers'),function(s){_drvPub=[];s.forEach(function(d){_drvPub.push(Object.assign({id:d.id},d.data()));});_mergeDrivers();return;updateDash();renderDrivers();renderVehicles();renderRatings();updateBadges();updateAdminMapMarkers();},function(e){toast('⚠️ Drivers: '+e.message);});
   FB.onSnapshot(FB.collection(FB.db,'customers'),function(s){allCustomers=[];s.forEach(function(d){allCustomers.push(Object.assign({id:d.id},d.data()));});updateDash();renderCustomers();},function(e){toast('⚠️ Customers: '+e.message);});
   FB.onSnapshot(FB.collection(FB.db,'bookings'),function(s){allBookings=[];s.forEach(function(d){allBookings.push(Object.assign({id:d.id},d.data()));});updateDash();renderBookings();renderRecentBookings();renderTracking();renderAnalytics();},function(e){toast('⚠️ Bookings: '+e.message);});
   FB.onSnapshot(FB.query(FB.collection(FB.db,'sos_alerts'),FB.where('acknowledged','==',false)),function(s){_sos=[];s.forEach(function(d){_sos.push(Object.assign({_id:d.id},d.data()));});renderSos();},function(){});
   FB.onSnapshot(FB.collection(FB.db,'disputes'),function(s){allDisputes=[];s.forEach(function(d){allDisputes.push(Object.assign({id:d.id},d.data()));});renderDisputes();updateBadges();},function(){});
   FB.onSnapshot(FB.collection(FB.db,'ratings'),function(s){allRatings=[];s.forEach(function(d){allRatings.push(Object.assign({id:d.id},d.data()));});renderRatings();},function(){});
   FB.onSnapshot(FB.collection(FB.db,'errorReports'),function(s){allErrorReports=[];s.forEach(function(d){allErrorReports.push(Object.assign({id:d.id},d.data()));});renderErrorReports();updateBadges();},function(){});
+  FB.onSnapshot(FB.collection(FB.db,'vehicleDocVerifications'),function(s){allDocReviews=[];s.forEach(function(d){allDocReviews.push(Object.assign({id:d.id},d.data()));});renderDocReview();updateBadges();},function(){});
+  FB.onSnapshot(FB.collection(FB.db,'paymentProofs'),function(s){allPaymentProofs=[];s.forEach(function(d){allPaymentProofs.push(Object.assign({id:d.id},d.data()));});renderPayments();updateBadges();},function(){});
+  FB.onSnapshot(FB.collection(FB.db,'dataRequests'),function(s){allDataRequests=[];s.forEach(function(d){allDataRequests.push(Object.assign({id:d.id},d.data()));});renderDataRequests();updateBadges();},function(e){toast('⚠️ Data requests: '+e.message);});
 }
 
 /* ── BADGES ── */
@@ -1203,6 +1642,27 @@ function updateBadges(){
   var dd=$('badge-disputes');if(dd){dd.textContent=openD;dd.classList.toggle('show',openD>0);}
   var openE=allErrorReports.filter(function(e){return !e.resolved;}).length;
   var ed=$('badge-errors');if(ed){ed.textContent=openE;ed.classList.toggle('show',openE>0);}
+  var openDocs=allDocReviews.filter(function(v){return v.verification_status==='manual_review'||v.verification_status==='rejected';}).length;
+  var bdi=$('badge-docreview-inline');if(bdi){bdi.textContent=openDocs;bdi.style.display=openDocs>0?'inline-block':'none';}
+  var pp=allPaymentProofs.filter(function(p){return p.status==='pending';}).length;
+  var bp=$('badge-payments');if(bp){bp.textContent=pp;bp.classList.toggle('show',pp>0);}
+  var dq=allDataRequests.filter(function(r){return r.status==='pending';}).length;
+  var bq=$('badge-datareq');if(bq){bq.textContent=dq;bq.classList.toggle('show',dq>0);}
+}
+
+/* ── BILLING HELPERS (monthly driver subscription, 3-month free trial, no commission) ── */
+/* SUBSCRIPTION PRICE — the ONE place to change the monthly driver price */
+var SUB_PRICE=300;
+function _tcApplySubPrice(){var els=document.querySelectorAll('.tc-sub-price');for(var i=0;i<els.length;i++)els[i].textContent='R'+SUB_PRICE;}
+_tcApplySubPrice();document.addEventListener('DOMContentLoaded',_tcApplySubPrice);
+function _tcPaid(){return allDrivers.filter(function(d){return d.subscriptionStatus==='active'&&d.paidUntil&&new Date(d.paidUntil).getTime()>Date.now();}).length;}
+function _tcTrial(){return allDrivers.filter(function(d){return d.trialStartDate&&!(d.paidUntil&&new Date(d.paidUntil).getTime()>Date.now())&&(Date.now()-new Date(d.trialStartDate).getTime())<90*86400000;}).length;}
+function _tcBillLabel(d){
+  var now=Date.now(),pu=d.paidUntil?new Date(d.paidUntil).getTime():0;
+  if(pu>now)return '💳 Paid until '+new Date(pu).toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+  if(!d.trialStartDate)return '⚪ No trial yet';
+  var left=90-Math.floor((now-new Date(d.trialStartDate).getTime())/86400000);
+  return left>0?'🆓 Trial · '+left+'d left':'⛔ Trial ended · unpaid';
 }
 
 /* ── DASHBOARD ── */
@@ -1210,10 +1670,10 @@ function updateDash(){
   var pending=allDrivers.filter(function(d){return d.status==='pending';});
   var approved=allDrivers.filter(function(d){return d.status==='approved';});
   var active=allBookings.filter(function(b){return b.ds==='in_progress';});
-  var basic=allDrivers.filter(function(d){return d.subscription==='basic';}).length;
-  var std=allDrivers.filter(function(d){return d.subscription==='standard';}).length;
-  var subRev=(basic*699)+(std*899);
-  var commRev=allBookings.reduce(function(s,b){return s+(b.priceNum||0)*0.2;},0);
+  var basic=_tcPaid();
+  var std=_tcTrial();
+  var subRev=(basic*SUB_PRICE);
+  var commRev=allBookings.reduce(function(s,b){return s+(b.priceNum||0)*0;},0);
   var total=subRev+commRev;
   txt('h-rev','R'+Math.round(total).toLocaleString());
   txt('h-subrev','R'+subRev.toLocaleString());
@@ -1228,7 +1688,17 @@ function updateDash(){
   txt('dash-date',new Date().toLocaleDateString('en-ZA',{weekday:'long',year:'numeric',month:'long',day:'numeric'}));
   renderPendingList(pending);
   renderRecentBookings();
-  buildBarChart('dash-chart',['Mon','Tue','Wed','Thu','Fri','Sat','Now'],[3,7,5,9,12,8,Math.max(allBookings.length,1)],'linear-gradient(180deg,rgba(37,99,235,.9),rgba(37,99,235,.25))','');
+  (function(){
+    var names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],labels=[],counts=[],now=new Date();
+    for(var k=6;k>=0;k--){var dd=new Date(now.getFullYear(),now.getMonth(),now.getDate()-k);labels.push(k===0?'Today':names[dd.getDay()]);counts.push(0);}
+    allBookings.forEach(function(b){
+      var t=new Date(b.created||b.createdAt||''); if(isNaN(t))return;
+      var diff=Math.round((new Date(now.getFullYear(),now.getMonth(),now.getDate())-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/86400000);
+      if(diff>=0&&diff<=6)counts[6-diff]++;
+    });
+    window._tcChart7={labels:labels,counts:counts};
+  })();
+  buildBarChart('dash-chart',window._tcChart7.labels,window._tcChart7.counts,'linear-gradient(180deg,rgba(37,99,235,.9),rgba(37,99,235,.25))','');
 }
 
 /* ── PENDING LIST ── */
@@ -1242,7 +1712,7 @@ function renderPendingList(pending){
     var row=make('div','li-row');
     var av=make('div','li-av');av.textContent=d.name?d.name[0].toUpperCase():'D';
     var inf=make('div','li-info');
-    inf.innerHTML='<div class="li-name">'+safe(d.name)+'</div><div class="li-meta">'+safe(d.email)+' · '+safe(d.truckType||d.truck||'—')+'</div>';
+    inf.innerHTML='<div class="li-name">'+safe(d.name)+'</div><div class="li-meta">'+safe(d.email)+' · '+safe(d.truckType||d.truck||'—')+(d.courierStatus==='unverified'?' · 🟠 Fragile Care to review':'')+'</div>';
     row.appendChild(av);row.appendChild(inf);item.appendChild(row);
     var acts=make('div','li-acts');
     acts.appendChild(mkBtn('✓ Approve','btn btn-approve',function(){approveDriver(uid_);}));
@@ -1287,7 +1757,7 @@ window.renderDrivers=function(){
     var row=make('div','li-row');
     var av=make('div',avCls);av.textContent=d.name?d.name[0].toUpperCase():'D';
     var inf=make('div','li-info');
-    inf.innerHTML='<div class="li-name">'+safe(d.name)+'</div><div class="li-meta">'+safe(d.email)+' · '+(d.subscription||'no plan')+(d.plate?' · '+safe(d.plate):'')+'</div>';
+    inf.innerHTML='<div class="li-name">'+safe(d.name)+'</div><div class="li-meta">'+safe(d.email)+' · '+_tcBillLabel(d)+(d.plate?' · '+safe(d.plate):'')+(d.courierStatus==='unverified'?' · 🟠 Fragile Care to review':'')+'</div>';
     var right=make('div','li-right');right.innerHTML=pillHtml(d.status||'pending');
     row.appendChild(av);row.appendChild(inf);row.appendChild(right);item.appendChild(row);
     var acts=make('div','li-acts');
@@ -1299,6 +1769,8 @@ window.renderDrivers=function(){
     }else if(d.status==='suspended'){
       acts.appendChild(mkBtn('▶ Reinstate','btn btn-reinstate',mkFn(reinstateDriver,uid_)));
     }
+    acts.appendChild(mkBtn('💳 Mark paid +30d','btn btn-view',mkFn(markDriverPaid,uid_)));
+    acts.appendChild(mkBtn('➕ Trial +30d','btn btn-view',mkFn(extendDriverTrial,uid_)));
     acts.appendChild(mkBtn('View','btn btn-view',mkFn(viewDriver,uid_)));
     acts.appendChild(mkBtn('💬 Chat','btn btn-chat',(function(u,n){return function(){openChat(u,n);};})(uid_,d.name)));
     item.appendChild(acts);w.appendChild(item);
@@ -1570,7 +2042,7 @@ window.sendBroadcast = async function(){
   var result = await _fcmBroadcast(title, body, notifTarget);
 
   // 2. Firestore broadcast (in-app real-time banner — always fires)
-  await _firestoreBroadcast(title, body, notifTarget);
+  var inApp = await _firestoreBroadcast(title, body, notifTarget);
 
   // 3. Log to Firestore history
   var FB=window._FB;
@@ -1581,12 +2053,15 @@ window.sendBroadcast = async function(){
     sentAt:new Date().toISOString(), sentBy:'admin'
   }).catch(function(){});
 
-  if(result.ok){
-    toast('✅ Push sent to '+result.recipients+' subscriber'+(result.recipients!==1?'s':'')+' + in-app broadcast done');
+  var _ia = inApp && inApp.ok;
+  if(!_ia){
+    toast('Could not save the in-app message: '+((inApp&&inApp.reason)||'unknown error')+(result.ok?' (the push was sent).':''),6000);
+  } else if(result.ok){
+    toast('Push sent to '+result.recipients+' subscriber'+(result.recipients!==1?'s':'')+' and the in-app message was saved.',5000);
   } else if(result.reason==='no_key'){
-    toast('ℹ️ In-app broadcast sent. Add Admin API Secret in Settings to enable push.');
+    toast('In-app message sent. Add the Admin API Secret in Settings to also send push.',5000);
   } else {
-    toast('⚠️ Push error: '+result.reason+' · In-app broadcast still sent.');
+    toast('Push error: '+result.reason+'. The in-app message was still sent.',6000);
   }
 
   if($('notif-title'))$('notif-title').value='';
@@ -1611,8 +2086,46 @@ function loadNotifHistory(){
 }
 
 /* ── APPROVE / REJECT / SUSPEND / REINSTATE ── */
-function approveDriver(uid_){
+function _tcTodayISO(){var t=new Date();return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);}
+function _tcExpTxt(v){if(!v)return '—';return String(v)+(String(v)<_tcTodayISO()?' 🔴 EXPIRED':'');}
+// Things an admin should look at before approving a driver
+function _tcApprovalIssues(d){
+  var out=[],t=_tcTodayISO();
+  if(!d.licensePhoto)out.push("Driver's licence photo missing");
+  if(d.needsPrdp!==false&&!d.prdpPhoto)out.push('PrDP photo missing');
+  if(d.needsPrdp===true&&!d.operatorCardPhoto)out.push('Operator card missing');
+  if(!d.discPhoto)out.push('Licence disc photo missing');
+  if(!d.selfiePhoto)out.push('Selfie missing');
+  if(!d.truckPhoto)out.push('Truck photo missing');
+  if(d.prdpExpiry&&String(d.prdpExpiry)<t)out.push('PrDP expired ('+d.prdpExpiry+')');
+  if(d.discExpiry&&String(d.discExpiry)<t)out.push('Licence disc expired ('+d.discExpiry+')');
+  var sc=d.docScans||{};
+  ['licence','prdp','disc'].forEach(function(k){
+    var r=sc[k];if(!r)return;
+    if(r.status==='expired')out.push(k+' scan says EXPIRED');
+    else if(r.needs_review)out.push(k+' scan needs manual review');
+    var ck=r.checks||{};Object.keys(ck).forEach(function(c){if(ck[c]===false)out.push(k+': '+c.replace(/_/g,' ')+' does not match');});
+  });
+  if(d.discVerification&&d.discVerification.status&&d.discVerification.status!=='verified')out.push('Licence disc not auto-verified ('+d.discVerification.status+')');
+  return out;
+}
+function _tcApproveWarn(uid_,d,issues){
+  openModal(function(m){
+    m.innerHTML+='<div class="modal-title">⚠️ Check before approving</div><div class="modal-sub">'+safe(d.name||'This driver')+' has open issues:</div>';
+    issues.forEach(function(t){m.innerHTML+='<div class="mrow"><span class="mkey">•</span><span class="mval">'+safe(t)+'</span></div>';});
+    var acts=make('div','modal-actions');
+    acts.appendChild(mkMbtn('Cancel','mbtn mbtn-close',window._closeModal));
+    acts.appendChild(mkMbtn('Approve anyway','mbtn mbtn-approve',function(){window._closeModal();approveDriver(uid_,true);}));
+    m.appendChild(acts);
+  });
+}
+function approveDriver(uid_,force){
   var FB=window._FB;if(!FB)return;
+  if(!force){
+    var _d=allDrivers.find(function(x){return uid(x)===uid_;});
+    var _iss=_d?_tcApprovalIssues(_d):[];
+    if(_iss.length){_tcApproveWarn(uid_,_d,_iss);return;}
+  }
   FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{status:'approved'}).then(function(){
     toast('✅ Driver approved');
     var d=allDrivers.find(function(x){return uid(x)===uid_;});
@@ -1645,6 +2158,94 @@ function reinstateDriver(uid_){
   }).catch(function(e){toast('Error: '+e.message);});
 }
 
+/* ── BILLING ACTIONS ── */
+/* -- EFT PAYMENT PROOFS -- */
+function renderPayments(){
+  var w=$('payments-list');if(!w)return;
+  var pend=allPaymentProofs.filter(function(p){return p.status==='pending';}).sort(function(a,b){return(a.createdAt||'')>(b.createdAt||'')?1:-1;});
+  var done=allPaymentProofs.filter(function(p){return p.status!=='pending';}).sort(function(a,b){return(b.reviewedAt||b.createdAt||'')>(a.reviewedAt||a.createdAt||'')?1:-1;}).slice(0,15);
+  if(!pend.length&&!done.length){w.innerHTML='<div class="empty"><div class="empty-ico">\U0001F4B3</div><div class="empty-txt">No payment proofs yet.</div></div>';return;}
+  w.innerHTML='';
+  function row(p,isPending){
+    var d=allDrivers.find(function(x){return uid(x)===p.id;})||{};
+    var item=make('div','li'),r=make('div','li-row'),inf=make('div','li-info'),right=make('div','li-right');
+    inf.innerHTML='<div class="li-name">'+safe(p.name||d.name)+'</div><div class="li-meta">'+safe(p.phone||d.phone)+' \u00b7 '+tAgo(p.createdAt)+'</div>'+
+      '<div class="li-meta">'+(d.id||d.uid?_tcBillLabel(d):'')+'</div>'+
+      (p.status==='rejected'&&p.reason?'<div class="li-meta">Reason: '+safe(p.reason)+'</div>':'');
+    right.innerHTML='<span class="pill '+(p.status==='approved'?'p-approved':p.status==='rejected'?'p-rejected':'p-pending')+'">'+safe(String(p.status||'').toUpperCase())+'</span>';
+    r.appendChild(inf);r.appendChild(right);item.appendChild(r);
+    var acts=make('div','li-acts');
+    acts.appendChild(mkBtn('\U0001F50D View proof','btn btn-view',mkFn(viewPaymentProof,p.id)));
+    if(isPending){
+      acts.appendChild(mkBtn('\u2705 Approve +30d','btn btn-approve',mkFn(approvePayment,p.id)));
+      acts.appendChild(mkBtn('\u274C Reject','btn btn-reject',mkFn(rejectPayment,p.id)));
+    }
+    item.appendChild(acts);w.appendChild(item);
+  }
+  if(pend.length){var h=make('div','');h.style.cssText='font-weight:700;margin:4px 0 8px;';h.textContent='Waiting for you ('+pend.length+')';w.appendChild(h);pend.forEach(function(p){row(p,true);});}
+  if(done.length){var h2=make('div','');h2.style.cssText='font-weight:700;margin:16px 0 8px;color:var(--muted2);';h2.textContent='Recently reviewed';w.appendChild(h2);done.forEach(function(p){row(p,false);});}
+}
+function viewPaymentProof(uid_){
+  var p=allPaymentProofs.find(function(x){return x.id===uid_;});if(!p||!p.imageData){toast('No image found');return;}
+  var FB=window._FB;if(!FB)return;
+  Promise.resolve(p.imageData).then(function(url){
+    openModal(function(m){
+      var isPdf=/\.pdf$/i.test(p.path)||p.contentType==='application/pdf';
+      m.innerHTML+='<div class="modal-title">Proof of payment</div><div class="modal-sub">'+safe(p.name)+' \u00b7 '+tAgo(p.createdAt)+'</div>';
+      var box=make('div','');box.style.cssText='text-align:center;margin:12px 0;';
+      if(isPdf){var a=make('a','btn btn-view');a.href=url;a.target='_blank';a.rel='noopener';a.textContent='Open PDF';box.appendChild(a);}
+      else{var im=make('img','');im.src=url;im.alt='Proof of payment';im.style.cssText='max-width:100%;max-height:60vh;border-radius:10px;';box.appendChild(im);}
+      m.appendChild(box);
+      m.appendChild(mkBtn('Close','btn btn-view',function(){window._closeModal();}));
+    });
+  }).catch(function(e){toast('Could not load proof: '+e.message);});
+}
+function approvePayment(uid_){
+  var d=allDrivers.find(function(x){return uid(x)===uid_;});if(!d){toast('Driver not found');return;}
+  if(!confirm('Approve payment for '+(d.name||'this driver')+'?\n\nOnly approve after you have seen the money in your bank. This adds 30 days.'))return;
+  var FB=window._FB;if(!FB)return;
+  var now=new Date().toISOString();
+  var base=Math.max(Date.now(),d.paidUntil?new Date(d.paidUntil).getTime():0);
+  FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{paidUntil:new Date(base+30*86400000).toISOString(),subscriptionStatus:'active',subscription:'paid',lastPaymentMethod:'eft',lastPaymentAt:now}).then(function(){
+    return FB.updateDoc(FB.doc(FB.db,'paymentProofs',uid_),{status:'approved',reviewedAt:now,reason:''});
+  }).then(function(){
+    toast('\u2705 Approved \u2014 30 days added');
+    if(d.fcmToken&&typeof sendFCM==='function')sendFCM(d.fcmToken,'Payment received','Your TruckConnect subscription is active. Thank you!');
+  }).catch(function(e){toast('Error: '+e.message);});
+}
+function rejectPayment(uid_){
+  var d=allDrivers.find(function(x){return uid(x)===uid_;})||{};
+  var reason=prompt('Reason for rejecting (the driver will see this):','We could not find your payment. Please check and upload again.');
+  if(reason===null)return;
+  var FB=window._FB;if(!FB)return;
+  FB.updateDoc(FB.doc(FB.db,'paymentProofs',uid_),{status:'rejected',reviewedAt:new Date().toISOString(),reason:reason||'Please upload again.'}).then(function(){
+    toast('Rejected');
+    if(d.fcmToken&&typeof sendFCM==='function')sendFCM(d.fcmToken,'Payment not confirmed',reason||'Please upload your proof of payment again.');
+  }).catch(function(e){toast('Error: '+e.message);});
+}
+
+function markDriverPaid(uid_){
+  var d=allDrivers.find(function(x){return uid(x)===uid_;});if(!d)return;
+  if(!confirm('Mark '+(d.name||'this driver')+' as paid for 30 more days?'))return;
+  var FB=window._FB;if(!FB)return;
+  var base=Math.max(Date.now(),d.paidUntil?new Date(d.paidUntil).getTime():0);
+  FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{paidUntil:new Date(base+30*86400000).toISOString(),subscriptionStatus:'active',subscription:'paid',lastPaymentMethod:'manual',lastPaymentAt:new Date().toISOString()}).then(function(){
+    toast('💳 Marked paid +30 days');
+    if(d.fcmToken)sendFCM(d.fcmToken,'Payment received','Your TruckConnect subscription is active. Thank you!');
+  }).catch(function(e){toast('Error: '+e.message);});
+}
+function extendDriverTrial(uid_){
+  var d=allDrivers.find(function(x){return uid(x)===uid_;});if(!d)return;
+  if(!d.trialStartDate){toast('This driver has not started a trial yet');return;}
+  if(!confirm('Give '+(d.name||'this driver')+' 30 more trial days?'))return;
+  var FB=window._FB;if(!FB)return;
+  var left=Math.max(0,90-Math.floor((Date.now()-new Date(d.trialStartDate).getTime())/86400000));
+  var remaining=Math.min(90,left+30);
+  FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{trialStartDate:new Date(Date.now()-(90-remaining)*86400000).toISOString(),subscription:'trial'}).then(function(){
+    toast('➕ Trial extended — '+remaining+' days left');
+  }).catch(function(e){toast('Error: '+e.message);});
+}
+
 /* ── VIEW DRIVER ── */
 function viewDriver(uid_){
   var d=allDrivers.find(function(x){return uid(x)===uid_;});if(!d)return;
@@ -1655,7 +2256,7 @@ function buildDriverModal(uid_,d){
   var m=$('modal');m.innerHTML='<div class="modal-handle"></div>';
   m.innerHTML+='<div class="modal-title">'+safe(d.name)+'</div>';
   m.innerHTML+='<div class="modal-sub">Driver Profile &nbsp;'+pillHtml(d.status||'pending')+'</div>';
-  var rows=[['Email',d.email],['Phone',d.phone],['SA ID',d.idNumber||'—'],['Truck',d.truck],['Type',d.truckType],['Plate',d.plate],['Province',d.province],['Bank',d.bank||'—'],['Account Holder',d.accountHolder||'—'],['Account No.',d.accountNumber||'—'],['Account Type',d.accountType||'—'],['Branch Code',d.branchCode||'—'],['Plan',d.subscription||'None'],['Status',d.status],['Applied',d.applied]];
+  var rows=[['Email',d.email],['Phone',d.phone],['SA ID',d.idNumber||'—'],['Truck',d.truck],['Type',d.truckType],['Plate',d.plate],['Payload',d.payloadCapacity?d.payloadCapacity+' ton':'—'],['Licence code',d.licenseCode||'—'],['PrDP expiry',_tcExpTxt(d.prdpExpiry)],['Disc expiry',_tcExpTxt(d.discExpiry)],['Province',d.province],['Bank',d.bank||'—'],['Account Holder',d.accountHolder||'—'],['Account No.',d.accountNumber||'—'],['Account Type',d.accountType||'—'],['Branch Code',d.branchCode||'—'],['Plan',d.subscription||'None'],['Status',d.status],['Applied',d.applied]];
   rows.forEach(function(r){m.innerHTML+='<div class="mrow"><span class="mkey">'+r[0]+'</span><span class="mval">'+safe(r[1])+'</span></div>';});
 
   // doc images
@@ -1670,14 +2271,87 @@ function buildDriverModal(uid_,d){
     else{html+='<img src="'+src+'" style="width:100%;max-height:170px;object-fit:contain;border-radius:10px;border:1px solid var(--border);background:var(--bg3);" onerror="this.parentElement.innerHTML=\'<div style=\'text-align:center;color:var(--muted);padding:20px;\'>Image unavailable</div>\'"/>';}
     html+='</div>';return html;
   }
-  m.innerHTML+=docBlock('PRDP / Licence',d.prdpPhoto||null);
-  m.innerHTML+=docBlock('Licence Disc',d.discPhoto||null);
+  // Licence, PrDP and bank proof are private Firebase Storage paths: each needs a download URL.
+  var _tcPathDocs=[];
+  function pathDocBlock(label,key,src){
+    var lbl='<div style="font-size:9px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">'+label+'</div>';
+    if(src&&String(src).indexOf('driver-docs/')===0){
+      var wid='dw-'+key+'-'+uid_;
+      _tcPathDocs.push({id:wid,path:src});
+      return '<div style="margin-bottom:12px;">'+lbl+'<div id="'+wid+'" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;font-size:12px;color:var(--muted);">Loading…</div></div>';
+    }
+    if(src&&String(src).indexOf('uploaded:')===0){
+      return '<div style="margin-bottom:12px;">'+lbl+'<div style="background:var(--bg3);border:1px dashed var(--border);border-radius:10px;padding:14px;text-align:center;font-size:12px;color:var(--muted);">Only the file name was saved (old app version): '+safe(String(src).slice(9))+'</div></div>';
+    }
+    return docBlock(label,src||null);
+  }
+  function scanBlock(label,sc){
+    if(!sc)return '';
+    var col=sc.status==='valid'?'#4ade80':sc.status==='expired'?'#f87171':'#fbbf24';
+    var t=sc.status==='valid'?'VALID':sc.status==='expired'?'EXPIRED':'UNABLE TO VERIFY';
+    var h='<div class="mrow"><span class="mkey">'+label+'</span><span class="mval" style="color:'+col+';">'+t+(sc.expiry_date?' · exp '+safe(sc.expiry_date):'')+(sc.needs_review?' · needs review':'')+'</span></div>';
+    (sc.flags||[]).forEach(function(f){h+='<div class="mrow"><span class="mkey">⚠️</span><span class="mval">'+safe(f)+'</span></div>';});
+    var ck=sc.checks||{};
+    Object.keys(ck).forEach(function(k){ if(ck[k]===false)h+='<div class="mrow"><span class="mkey">'+safe(k.replace(/_/g,' '))+'</span><span class="mval" style="color:#f87171;">🔴 MISMATCH</span></div>'; });
+    return h;
+  }
+  m.innerHTML+=pathDocBlock("DRIVER'S LICENCE",'lic',d.licensePhoto);
+  m.innerHTML+=pathDocBlock('PRDP PERMIT','prdp',d.prdpPhoto);
+  if(d.operatorCardPhoto)m.innerHTML+=pathDocBlock('OPERATOR CARD','opcard',d.operatorCardPhoto);
+  m.innerHTML+=pathDocBlock('BANK PROOF','bank',d.bankProofPhoto);
+  if(d.docScans&&(d.docScans.licence||d.docScans.prdp||d.docScans.disc)){
+    m.innerHTML+='<div class="msec-lbl">Document Scan Results</div>';
+    m.innerHTML+=scanBlock("Driver's licence",d.docScans.licence);
+    m.innerHTML+=scanBlock('PrDP permit',d.docScans.prdp);
+    m.innerHTML+=scanBlock('Licence disc',d.docScans.disc);
+    m.innerHTML+='<div class="mrow"><span class="mkey">Note</span><span class="mval">Automated reading only. It does not prove a document is genuine. Check the photos yourself.</span></div>';
+  }
+
+  // Licence disc — stored as a private Firebase Storage path, so resolve a download URL
+  m.innerHTML+='<div style="margin-bottom:12px;"><div style="font-size:9px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">LICENCE DISC</div><div id="disc-img-wrap-'+uid_+'" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;font-size:12px;color:var(--muted);">'+(d.discPhoto?'Loading…':'Not uploaded')+'</div></div>';
+
+  // Vehicle Documents — AI verification result
+  if(d.discVerification){
+    var v=d.discVerification, ed=v.extracted_data||{}, vc=v.verification_checks||{};
+    function matchRow(label,val,match){
+      if(val==null||val==='')return '';
+      var badge=match===true?'🟢 MATCH':match===false?'🟡 MISMATCH':'—';
+      return '<div class="mrow"><span class="mkey">'+label+'</span><span class="mval">'+safe(val)+' '+badge+'</span></div>';
+    }
+    var statusBadge=v.status==='verified'?'🟢 Verified':v.status==='manual_review'?'🟡 Manual Review':'🔴 Rejected';
+    m.innerHTML+='<div class="msec-lbl">Vehicle Documents — AI Verification</div>';
+    m.innerHTML+='<div class="mrow"><span class="mkey">Result</span><span class="mval">'+statusBadge+'</span></div>';
+    m.innerHTML+=matchRow('Registration',ed.registration_number,vc.registration_match);
+    m.innerHTML+=matchRow('VIN',ed.vin_number,vc.vin_match);
+    m.innerHTML+=matchRow('Engine Number',ed.engine_number,vc.engine_match);
+    m.innerHTML+=matchRow('Vehicle Make',ed.vehicle_make,vc.vehicle_make_match);
+    if(ed.expiry_date)m.innerHTML+='<div class="mrow"><span class="mkey">Expiry Date</span><span class="mval">'+safe(ed.expiry_date)+' '+(vc.expiry_valid?'🟢 VALID':'🔴 EXPIRED')+'</span></div>';
+    if(v.confidence_score!=null)m.innerHTML+='<div class="mrow"><span class="mkey">AI Confidence</span><span class="mval">'+Math.round(v.confidence_score*100)+'%</span></div>';
+    m.innerHTML+='<div class="mrow"><span class="mkey">Document Manipulation</span><span class="mval">'+(vc.possible_manipulation==='unknown'?'Could not be confirmed':vc.possible_manipulation?'⚠️ Suspicious signal detected':'No suspicious signal detected')+'</span></div>';
+    if(v.review_reason)m.innerHTML+='<div class="mrow"><span class="mkey">Review Reason</span><span class="mval">'+safe(v.review_reason)+'</span></div>';
+  }
+
+  // Fragile Care vehicle review
+  if(d.courierVehicle){
+    var cvLbl=d.courierVehicle==='van'?'Panel van / minivan with no seats':'Closed bakkie';
+    var cvSt=d.courierStatus||'approved';
+    var cvTxt=cvSt==='approved'?'🟢 Approved':cvSt==='rejected'?'🔴 Rejected':'🟠 Waiting for review';
+    m.innerHTML+='<div class="msec-lbl">Fragile Care vehicle</div>';
+    m.innerHTML+='<div class="mrow"><span class="mkey">Vehicle</span><span class="mval">'+cvLbl+'</span></div>';
+    m.innerHTML+='<div class="mrow"><span class="mkey">Status</span><span class="mval">'+cvTxt+'</span></div>';
+    m.innerHTML+='<div class="mrow"><span class="mkey">Check</span><span class="mval">Vehicle is closed, any make, no seats in the load area. Fragile goods and small furniture only. No letters or documents.</span></div>';
+    var cva=make('div','modal-actions');
+    function setCv(st){FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{courierStatus:st,courierReviewedAt:new Date().toISOString()}).then(function(){toast('Fragile Care '+st);window._closeModal();}).catch(function(e){toast('Error: '+e.message);});}
+    if(cvSt!=='approved')cva.appendChild(mkMbtn('✓ Approve Fragile Care','mbtn mbtn-approve',function(){setCv('approved');}));
+    if(cvSt!=='rejected')cva.appendChild(mkMbtn('✕ Reject Fragile Care','mbtn mbtn-reject',function(){setCv('rejected');}));
+    m.appendChild(cva);
+  }
 
   var acts=make('div','modal-actions');
   acts.appendChild(mkMbtn('Close','mbtn mbtn-close',window._closeModal));
   acts.appendChild(mkMbtn('📨 Message','mbtn',function(){window._closeModal();openMessageDriverForm(uid_,d.name);}));
   if(d.status==='pending'){
-    acts.appendChild(mkMbtn('✓ Approve','mbtn mbtn-approve',function(){approveDriver(uid_);window._closeModal();}));
+    acts.appendChild(mkMbtn('✓ Approve','mbtn mbtn-approve',function(){window._closeModal();approveDriver(uid_);}));
     acts.appendChild(mkMbtn('✕ Reject','mbtn mbtn-reject',function(){rejectDriver(uid_);window._closeModal();}));
   }else if(d.status==='approved'){
     acts.appendChild(mkMbtn('⏸ Suspend','mbtn mbtn-suspend',function(){suspendDriver(uid_);window._closeModal();}));
@@ -1685,6 +2359,23 @@ function buildDriverModal(uid_,d){
     acts.appendChild(mkMbtn('▶ Reinstate','mbtn mbtn-approve',function(){reinstateDriver(uid_);window._closeModal();}));
   }
   m.appendChild(acts);
+
+  _tcPathDocs.forEach(function(x){
+    var FB2=window._FB, w=$(x.id); if(!FB2||!w)return;
+    FB2.getDownloadURL(FB2.storageRef(FB2.storage,x.path)).then(function(url){
+      if(/\.pdf$/i.test(x.path)) w.innerHTML='<a href="'+url+'" target="_blank" style="color:#60a5fa;">📄 Open PDF</a>';
+      else w.innerHTML='<a href="'+url+'" target="_blank"><img src="'+url+'" style="width:100%;max-height:220px;object-fit:contain;border-radius:6px;"/></a>';
+    }).catch(function(){w.textContent='Image unavailable';});
+  });
+  // Resolve the licence disc image now that the wrapper element exists in the DOM
+  if(d.discPhoto){
+    var FB=window._FB, wrap=$('disc-img-wrap-'+uid_);
+    if(FB&&wrap){
+      FB.getDownloadURL(FB.storageRef(FB.storage,d.discPhoto)).then(function(url){
+        wrap.innerHTML='<img src="'+url+'" style="width:100%;max-height:170px;object-fit:contain;border-radius:6px;" onerror="this.parentElement.textContent=\'Image unavailable\'"/>';
+      }).catch(function(){wrap.textContent='Image unavailable';});
+    }
+  }
 }
 
 /* ── CHAT ── */
@@ -1697,12 +2388,17 @@ function openChat(uid_,name){
   if(chatUnsub){chatUnsub();chatUnsub=null;}
   var FB=window._FB;if(!FB||!uid_)return;
   var chatId='admin_'+uid_;
+  var _cw=$('chat-msgs');if(_cw){_cw._seen=false;_cw.innerHTML='';}
   chatUnsub=FB.onSnapshot(
-    FB.query(FB.collection(FB.db,'chats',chatId,'messages'),FB.orderBy('at','asc')),
+    FB.collection(FB.db,'chats',chatId,'messages'),{includeMetadataChanges:true},
     function(snap){
-      var msgs=[];snap.forEach(function(d){msgs.push(Object.assign({id:d.id},d.data()));});
+      if(chatUid!==uid_)return;
+      var msgs=[];snap.forEach(function(d){
+        var m;try{m=d.data({serverTimestamps:'estimate'});}catch(e){m=d.data();}
+        msgs.push(Object.assign({id:d.id,_pending:!!(d.metadata&&d.metadata.hasPendingWrites)},m));
+      });
       renderMsgs(msgs);
-    },function(){}
+    },function(e){console.warn('[TC] Chat listener err:',e);}
   );
 }
 
@@ -1712,17 +2408,50 @@ window.closeChatConv=function(){
   if(cv)cv.style.display='none';if(lv)lv.style.display='block';
 };
 
+function chatMs(m){
+  var ks=['ts','tsMs','at','createdAt','time','timestamp','sentAt'],v=null,i;
+  for(i=0;i<ks.length;i++){if(m[ks[i]]!==undefined&&m[ks[i]]!==null){v=m[ks[i]];break;}}
+  if(v===null)return null;
+  if(typeof v==='object'){
+    if(typeof v.toMillis==='function')return v.toMillis();
+    if(typeof v.seconds==='number')return v.seconds*1000;
+    if(v instanceof Date)return v.getTime();
+    return null;
+  }
+  if(typeof v==='number')return v<1e11?v*1000:v;
+  var n=Date.parse(v);if(!isNaN(n))return n;
+  var f=parseFloat(v);return isNaN(f)?null:(f<1e11?f*1000:f);
+}
+function chatDayLabel(t){
+  var d=new Date(t),now=new Date(),y=new Date(Date.now()-864e5);
+  if(d.toDateString()===now.toDateString())return 'Today';
+  if(d.toDateString()===y.toDateString())return 'Yesterday';
+  return d.toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'});
+}
 function renderMsgs(msgs){
   var w=$('chat-msgs');if(!w)return;
+  msgs=msgs.filter(function(m){return String(m.text||m.message||'').trim();});
   if(!msgs.length){w.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">No messages yet.</div>';return;}
+  msgs.forEach(function(m){var t=chatMs(m);m._ms=(t===null)?(m._pending?Date.now():0):t;});
+  msgs.sort(function(a,b){return (a._ms-b._ms)||(a.id<b.id?-1:a.id>b.id?1:0);});
+  var nearBottom=(w.scrollHeight-w.scrollTop-w.clientHeight)<120;
+  var first=!w._seen;w._seen=true;
   w.innerHTML='';
+  var lastDay='';
   msgs.forEach(function(m){
-    var isMe=m.from==='admin';
+    var day=m._ms?new Date(m._ms).toDateString():'';
+    if(day&&day!==lastDay){
+      var dv=make('div','');dv.style.cssText='align-self:center;font-size:10px;font-weight:700;color:var(--muted);background:rgba(127,127,127,.14);border-radius:10px;padding:3px 10px;margin:6px 0 2px;';
+      dv.textContent=chatDayLabel(m._ms);w.appendChild(dv);lastDay=day;
+    }
+    var isMe=m.from==='admin'||m.senderRole==='admin';
+    var who=isMe?'You':(m.senderName||(m.senderRole==='driver'?'Driver':m.senderRole==='customer'?'Customer':chatName||'User'));
+    var time=m._ms?new Date(m._ms).toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'}):'';
     var b=make('div','chat-bubble '+(isMe?'me':'them'));
-    b.innerHTML=safe(m.text)+'<div class="chat-time">'+(isMe?'You':'Driver/Customer')+' · '+tAgo(m.at)+'</div>';
+    b.innerHTML=safe(m.text||m.message)+'<div class="chat-time">'+safe(who)+' \u00b7 '+time+'</div>';
     w.appendChild(b);
   });
-  w.scrollTop=w.scrollHeight;
+  if(first||nearBottom){w.scrollTop=w.scrollHeight;requestAnimationFrame(function(){w.scrollTop=w.scrollHeight;});}
 }
 
 window.sendMsg=function(){
@@ -1730,7 +2459,7 @@ window.sendMsg=function(){
   var text=inp.value.trim();inp.value='';
   var FB=window._FB;if(!FB)return;
   var chatId='admin_'+chatUid;
-  FB.addDoc(FB.collection(FB.db,'chats',chatId,'messages'),{text:text,from:'admin',at:new Date().toISOString()}).catch(function(e){console.error('[TC] Chat send failed. code:',e&&e.code,'message:',e&&e.message);toast('Failed to send: '+(e&&e.code||'unknown error'));});
+  FB.addDoc(FB.collection(FB.db,'chats',chatId,'messages'),{text:text,from:'admin',senderRole:'admin',senderName:'TruckConnect Support',at:new Date().toISOString(),ts:new Date().toISOString(),tsMs:Date.now()}).catch(function(e){console.error('[TC] Chat send failed. code:',e&&e.code,'message:',e&&e.message);toast('Failed to send: '+(e&&e.code||'unknown error'));});
 };
 
 window.renderChatList=function(){
@@ -1787,6 +2516,8 @@ window.renderVehicles=function(){
 
 /* ── RATINGS ── */
 function renderRatings(){
+  // Customer star ratings live on the booking (customerRating), so build the list from bookings
+  allRatings=allBookings.filter(function(b){return b.customerRating;}).map(function(b){return {id:b.id,driverId:b.driverUid||b.driverId||'unknown',driverName:b.driverName||'Unknown',rating:b.customerRating,comment:b.customerComment||''};});
   // Build driver rating map
   var drMap={};
   allRatings.forEach(function(r){
@@ -1897,6 +2628,87 @@ function deleteErrorReport(id){
   var FB=window._FB;if(!FB)return;
   if(!confirm('Delete this error report?'))return;
   FB.deleteDoc(FB.doc(FB.db,'errorReports',id)).then(function(){toast('Deleted');}).catch(function(e){toast('Error: '+e.message);});
+}
+
+/* ══════════ VEHICLE DOCUMENT REVIEW QUEUE ══════════ */
+function renderDocReview(){
+  var w=$('docreview-list');if(!w)return;
+  var list=allDocReviews.filter(function(v){return v.verification_status==='manual_review'||v.verification_status==='rejected';})
+    .sort(function(a,b){return(b.created_at||'')>(a.created_at||'')?1:-1;});
+  if(!list.length){w.innerHTML='<div class="empty"><div class="empty-ico">✅</div><div class="empty-txt">Nothing needs review right now.</div></div>';return;}
+  w.innerHTML='';
+  list.forEach(function(v){
+    var driver=allDrivers.find(function(d){return uid(d)===v.driver_id;});
+    var name=driver?driver.name:'Unknown driver';
+    var ed=v.extracted_data||{};
+    var isHighPriority=v.verification_status==='rejected';
+    var item=make('div','li');
+    var row=make('div','li-row');
+    var av=make('div','li-av');av.style.fontSize='16px';av.style.background='none';av.textContent=isHighPriority?'🔴':'🟡';
+    var inf=make('div','li-info');
+    inf.innerHTML='<div class="li-name">'+(isHighPriority?'🔴 HIGH PRIORITY — ':'')+safe(name)+'</div>'+
+      '<div class="li-meta">Reg: '+safe(ed.registration_number||'—')+' · '+safe(ed.vehicle_make||'—')+' · '+tAgo(v.created_at)+'</div>'+
+      '<div class="li-meta" style="color:var(--muted2);">'+safe(v.review_reason||'Needs manual review')+(v.confidence_score!=null?' · AI confidence '+Math.round(v.confidence_score*100)+'%':'')+'</div>';
+    var right=make('div','li-right');right.innerHTML=pillHtml(v.verification_status);
+    row.appendChild(av);row.appendChild(inf);row.appendChild(right);item.appendChild(row);
+    var acts=make('div','li-acts');
+    acts.appendChild(mkBtn('✓ Approve','btn btn-approve',(function(vv){return function(){_docReviewDecide(vv,'approved');};})(v)));
+    acts.appendChild(mkBtn('✕ Reject','btn btn-reject',(function(vv){return function(){_docReviewDecide(vv,'rejected');};})(v)));
+    acts.appendChild(mkBtn('📷 Request New Photo','btn btn-suspend',(function(vv){return function(){_docReviewRequestPhoto(vv);};})(v)));
+    acts.appendChild(mkBtn('View Document','btn btn-view',(function(vv,dd){return function(){viewDocReviewImage(vv,dd);};})(v,driver)));
+    item.appendChild(acts);w.appendChild(item);
+  });
+}
+
+function _docReviewDecide(v,decision){
+  var FB=window._FB;if(!FB)return;
+  var newStatus=decision==='approved'?'verified':'rejected';
+  FB.updateDoc(FB.doc(FB.db,'vehicleDocVerifications',v.id),{
+    verification_status:newStatus,
+    review_required:false,
+    reviewed_by:(FB.auth.currentUser&&FB.auth.currentUser.email)||'admin',
+    reviewed_at:new Date().toISOString(),
+    updated_at:new Date().toISOString()
+  }).then(function(){
+    // Mirror the decision onto the driver's own record too, so it shows correctly in their profile
+    if(v.driver_id){
+      FB.updateDoc(FB.doc(FB.db,'drivers',v.driver_id),{
+        'discVerification.status':newStatus,
+        'discVerification.review_required':false
+      }).catch(function(){});
+    }
+    toast(decision==='approved'?'✓ Document approved':'✕ Document rejected');
+  }).catch(function(e){toast('Error: '+e.message);});
+}
+
+function _docReviewRequestPhoto(v){
+  var FB=window._FB;if(!FB||!v.driver_id)return;
+  if(!confirm('Ask this driver to re-upload their licence disc photo?'))return;
+  FB.updateDoc(FB.doc(FB.db,'vehicleDocVerifications',v.id),{
+    verification_status:'manual_review',
+    review_reason:'Admin requested a new photo',
+    updated_at:new Date().toISOString()
+  }).catch(function(){});
+  FB.addDoc(FB.collection(FB.db,'chats','admin_'+v.driver_id,'messages'),{
+    text:'📷 Please re-upload a clearer photo of your vehicle licence disc — we could not confirm the details on the one you sent.',
+    from:'admin',senderRole:'admin',senderName:'TruckConnect Support',at:new Date().toISOString(),ts:new Date().toISOString(),tsMs:Date.now()
+  }).then(function(){toast('Request sent to driver');}).catch(function(e){toast('Error: '+e.message);});
+}
+
+function viewDocReviewImage(v,driver){
+  openModal(function(m){
+    m.innerHTML+='<div class="modal-title">Vehicle Licence Disc</div>';
+    m.innerHTML+='<div class="modal-sub">'+safe(driver?driver.name:'Unknown driver')+'</div>';
+    m.innerHTML+='<div id="docreview-img-wrap" style="text-align:center;padding:20px;color:var(--muted);">Loading image…</div>';
+  });
+  var FB=window._FB;
+  if(!FB||!v.storage_path){var w=$('docreview-img-wrap');if(w)w.innerHTML='No document image on file.';return;}
+  FB.getDownloadURL(FB.storageRef(FB.storage,v.storage_path)).then(function(url){
+    var w=$('docreview-img-wrap');if(!w)return;
+    w.innerHTML='<img src="'+url+'" style="max-width:100%;max-height:60vh;border-radius:10px;border:1px solid var(--border);"/>';
+  }).catch(function(){
+    var w=$('docreview-img-wrap');if(w)w.innerHTML='Image unavailable.';
+  });
 }
 function showErrorReport(e){
   openModal(function(m){
@@ -2023,10 +2835,10 @@ function renderAnalytics(){
   var totalFare=allBookings.filter(function(b){return b.ds==='completed';}).reduce(function(s,b){return s+(b.priceNum||0);},0);
   var avgEl=document.getElementById('an-avg-fare');if(avgEl)avgEl.textContent='R'+(done?Math.round(totalFare/done):0).toLocaleString();
   var canEl=document.getElementById('an-cancel-rate');if(canEl)canEl.textContent=total?Math.round(cancelled/total*100)+'%':'0%';
-  var basic=allDrivers.filter(function(d){return d.subscription==='basic';}).length;
-  var std=allDrivers.filter(function(d){return d.subscription==='standard';}).length;
-  var sub=(basic*699)+(std*899);
-  var comm=allBookings.reduce(function(s,b){return s+(b.priceNum||0)*0.2;},0);
+  var basic=_tcPaid();
+  var std=_tcTrial();
+  var sub=(basic*SUB_PRICE);
+  var comm=allBookings.reduce(function(s,b){return s+(b.priceNum||0)*0;},0);
   var rev=sub+comm;
   txt('an-rev','R'+Math.round(rev).toLocaleString());
   var now=new Date(),monthLabels=[],monthRevArr=[],monthTripArr=[];
@@ -2061,16 +2873,16 @@ function renderAnalytics(){
 
 /* ── REVENUE ── */
 function renderRevenue(){
-  var basic=allDrivers.filter(function(d){return d.subscription==='basic';}).length;
-  var std=allDrivers.filter(function(d){return d.subscription==='standard';}).length;
-  var sub=(basic*699)+(std*899);
-  var comm=allBookings.reduce(function(s,b){return s+(b.priceNum||0)*0.2;},0);
+  var basic=_tcPaid();
+  var std=_tcTrial();
+  var sub=(basic*SUB_PRICE);
+  var comm=allBookings.reduce(function(s,b){return s+(b.priceNum||0)*0;},0);
   var total=sub+comm;
   txt('rv-total','R'+Math.round(total).toLocaleString());
-  txt('rv-basic-n',basic);txt('rv-basic-note','R'+(basic*699).toLocaleString()+'/mo');
-  txt('rv-std-n',std);txt('rv-std-note','R'+(std*899).toLocaleString()+'/mo');
-  txt('rv-basic-detail',basic+' drivers · R'+(basic*699).toLocaleString());
-  txt('rv-std-detail',std+' drivers · R'+(std*899).toLocaleString());
+  txt('rv-basic-n',basic);txt('rv-basic-note','R'+(basic*SUB_PRICE).toLocaleString()+'/mo');
+  txt('rv-std-n',std);txt('rv-std-note','R0'+'/mo');
+  txt('rv-basic-detail',basic+' drivers · R'+(basic*SUB_PRICE).toLocaleString());
+  txt('rv-std-detail',std+' drivers · free trial');
   txt('rv-comm-detail','R'+Math.round(comm).toLocaleString());
   txt('rv-grand','R'+Math.round(total).toLocaleString());
 }
@@ -2142,6 +2954,87 @@ async function _dk(uid_){var enc=new TextEncoder();var km=await window.crypto.su
 async function decField(uid_,ct){if(!ct||!ct.includes(':'))return ct;try{var p=ct.split(':');if(p.length!==2)return ct;var b64=function(s){var bin=atob(s);var a=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a;};var key=await _dk(uid_);var plain=await window.crypto.subtle.decrypt({name:'AES-GCM',iv:b64(p[0])},key,b64(p[1]));return new TextDecoder().decode(plain);}catch(e){return'[decrypt failed]';}}
 async function decryptDriver(uid_,d){if(!d._encrypted)return d;var fields=['idNumber','accountNumber','branchCode','accountHolder','accountType','bank'];var r=Object.assign({},d);for(var i=0;i<fields.length;i++){var f=fields[i];if(r[f])r[f]=await decField(uid_,r[f]);}return r;}
 
+/* ── DATA REQUESTS (POPIA) ── */
+function _drTime(v){
+  try{var d=v&&typeof v.toDate==='function'?v.toDate():(v?new Date(v):null);return d&&!isNaN(d)?d:null;}catch(e){return null;}
+}
+function _drWho(r){
+  var p=(r.role==='driver'?allDrivers:allCustomers).find(function(x){return uid(x)===r.uid||x.id===r.uid;})||{};
+  return p.name||'(profile deleted or not found)';
+}
+function renderDataRequests(){
+  var w=$('datareq-list');if(!w)return;
+  var pend=allDataRequests.filter(function(r){return r.status==='pending';}).sort(function(a,b){return((_drTime(a.createdAt)||0)-(_drTime(b.createdAt)||0));});
+  var done=allDataRequests.filter(function(r){return r.status!=='pending';}).sort(function(a,b){return((_drTime(b.completedAt||b.createdAt)||0)-(_drTime(a.completedAt||a.createdAt)||0));}).slice(0,15);
+  if(!pend.length&&!done.length){w.innerHTML='<div class="empty"><div class="empty-ico">🗂️</div><div class="empty-txt">No data requests.</div></div>';return;}
+  w.innerHTML='';
+  function row(r,isPending){
+    var item=make('div','li'),rw=make('div','li-row'),inf=make('div','li-info'),right=make('div','li-right');
+    var t=_drTime(r.createdAt);
+    inf.innerHTML='<div class="li-name">'+safe(_drWho(r))+'</div><div class="li-meta">'+safe(String(r.role||'').toUpperCase())+' · '+safe(String(r.type||'data_access').replace('_',' '))+(t?' · '+t.toLocaleDateString('en-ZA'):'')+'</div><div class="li-meta">UID: '+safe(r.uid)+'</div>';
+    right.innerHTML='<span class="pill '+(isPending?'p-pending':'p-approved')+'">'+safe(String(r.status||'').toUpperCase())+'</span>';
+    rw.appendChild(inf);rw.appendChild(right);item.appendChild(rw);
+    var acts=make('div','li-acts');
+    acts.appendChild(mkBtn('📥 Download data (JSON)','btn btn-view',mkFn(downloadUserData,r.id)));
+    if(isPending)acts.appendChild(mkBtn('✅ Mark completed','btn btn-approve',mkFn(completeDataRequest,r.id)));
+    item.appendChild(acts);w.appendChild(item);
+  }
+  if(pend.length){var h=make('div','');h.style.cssText='font-weight:700;margin:4px 0 8px;';h.textContent='Pending ('+pend.length+')';w.appendChild(h);pend.forEach(function(r){row(r,true);});}
+  if(done.length){var h2=make('div','');h2.style.cssText='font-weight:700;margin:16px 0 8px;color:var(--muted2);';h2.textContent='Recently completed';w.appendChild(h2);done.forEach(function(r){row(r,false);});}
+}
+function completeDataRequest(id){
+  var r=allDataRequests.find(function(x){return x.id===id;});if(!r)return;
+  if(!confirm('Mark this request as completed?\n\nOnly do this after the user has received their data.'))return;
+  var FB=window._FB;if(!FB)return;
+  FB.updateDoc(FB.doc(FB.db,'dataRequests',id),{status:'completed',completedAt:FB.serverTimestamp()})
+    .then(function(){toast('Request marked completed');})
+    .catch(function(e){toast('Could not update: '+e.message);});
+}
+var _CUST_SALT='TruckConnect-ZA-Customer-2024-v1';
+async function _decCust(uid_,ct){
+  if(!ct||typeof ct!=='string'||ct.indexOf(':')<0)return ct;
+  try{
+    var enc=new TextEncoder();
+    var km=await crypto.subtle.importKey('raw',enc.encode(uid_+_CUST_SALT),{name:'PBKDF2'},false,['deriveKey']);
+    var key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:enc.encode(_CUST_SALT),iterations:100000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+    var p=ct.split(':');var b64=function(x){var b=atob(x),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;};
+    return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(p[0])},key,b64(p[1])));
+  }catch(e){return '[decrypt failed]';}
+}
+async function downloadUserData(id){
+  var r=allDataRequests.find(function(x){return x.id===id;});if(!r)return;
+  var FB=window._FB;if(!FB)return;
+  toast('Collecting data…');
+  try{
+    var out={exportedAt:new Date().toISOString(),request:r,uid:r.uid,role:r.role};
+    function snapList(sn){var a=[];sn.forEach(function(d){a.push(Object.assign({id:d.id},d.data()));});return a;}
+    async function q(coll,field){try{return snapList(await FB.getDocs(FB.query(FB.collection(FB.db,coll),FB.where(field,'==',r.uid))));}catch(e){return [];}}
+    if(r.role==='driver'){
+      var pub=await FB.getDoc(FB.doc(FB.db,'drivers',r.uid));
+      var priv=await FB.getDoc(FB.doc(FB.db,'driverPrivate',r.uid));
+      out.profile=pub.exists()?pub.data():null;
+      out.privateProfile=priv.exists()?await decryptDriver(r.uid,priv.data()):null;
+      try{out.files=snapList(await FB.getDocs(FB.collection(FB.db,'driverPrivate',r.uid,'files')));}catch(e){out.files=[];}
+      out.bookings=await q('bookings','driverUid');
+      out.documentVerifications=await q('vehicleDocVerifications','driver_id');
+    }else{
+      var c=await FB.getDoc(FB.doc(FB.db,'customers',r.uid));
+      var cd=c.exists()?c.data():null;
+      if(cd){cd=Object.assign({},cd);cd.phone=await _decCust(r.uid,cd.phone);cd.idNumber=await _decCust(r.uid,cd.idNumber);}
+      out.profile=cd;
+      var b1=await q('bookings','customerUid'),b2=await q('bookings','customerId'),seen={};
+      out.bookings=b1.concat(b2).filter(function(b){if(seen[b.id])return false;seen[b.id]=1;return true;});
+    }
+    out.dataRequests=allDataRequests.filter(function(x){return x.uid===r.uid;});
+    var json=JSON.stringify(out,function(k,v){return v&&typeof v.toDate==='function'?v.toDate().toISOString():v;},2);
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+    a.download='TruckConnect_data_'+(r.role||'user')+'_'+r.uid+'.json';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    toast('📥 Data downloaded');
+  }catch(e){toast('Could not collect data: '+e.message);}
+}
+
 /* ── DOM BUILDER HELPERS ── */
 function make(tag,cls){var el=document.createElement(tag);if(cls)el.className=cls;return el;}
 function mkBtn(txt_,cls,fn){var b=make('button',cls);b.textContent=txt_;b.onclick=fn;return b;}
@@ -2156,6 +3049,8 @@ function mkFn(fn,arg){return function(){fn(arg);};}
    is unforgeable hardware biometric verification, not a typed PIN.
    ══════════════════════════════════════════════════════════════════════ */
 var BIO_CRED_KEY = 'tc_admin_webauthn_cred_id';
+// Set to false ONLY if you get locked out (turns the fingerprint gate off).
+var BIO_REQUIRED = true;
 var _pendingAuthUser = null; // Firebase user object waiting on fingerprint
 
 function _b64uToBuf(b64u){
@@ -2228,46 +3123,51 @@ function _hasFingerprintRegistered(){
   return !!localStorage.getItem(BIO_CRED_KEY);
 }
 
-// Runs the biometric gate screen — resolves true/false
+// Runs the biometric gate screen. Resolves true ONLY when the fingerprint passes;
+// a failed attempt stays on the gate so you can tap "Use Fingerprint" again.
+// "Cancel & Sign Out" on the gate leaves the app signed out.
 async function _runBiometricGate(email){
+  if(!BIO_REQUIRED)return true;
   return new Promise(function(resolve){
     goScreen('s-biogate');
     var statusEl=$('bio-status'), errEl=$('bio-err'), retryBtn=$('bio-retry-btn'), pulse=$('bio-pulse');
-    if(errEl)errEl.style.display='none';
-
+    var busy=false;
+    function setStatus(t){if(statusEl)statusEl.textContent=t;}
+    function fail(msg){
+      if(pulse)pulse.style.borderColor='#f87171';
+      if(errEl){errEl.textContent=msg;errEl.style.display='block';}
+      busy=false;
+    }
     async function attempt(){
+      if(busy)return; busy=true;
       if(errEl)errEl.style.display='none';
       if(pulse)pulse.style.borderColor='var(--blue)';
-      if(!_hasFingerprintRegistered()){
-        if(statusEl)statusEl.textContent='No fingerprint registered on this device yet. Touch sensor to set it up.';
-        var reg=await _registerFingerprint(email);
-        if(reg.ok){
-          if(statusEl)statusEl.textContent='✅ Fingerprint registered! Verifying…';
-          var verify=await _verifyFingerprint();
-          resolve(verify.ok);
-          return;
-        } else {
-          if(pulse)pulse.style.borderColor='#f87171';
-          if(errEl){errEl.textContent=reg.reason==='not_supported'?'This device has no fingerprint sensor available to the browser.':'Could not set up fingerprint. Try again.';errEl.style.display='block';}
-          resolve(false);
-          return;
+      try{
+        if(!_hasFingerprintRegistered()){
+          setStatus('No fingerprint registered on this device yet. Touch sensor to set it up.');
+          var reg=await _registerFingerprint(email);
+          if(!reg.ok){
+            fail(reg.reason==='not_supported'?'This device has no fingerprint sensor available to the browser.':'Could not set up fingerprint. Tap "Use Fingerprint" to try again.');
+            return;
+          }
+          setStatus('✅ Fingerprint registered! Verifying…');
         }
-      }
-      if(statusEl)statusEl.textContent='Touch your device\'s fingerprint sensor…';
-      var v=await _verifyFingerprint();
-      if(v.ok){
-        if(statusEl)statusEl.textContent='✅ Verified!';
-        resolve(true);
-      } else {
-        if(pulse)pulse.style.borderColor='#f87171';
-        if(errEl){errEl.textContent='Fingerprint not recognised. Try again.';errEl.style.display='block';}
-        resolve(false);
-      }
+        setStatus('Touch your device\'s fingerprint sensor…');
+        var v=await _verifyFingerprint();
+        if(v.ok){setStatus('✅ Verified!');busy=false;resolve(true);}
+        else fail('Fingerprint not recognised. Tap "Use Fingerprint" to try again.');
+      }catch(e){fail('Fingerprint error. Tap "Use Fingerprint" to try again.');}
     }
-
     if(retryBtn)retryBtn.onclick=attempt;
     attempt();
   });
+}
+
+// Opens the admin screens (only called after password AND fingerprint pass)
+function _enterAdmin(user){var _du2=$('drawer-uid');if(_du2&&user)_du2.textContent='Signed in: '+(user.email||'')+' · UID '+user.uid;
+  goScreen('s-admin');
+  startListeners();
+  txt('admin-email',user.email||'—');txt('admin-uid','UID: '+user.uid);
 }
 
 /* ── APP LAUNCHER ── */
@@ -2301,11 +3201,9 @@ document.addEventListener('DOMContentLoaded',function(){
       loginBtn.disabled=true;loginBtn.textContent='Signing in…';
       FB.signInWithEmailAndPassword(FB.auth,email,pass).then(function(cred){
         loginBtn.disabled=false;loginBtn.textContent='Sign In →';
-        // Password correct — fingerprint gate disabled for now, go straight in
+        // Password correct — now the fingerprint gate
         _pendingAuthUser=cred.user;
-        goScreen('s-admin');
-        startListeners();
-        txt('admin-email',cred.user.email||'—');
+        return _runBiometricGate(cred.user.email).then(function(){_enterAdmin(cred.user);});
       }).catch(function(e){
         loginBtn.disabled=false;loginBtn.textContent='Sign In →';
         var msg='Sign in failed. Check your credentials.';
@@ -2349,12 +3247,10 @@ var _fbPoll=setInterval(function(){
       return;
     }
     _authDone=true;clearTimeout(_authTimer);
-    if(user){
-      // Session restored on page load — fingerprint gate disabled for now
-      goScreen('s-admin');
-      startListeners();
-      txt('admin-email',user.email||'—');
+    if(user){var _du=$('drawer-uid');if(_du)_du.textContent='Signed in: '+(user.email||'')+' · UID '+user.uid;
+      // Session restored on page load — must pass the fingerprint gate again
       var lb=$('login-btn');if(lb){lb.disabled=false;lb.textContent='Sign In →';}
+      _runBiometricGate(user.email).then(function(){_enterAdmin(user);});
     } else {
       goScreen('s-login');
       listenersOn=false;allDrivers=[];allCustomers=[];allBookings=[];
@@ -2374,7 +3270,7 @@ var _fbPoll=setInterval(function(){
    verification, before wiping drivers/customers/bookings/disputes/
    ratings/notifications from Firestore.
    ══════════════════════════════════════════════════════════════════════════ */
-var CLEAR_DATA_COLLECTIONS = ['drivers','customers','bookings','disputes','ratings','notifications'];
+var CLEAR_DATA_COLLECTIONS = ['drivers','driverPrivate','customers','bookings','disputes','ratings','notifications'];
 
 async function _clearAllFirestoreData(){
   var FB=window._FB; if(!FB)return {ok:false,reason:'Firebase not ready'};
@@ -2480,6 +3376,11 @@ var AI_PROXY_URL = 'https://truckconnectagent.madibasphiwe50.workers.dev';
 // Make up any random string and put the SAME value in both places.
 var AI_ADMIN_KEY = '_kmFhTTSDbvLeoH9rWVfPtOoSRKU7s6O';
 var AI_HISTORY_KEY = 'tc_ai_chat_history';
+async function _aiAuthHeaders(){
+  var h={'Content-Type':'application/json','X-Admin-Key':AI_ADMIN_KEY};
+  try{ var u=window._FB&&window._FB.auth&&window._FB.auth.currentUser; if(u){ h['Authorization']='Bearer '+(await u.getIdToken()); } }catch(e){}
+  return h;
+}
 var aiHistory = []; // OpenAI-compatible format: {role:'system'|'user'|'assistant'|'tool', content, tool_calls?, tool_call_id?}
 try{
   var savedHistory = JSON.parse(localStorage.getItem(AI_HISTORY_KEY)||'[]');
@@ -2589,7 +3490,7 @@ async function _aiGithubCall(payload){
   try{
     var r = await fetch(AI_PROXY_URL, {
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Admin-Key':AI_ADMIN_KEY},
+      headers:await _aiAuthHeaders(),
       body:JSON.stringify(payload)
     });
     var d = await r.json();
@@ -2662,7 +3563,9 @@ async function _aiExecuteTool(name, args){
     case 'approve_driver': {
       var d=_aiFindDriver(args.driver_id);
       if(!d)return {error:'Driver not found: '+args.driver_id};
-      approveDriver(d.id);
+      var _aiIss=_tcApprovalIssues(d);
+      if(_aiIss.length)return {error:'Not approved. Open issues: '+_aiIss.join('; ')+'. Ask the admin to open the driver profile and use Approve anyway if they accept the risk.'};
+      approveDriver(d.id,true);
       return {ok:true, message:'Approved driver: '+d.name};
     }
     case 'suspend_driver': {
@@ -2706,7 +3609,7 @@ async function _aiCallOpenAI(){
   var messages = [{role:'system', content:AI_SYSTEM_PROMPT}].concat(aiHistory);
   var resp = await fetch(AI_PROXY_URL, {
     method:'POST',
-    headers:{'Content-Type':'application/json','X-Admin-Key':AI_ADMIN_KEY},
+    headers:await _aiAuthHeaders(),
     body:JSON.stringify({messages:messages, tools:AI_TOOLS})
   });
   var data = await resp.json();
@@ -3065,6 +3968,486 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   }
 });
+})();
+</script>
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   ADMIN PUSH ALERTS — talks to the separate truckconnect-admin-notify worker.
+   Registers THIS phone for admin pushes, saves the 4 on/off switches,
+   sends test pushes. Does not touch broadcasts, chat, the fingerprint
+   gate or the AI assistant.
+   ══════════════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+var AP_URL='https://truckconnect-admin-notify.madibasphiwe50.workers.dev';
+var SW_FILE='TruckConnect-Admin-SW.js';
+var K_KEY='tc_admin_notify_key',K_TOKEN='tc_admin_push_token',K_PREFS='tc_admin_push_prefs',K_SYNC='tc_admin_push_sync';
+var TYPES=['customer','driver','completed','cancelled'];
+var busy=false,pendingTab='';
+
+function $(id){return document.getElementById(id);}
+function ls(k,v){
+  try{
+    if(v===undefined)return localStorage.getItem(k);
+    if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);
+  }catch(e){}
+  return null;
+}
+function supported(){
+  return !!(window.isSecureContext&&('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window));
+}
+function msg(text,kind){
+  var el=$('ap-msg');if(!el)return;
+  if(!text){el.style.display='none';return;}
+  var c={ok:'#86efac',err:'#fca5a5',info:'#7dd3fc'}[kind||'info'];
+  el.style.display='block';el.style.color=c;el.textContent=text;
+}
+function setBusy(b){
+  ['ap-enable','ap-disable','ap-check','ap-savekey'].forEach(function(id){var el=$(id);if(el)el.disabled=!!b;});
+}
+
+/* ── switches (the 4 on/off types) ── */
+function readPrefs(){
+  var p={customer:true,driver:true,completed:true,cancelled:true};
+  try{var s=JSON.parse(ls(K_PREFS)||'null');if(s)TYPES.forEach(function(t){if(typeof s[t]==='boolean')p[t]=s[t];});}catch(e){}
+  return p;
+}
+function writePrefs(p){ls(K_PREFS,JSON.stringify(p));}
+function paintToggles(p){TYPES.forEach(function(t){var el=$('ap-t-'+t);if(el)el.checked=p[t]!==false;});}
+function toggleValues(){
+  var p={};TYPES.forEach(function(t){var el=$('ap-t-'+t);p[t]=el?!!el.checked:true;});return p;
+}
+
+/* ── talking to the worker ── */
+async function authHeaders(){
+  var FB=window._FB,u=FB&&FB.auth&&FB.auth.currentUser;
+  if(!u)throw new Error('Sign in to the Admin app first.');
+  var key=ls(K_KEY);
+  if(!key)throw new Error('Enter the notify key first.');
+  var idToken=await u.getIdToken();
+  return {'Content-Type':'application/json','X-Admin-Notify-Key':key,'Authorization':'Bearer '+idToken};
+}
+function niceErr(code,status,detail){
+  var m={
+    bad_key:'Wrong notify key. It must match ADMIN_NOTIFY_SECRET in Cloudflare.',
+    no_login:'Not signed in.',
+    bad_login:'Your login expired. Sign out and sign in again.',
+    not_admin:'This login email is not listed in ADMIN_EMAILS in Cloudflare.',
+    admin_emails_not_set:'Add ADMIN_EMAILS in Cloudflare first.',
+    device_not_found:'This phone is not registered. Tap Enable on this phone.',
+    bad_token:'Push token problem. Tap Turn off, then Enable again.',
+    bad_type:'Unknown test type.'
+  };
+  if(m[code])return m[code];
+  if(code&&String(code).indexOf('push_failed')===0)return 'The push could not be delivered ('+String(code).replace('push_failed_','')+'). Tap Turn off, then Enable again.';
+  if(code==='server_error')return 'Worker error: '+(detail||'check the Cloudflare logs');
+  return 'Failed ('+(code||status)+')';
+}
+async function call(path,method,body){
+  var h=await authHeaders(),res;
+  try{
+    res=await fetch(AP_URL+path,{method:method||'GET',headers:h,body:body?JSON.stringify(body):undefined});
+  }catch(e){
+    throw new Error('Cannot reach the notify worker. Check it is deployed with the exact name truckconnect-admin-notify.');
+  }
+  var j=null;try{j=await res.json();}catch(e){}
+  if(!res.ok||!j||j.ok===false)throw new Error(niceErr(j&&j.error,res.status,j&&j.detail));
+  return j;
+}
+
+/* ── service worker + FCM token ── */
+function waitActive(reg){
+  return new Promise(function(resolve,reject){
+    var sw=reg.installing||reg.waiting||reg.active;
+    if(!sw)return reject(new Error('The service worker did not start.'));
+    if(sw.state==='activated')return resolve(reg);
+    var timer=setTimeout(function(){reject(new Error('The service worker took too long to start. Reload and try again.'));},15000);
+    sw.addEventListener('statechange',function(){
+      if(sw.state==='activated'){clearTimeout(timer);resolve(reg);}
+      else if(sw.state==='redundant'){clearTimeout(timer);reject(new Error('The service worker failed to install. Is TruckConnect-Admin-SW.js uploaded next to this page?'));}
+    });
+  });
+}
+async function registerSW(){
+  var appUrl=location.href.split('#')[0].split('?')[0];
+  var reg;
+  try{
+    reg=await navigator.serviceWorker.register(SW_FILE+'?app='+encodeURIComponent(appUrl),{scope:'./tc-admin-push/'});
+  }catch(e){
+    throw new Error('Could not load TruckConnect-Admin-SW.js. Upload it to the same GitHub folder as this page.');
+  }
+  return waitActive(reg);
+}
+async function messagingModule(){
+  var FB=window._FB;
+  if(!FB||!FB.app)throw new Error('The app is still loading. Try again in a moment.');
+  return import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
+}
+async function getPushToken(vapid){
+  var mod=await messagingModule();
+  var messaging=mod.getMessaging(window._FB.app);
+  var reg=await registerSW();
+  var token=await mod.getToken(messaging,{vapidKey:vapid,serviceWorkerRegistration:reg});
+  if(!token)throw new Error('No push token was issued. Check notification permission and try again.');
+  return token;
+}
+function deviceLabel(){
+  var ua=navigator.userAgent||'';
+  var os=/Android/i.test(ua)?'Android':/iPhone|iPad|iPod/i.test(ua)?'iPhone':/Windows/i.test(ua)?'Windows':/Mac/i.test(ua)?'Mac':'Device';
+  var br=/Edg\//.test(ua)?'Edge':/SamsungBrowser/i.test(ua)?'Samsung Internet':/Firefox/i.test(ua)?'Firefox':/Chrome/i.test(ua)?'Chrome':/Safari/i.test(ua)?'Safari':'Browser';
+  var app=false;
+  try{app=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}catch(e){}
+  return os+' · '+br+(app?' (app)':'');
+}
+
+/* ── what the card shows ── */
+function paintState(){
+  var chip=$('ap-chip'),en=$('ap-enable'),dis=$('ap-disable');
+  var on=!!ls(K_TOKEN),perm=('Notification' in window)?Notification.permission:'unsupported';
+  var label='Off',cls='chip chip-amber',active=false;
+  if(!supported()){label='Not supported';cls='chip chip-red';}
+  else if(perm==='denied'){label='Blocked';cls='chip chip-red';}
+  else if(on&&perm==='granted'){label='On';cls='chip chip-green';active=true;}
+  if(chip){chip.textContent=label;chip.className=cls;}
+  if(en)en.style.display=active?'none':'block';
+  if(dis)dis.style.display=active?'block':'none';
+  var tests=document.querySelectorAll('[data-aptest],#ap-check');
+  for(var i=0;i<tests.length;i++){tests[i].disabled=!active;tests[i].style.opacity=active?'1':'.45';}
+  if(!supported())msg('This browser cannot do push alerts. On iPhone, add the Admin app to the Home Screen first and open it from there.','err');
+  else if(perm==='denied')msg('Notifications are blocked for this site. Allow them in your browser settings, then tap Enable.','err');
+}
+function ago(iso){
+  var t=Date.parse(iso);if(!t)return '';
+  var s=Math.max(0,Math.floor((Date.now()-t)/1000));
+  if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+' min ago';
+  if(s<86400)return Math.floor(s/3600)+' h ago';return Math.floor(s/86400)+' d ago';
+}
+async function refresh(){
+  paintState();paintToggles(readPrefs());
+  var inp=$('ap-key');if(inp&&ls(K_KEY)&&!inp.value)inp.value=ls(K_KEY);
+  var token=ls(K_TOKEN);if(!token||!ls(K_KEY))return;
+  try{
+    var s=await call('/status','POST',{token:token});
+    var info=$('ap-info');
+    if(s.mine){writePrefs(s.mine.prefs);paintToggles(s.mine.prefs);}
+    else{ls(K_TOKEN,null);paintState();msg('This phone was removed from the worker. Tap Enable to add it again.','err');}
+    if(info)info.textContent=s.devices+' phone'+(s.devices===1?'':'s')+' registered'+(s.lastEventAt?' · last alert '+ago(s.lastEventAt):'');
+  }catch(e){}
+}
+
+/* ── button actions ── */
+async function onEnable(){
+  if(busy)return;
+  var k=(($('ap-key')||{}).value||'').trim();
+  if(k)ls(K_KEY,k);
+  if(!ls(K_KEY)){msg('Enter the notify key first (the same one you saved as ADMIN_NOTIFY_SECRET in Cloudflare).','err');return;}
+  if(!supported()){paintState();return;}
+  // Ask for permission straight away, inside the tap, so the browser allows the prompt
+  var permPromise=Notification.permission==='granted'?Promise.resolve('granted'):Notification.requestPermission();
+  busy=true;setBusy(true);
+  try{
+    msg('Checking the worker…','info');
+    var cfg=await call('/config','GET');
+    if(!cfg.vapidKey)throw new Error('The worker has no VAPID_PUBLIC_KEY yet. Add it in Cloudflare, then try again.');
+    var perm=await permPromise;
+    if(perm!=='granted')throw new Error('Notifications are blocked. Allow them for this site in your browser settings, then tap Enable again.');
+    msg('Registering this phone…','info');
+    var token=await getPushToken(cfg.vapidKey);
+    var old=ls(K_TOKEN);
+    var r=await call('/register','POST',{token:token,label:deviceLabel(),prefs:toggleValues(),oldToken:(old&&old!==token)?old:undefined});
+    ls(K_TOKEN,token);ls(K_SYNC,String(Date.now()));writePrefs(r.prefs);paintToggles(r.prefs);
+    msg('✅ Done. This phone will now get admin alerts. Tap a Test button to check.','ok');
+  }catch(e){msg('⚠️ '+(e&&e.message||e),'err');}
+  busy=false;setBusy(false);paintState();refresh();
+}
+async function onDisable(){
+  if(busy)return;
+  busy=true;setBusy(true);
+  var token=ls(K_TOKEN),warn='';
+  try{
+    if(token){try{await call('/unregister','POST',{token:token});}catch(e){warn=' (the worker could not be reached, but this phone is switched off)';}}
+    try{var mod=await messagingModule();await mod.deleteToken(mod.getMessaging(window._FB.app));}catch(e){}
+    try{
+      var regs=await navigator.serviceWorker.getRegistrations();
+      regs.forEach(function(r){if((r.scope||'').indexOf('/tc-admin-push/')>-1)r.unregister();});
+    }catch(e){}
+    ls(K_TOKEN,null);ls(K_SYNC,null);
+    msg('Turned off for this phone.'+warn,'ok');
+  }catch(e){msg('⚠️ '+(e&&e.message||e),'err');}
+  busy=false;setBusy(false);paintState();
+}
+async function onToggle(){
+  var p=toggleValues();writePrefs(p);
+  var token=ls(K_TOKEN);if(!token||!supported())return;
+  try{var r=await call('/prefs','POST',{token:token,prefs:p});writePrefs(r.prefs);msg('Saved.','ok');}
+  catch(e){msg('⚠️ Could not save: '+e.message,'err');}
+}
+async function onTest(type){
+  var token=ls(K_TOKEN);
+  if(!token){msg('Enable alerts on this phone first.','err');return;}
+  try{
+    msg('Sending a test…','info');
+    await call('/test','POST',{token:token,type:type});
+    msg('✅ Test sent. It should appear on this phone within a few seconds.','ok');
+  }catch(e){msg('⚠️ '+e.message,'err');}
+}
+async function onCheckNow(){
+  try{
+    msg('Checking for new activity…','info');
+    var r=await call('/run','POST',{}),n=0;
+    TYPES.forEach(function(t){n+=(r.events&&r.events[t])||0;});
+    if(r.baseline)msg('✅ First check done. From now on, only NEW activity will alert you.','ok');
+    else if(n)msg('✅ Found '+n+' new event'+(n===1?'':'s')+', sent '+r.sent+' alert'+(r.sent===1?'':'s')+'.','ok');
+    else msg('✅ Nothing new right now.','ok');
+  }catch(e){msg('⚠️ '+e.message,'err');}
+}
+function onSaveKey(){
+  var k=(($('ap-key')||{}).value||'').trim();
+  if(!k){msg('Type the key first.','err');return;}
+  ls(K_KEY,k);msg('Key saved on this phone.','ok');refresh();
+}
+
+/* ── keep the token fresh (silent, no prompts) ── */
+async function silentSync(){
+  try{
+    if(!supported()||Notification.permission!=='granted')return;
+    if(!ls(K_TOKEN)||!ls(K_KEY))return;
+    if(Date.now()-Number(ls(K_SYNC)||0)<6*3600*1000)return;
+    var cfg=await call('/config','GET');if(!cfg.vapidKey)return;
+    var token=await getPushToken(cfg.vapidKey),old=ls(K_TOKEN);
+    var r=await call('/register','POST',{token:token,label:deviceLabel(),oldToken:old!==token?old:undefined});
+    ls(K_TOKEN,token);ls(K_SYNC,String(Date.now()));writePrefs(r.prefs);
+  }catch(e){/* silent */}
+}
+
+/* ── tapping a notification opens the right tab ── */
+function openTab(tab){
+  if(!tab||!/^[a-z]+$/.test(tab)||!$('tab-'+tab))return;
+  if(typeof window.goTab==='function')window.goTab(tab,null);
+}
+function adminActive(){var a=$('s-admin');return !!(a&&a.classList.contains('active'));}
+function openFromHash(){
+  var m=/[#&]tab=([a-z]+)/.exec(location.hash||'');
+  if(m){openTab(m[1]);try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
+}
+function onAdminReady(){
+  if(pendingTab){openTab(pendingTab);pendingTab='';}
+  openFromHash();
+  setTimeout(silentSync,2500);
+}
+
+/* ── wire everything up ── */
+function wire(){
+  if(!$('ap-card'))return;
+  var b;
+  if((b=$('ap-enable')))b.addEventListener('click',onEnable);
+  if((b=$('ap-disable')))b.addEventListener('click',onDisable);
+  if((b=$('ap-check')))b.addEventListener('click',onCheckNow);
+  if((b=$('ap-savekey')))b.addEventListener('click',onSaveKey);
+  TYPES.forEach(function(t){var el=$('ap-t-'+t);if(el)el.addEventListener('change',onToggle);});
+  var tb=document.querySelectorAll('[data-aptest]');
+  for(var i=0;i<tb.length;i++){(function(el){el.addEventListener('click',function(){onTest(el.getAttribute('data-aptest'));});})(tb[i]);}
+  paintToggles(readPrefs());paintState();
+
+  // show fresh status whenever Settings is opened (keeps the existing goTab working exactly as before)
+  var orig=window.goTab;
+  if(typeof orig==='function'){
+    window.goTab=function(tab){var r=orig.apply(this,arguments);if(tab==='settings')refresh();return r;};
+  }
+  window.addEventListener('hashchange',function(){if(adminActive())openFromHash();});
+  try{
+    var bc=new BroadcastChannel('tc-admin-push');
+    bc.onmessage=function(e){var t=e&&e.data&&e.data.tab;if(!t)return;if(adminActive())openTab(t);else pendingTab=t;};
+  }catch(e){}
+  var adm=$('s-admin');
+  if(adm){
+    var was=adminActive();
+    new MutationObserver(function(){var now=adminActive();if(now&&!was)onAdminReady();was=now;}).observe(adm,{attributes:true,attributeFilter:['class']});
+    if(was)onAdminReady();
+  }
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
+})();
+</script>
+<script>
+/* TC-PWA: "Install app" bar (shows only in the browser, only when Chrome says the app can be installed) */
+(function(){
+  try{if(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)return;}catch(e){}
+  try{var t=parseInt(localStorage.getItem('tc_install_dismissed')||'0',10);if(t&&Date.now()-t<7*864e5)return;}catch(e){}
+  var dp=null,bar=null;
+  function hide(){if(bar&&bar.parentNode)bar.parentNode.removeChild(bar);bar=null;}
+  function show(){
+    if(bar||!document.body)return;
+    bar=document.createElement('div');
+    bar.style.cssText='position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:2147483000;background:#111;color:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.35);font:600 14px/1.25 -apple-system,Roboto,Arial,sans-serif;';
+    var tx=document.createElement('div');tx.style.cssText='flex:1;min-width:0;';tx.textContent='Install TruckConnect Admin on your phone';
+    var ok=document.createElement('button');ok.textContent='Install';ok.style.cssText='background:#fff;color:#000;border:0;border-radius:10px;padding:9px 16px;font:700 14px Arial,sans-serif;cursor:pointer;';
+    var no=document.createElement('button');no.textContent='Not now';no.style.cssText='background:none;color:#aaa;border:0;padding:9px 6px;font:600 13px Arial,sans-serif;cursor:pointer;';
+    ok.onclick=function(){if(!dp)return;dp.prompt();dp.userChoice.then(function(){dp=null;hide();}).catch(function(){hide();});};
+    no.onclick=function(){try{localStorage.setItem('tc_install_dismissed',String(Date.now()));}catch(e){}hide();};
+    bar.appendChild(tx);bar.appendChild(ok);bar.appendChild(no);document.body.appendChild(bar);
+  }
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;if(document.body)show();else document.addEventListener('DOMContentLoaded',show);});
+  window.addEventListener('appinstalled',hide);
+})();
+try{if('serviceWorker' in navigator)navigator.serviceWorker.register('./TruckConnect-SW.js').catch(function(){});}catch(e){}
+</script>
+<style id="tc-ic-css">
+.tc-ic{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.tc-ic.tc-fill{fill:currentColor;stroke-width:1}
+.tc-ic.tc-dot{width:.8em;height:.8em;vertical-align:-.04em;stroke:none}
+.login-icon .tc-ic{stroke-width:1.4}
+</style>
+<script id="tc-ic-js">
+/* Replaces emoji with one-colour line icons (Lucide style). Runs on everything the app draws, now and later. */
+(function(){
+'use strict';
+var P={
+'truck':'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+'package':'<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="m7.5 4.27 9 5.15"/>',
+'message':'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+'search':'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+'list':'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+'ok':'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+'warn':'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+'no':'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+'pin':'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+'calendar':'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+'camera':'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+'user':'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+'users':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+'star':'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+'lock':'<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+'unlock':'<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>',
+'finger':'<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/>',
+'menu':'<path d="M4 12h16"/><path d="M4 6h16"/><path d="M4 18h16"/>',
+'x':'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+'check':'<path d="M20 6 9 17l-5-5"/>',
+'chart':'<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+'file':'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+'scale':'<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+'bell':'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+'bot':'<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+'bug':'<path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/>',
+'trend':'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+'wallet':'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+'card':'<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+'folder':'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+'shield':'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+'gear':'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+'trash':'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+'logout':'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
+'rocket':'<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+'map':'<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/>',
+'info':'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+'horn':'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+'send':'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+'download':'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+'mail':'<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+'save':'<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>',
+'phone':'<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>',
+'refresh':'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+'trophy':'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+'plus':'<path d="M5 12h14"/><path d="M12 5v14"/>',
+'target':'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+'wrench':'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+'siren':'<path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/><path d="M12 12v6"/>',
+'ban':'<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+'pause':'<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+'play':'<polygon points="6 3 20 12 6 21 6 3"/>',
+'compass':'<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/>',
+'home':'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+'ruler':'<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>',
+'shield1':'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+'phoneoff':'<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/><path d="M3 3l18 18"/>',
+'image':'<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+'idcard':'<path d="M16 10h2"/><path d="M16 14h2"/><path d="M6.17 15a3 3 0 0 1 5.66 0"/><circle cx="9" cy="11" r="2"/><rect x="2" y="5" width="20" height="14" rx="2"/>',
+'disc':'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/>',
+'bank':'<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+'sun':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+'moon':'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+'flag':'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
+'mic':'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>',
+'clip':'<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+'signal':'<path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/>',
+'turnleft':'<polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/>',
+'turnright':'<polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/>',
+'uturn':'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/>',
+'up':'<path d="m18 15-6-6-6 6"/>',
+'down':'<path d="m6 9 6 6 6-6"/>',
+'zap':'<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+'call':'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+'clock':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+};
+var A={
+'🚛':'truck','🚚':'truck','📦':'package','💬':'message','🔍':'search','📋':'list','✅':'ok','⚠':'warn','❌':'no',
+'📍':'pin','📅':'calendar','📷':'camera','👤':'user','👥':'users','⭐':'star','🔒':'lock','🔓':'unlock','🔐':'shield',
+'👆':'finger','🫆':'finger','☰':'menu','✕':'x','✓':'check','✔':'check','📊':'chart','📈':'trend','📄':'file','⚖':'scale',
+'🔔':'bell','🤖':'bot','🐞':'bug','💰':'wallet','💳':'card','🗂':'folder','⚙':'gear','🗑':'trash','🚪':'logout',
+'🚀':'rocket','🗺':'map','ℹ':'info','📢':'horn','📤':'send','📨':'mail','📧':'mail','📥':'download','💾':'save',
+'📲':'phone','🔄':'refresh','🏆':'trophy','➕':'plus','🎯':'target','🛠':'wrench','🚨':'siren','⛔':'ban','🆓':'clock',
+'🚧':'warn','⟳':'refresh','🧭':'compass','📸':'camera','🤳':'camera','🏠':'home','📏':'ruler','🛡':'shield1','🕐':'clock','⏰':'clock',
+'🚫':'ban','😤':'warn','💸':'wallet','📵':'phoneoff','🖼':'image','🪪':'idcard','💿':'disc','🏦':'bank','☀':'sun','🌙':'moon','🏁':'flag',
+'🎤':'mic','📎':'clip','📁':'folder','📡':'signal','⮌':'uturn','↰':'turnleft','↱':'turnright','⌃':'up','▲':'up','⌄':'down','▼':'down','▾':'down',
+'⚡':'zap','📞':'call',
+'🎉':'check','🆘':'siren','⏳':'clock','⏸':'pause','▶':'play','★':'star-fill',
+'🟡':{dot:'#f59e0b'},'🟢':{dot:'#22c55e'},'🔴':{dot:'#ef4444'},'🔵':{dot:'#3b82f6'},'⚪':{dot:'#9ca3af'},'⚫':{dot:'#6b7280'},
+'🥇':{text:'#1'},'🥈':{text:'#2'},'🥉':{text:'#3'}
+};
+var RE=/(?:[\u{1F000}-\u{1FAFF}ℹ☀-➿⭐⬆⏩-⏿▶▲▼▾↰↱⌃⌄⟳⮌])️?/gu;
+var SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,OPTION:1,TITLE:1,NOSCRIPT:1,svg:1};
+function build(a){
+  var t=document.createElement('template');
+  if(a.dot){t.innerHTML='<svg class="tc-ic tc-dot" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="'+a.dot+'"/></svg>';return t.content.firstChild;}
+  var fill=a==='star-fill',name=fill?'star':a;
+  t.innerHTML='<svg class="tc-ic'+(fill?' tc-fill':'')+'" viewBox="0 0 24 24" aria-hidden="true">'+P[name]+'</svg>';
+  return t.content.firstChild;
+}
+function skip(el){
+  for(var e=el;e&&e!==document.body;e=e.parentNode){
+    if(e.nodeType!==1)continue;
+    if(SKIP[e.nodeName]||SKIP[e.localName])return true;
+    if(e.classList&&e.classList.contains('chat-bubble')||e.classList.contains('chat-messages')||e.classList.contains('d-chat-messages'))return true;
+    if(e.hasAttribute&&e.hasAttribute('data-noicon'))return true;
+  }
+  return false;
+}
+function proc(n){
+  var v=n.nodeValue;if(!v)return;
+  RE.lastIndex=0;if(!RE.test(v))return;RE.lastIndex=0;
+  var p=n.parentNode;if(!p||skip(p))return;
+  var frag=document.createDocumentFragment(),last=0,m,did=false;
+  while((m=RE.exec(v))){
+    var a=A[m[0].replace(/️/g,'')];
+    if(a===undefined)continue;
+    if(m.index>last)frag.appendChild(document.createTextNode(v.slice(last,m.index)));
+    frag.appendChild(a.text?document.createTextNode(a.text):build(a));
+    last=m.index+m[0].length;did=true;
+  }
+  if(!did)return;
+  if(last<v.length)frag.appendChild(document.createTextNode(v.slice(last)));
+  p.replaceChild(frag,n);
+}
+function walk(root){
+  if(root.nodeType===3){proc(root);return;}
+  if(root.nodeType!==1)return;
+  var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),list=[],x;
+  while((x=w.nextNode()))list.push(x);
+  list.forEach(proc);
+}
+var q=[],sched=false;
+function flush(){sched=false;var l=q;q=[];l.forEach(function(n){if(n.isConnected!==false)walk(n);});}
+function push(n){q.push(n);if(!sched){sched=true;(window.requestAnimationFrame||setTimeout)(flush);}}
+function start(){
+  walk(document.body);
+  new MutationObserver(function(ms){
+    ms.forEach(function(m){
+      if(m.type==='characterData')push(m.target);
+      else m.addedNodes.forEach(function(n){push(n);});
+    });
+  }).observe(document.body,{childList:true,subtree:true,characterData:true});
+}
+if(document.body)start();else document.addEventListener('DOMContentLoaded',start);
 })();
 </script>
 </body>
