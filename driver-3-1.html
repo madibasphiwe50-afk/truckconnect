@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="tc-build" content="driver-20261023-3">
+<meta name="tc-build" content="driver-20261023-5">
 <script>
 /* TruckConnect protective layer — keeps the app standing when something goes wrong.
    Nothing here shows technical text on screen. Errors are reported quietly to the admin app. */
@@ -2894,6 +2894,7 @@ body.dark-mode #s-driver-chat{--cm-mine-bg:#F0F0F0;--cm-mine-fg:#161C20;}
       <span class="dh-find-txt" id="find-jobs-txt">Find Available Jobs</span>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h16m-6.5-6.5L20 12l-6.5 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
+    <button type="button" id="dh-return-btn" style="width:100%;margin:10px 0 0;padding:13px 16px;border-radius:14px;border:1.5px solid var(--border,rgba(127,127,127,.35));background:transparent;color:inherit;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">&#8617; Heading back empty? Post a return trip</button>
     <div class="dh-stats">
       <div class="dh-stat">
         <div class="dh-stat-ico"><span class="dh-r">R</span></div>
@@ -3180,18 +3181,20 @@ body.dark-mode #s-driver-chat{--cm-mine-bg:#F0F0F0;--cm-mine-fg:#161C20;}
         <select class="fs" id="prf-trucktype">
           <option value="">Select type</option>
           <option value="1 Ton Bakkie">1 Ton Bakkie</option>
-          <option value="1.5 Ton">1.5 Ton</option>
           <option value="2 Ton">2 Ton</option>
-          <option value="2.5 Ton">2.5 Ton</option>
           <option value="3 Ton">3 Ton</option>
-          <option value="3.5 Ton">3.5 Ton</option>
           <option value="4 Ton">4 Ton</option>
-          <option value="4.5 Ton">4.5 Ton</option>
           <option value="5 Ton">5 Ton</option>
           <option value="6 Ton">6 Ton</option>
           <option value="7 Ton">7 Ton</option>
           <option value="8 Ton">8 Ton</option>
-          <option value="8.5 Ton">8.5 Ton</option>
+          <option value="9 Ton">9 Ton</option>
+          <option value="10 Ton">10 Ton</option>
+          <option value="12 Ton">12 Ton (heavy)</option>
+          <option value="15 Ton">15 Ton (heavy)</option>
+          <option value="20 Ton">20 Ton (heavy)</option>
+          <option value="28 Ton">28 Ton (heavy)</option>
+          <option value="34 Ton">34 Ton (heavy)</option>
         </select>
       </div>
       <div class="fg"><label class="fl">Licence Plate</label><input class="fi" id="prf-plate" placeholder="e.g. CA 123-456"/></div>
@@ -3516,7 +3519,7 @@ window._tcPushLocation=function(lat,lng,heading,force){
   if(!FB||!currentUid||typeof lat!=='number'||typeof lng!=='number'||!isFinite(lat)||!isFinite(lng))return;
   _tcRestoreActiveJobs();
   var now=Date.now();
-  if(!force&&now-_tcLastLocPush<4000)return;
+  if(!force&&now-_tcLastLocPush<8000)return;
   var ids=(acceptedJobs||[]).filter(function(j){return j&&!_tcFutureJob(j);}).map(function(j){return j&&j.id;}).filter(Boolean);
   if(!ids.length)return;
   _tcLastLocPush=now;
@@ -3838,7 +3841,7 @@ function _tcCrossChecks(kind, scan) {
     } else checks.gvm_match = null;
   } else {
     var ex = String(v('id_number')).replace(/\D/g, ''), en = String(dData.idNumber || '').replace(/\D/g, '');
-    checks.id_match = (ex.length >= 10 && en.length >= 10) ? ex === en : null;
+    checks.id_match = (dData.idType!=='Passport + SA permit' && ex.length >= 10 && en.length >= 10) ? ex === en : null;
     if (checks.id_match === false) flags.push('ID number on the document does not match the one you entered.');
     var a = _tcNorm(v('driver_name')), b = _tcNorm(dData.name);
     if (a && b) {
@@ -3956,6 +3959,12 @@ function _tcOn(sel, fn) { var n = _tcScan.el.querySelector(sel); if (n) n.addEve
 // Step 1 — camera with framing guide (falls back to the phone's native camera / gallery)
 function _tcScanOpenCamera(kind) {
   var cfg = TC_SCAN_KINDS[kind]; _tcScan.kind = kind;
+  window._tcAutoCam({ title:'Scan ' + cfg.label, mode:'doc', aspect:cfg.aspect, heading:'Position the document inside the frame',
+    hint:'All four corners visible · flat · well lit — it scans and captures by itself', consent:TC_SCAN_CONSENT,
+    onCapture:function(b) { _tcScanProcess(kind, b); } });
+}
+function _tcScanOpenCameraOld(kind) {
+  var cfg = TC_SCAN_KINDS[kind]; _tcScan.kind = kind;
   _tcScanView(_tcTop('Scan ' + cfg.label) +
     '<div class="tcs-stage"><video autoplay playsinline muted></video><div class="tcs-frame" style="aspect-ratio:' + cfg.aspect + '"><i></i><i></i><i></i><i></i></div>' +
     '<div class="tcs-live" id="tcs-live"></div>' +
@@ -3996,6 +4005,194 @@ function _tcScanOpenCamera(kind) {
     c.toBlob(function(b) { if (b) _tcScanProcess(kind, b); }, 'image/jpeg', 0.92);
   });
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// AUTO-SCAN ENGINE — live document / ID / face scanning with auto-capture
+// Watches the camera feed, checks light + sharpness + steadiness + that the
+// document (or face) is inside the guide, then captures by itself.
+// ═══════════════════════════════════════════════════════════════════════
+(function(){
+  var CSS = '.tca-line{position:absolute;left:5%;right:5%;height:3px;top:4%;border-radius:3px;background:linear-gradient(90deg,transparent,#4ade80,transparent);box-shadow:0 0 16px 3px rgba(74,222,128,.8);animation:tcaScan 2.1s ease-in-out infinite alternate;pointer-events:none}' +
+    '@keyframes tcaScan{from{top:4%}to{top:94%}}' +
+    '#tc-scan .tcs-frame:not(.ready) i{border-color:#fff}#tc-scan .tcs-frame.ready i{border-color:#4ade80}' +
+    '#tc-scan .tcs-frame.ready{box-shadow:0 0 0 999px rgba(0,0,0,.55),0 0 0 3px #4ade80}' +
+    '#tc-scan .tcs-frame.tcs-oval{border:3px solid rgba(255,255,255,.85);border-radius:50%;top:44%;width:66%;max-height:72%}#tc-scan .tcs-frame.tcs-oval.ready{box-shadow:0 0 0 999px rgba(0,0,0,.55)}#tc-scan .tcs-frame.tcs-oval.ready{border-color:#4ade80}' +
+    '#tc-scan .tcs-frame.ready .tca-line{animation-duration:.7s}' +
+    '.tca-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}.tca-flash.on{opacity:.9;transition:none}' +
+    '.tca-prog{height:5px;background:#1f1f22}.tca-prog div{height:100%;width:0;background:#4ade80;transition:width .15s linear}' +
+    '#tc-scan .tcs-live.ok{background:rgba(22,163,74,.92)}' +
+    '.tca-prev{width:100%;border-radius:16px;display:block;background:#000}.tca-prev.face{width:62%;margin:0 auto;border-radius:50%;aspect-ratio:1/1;object-fit:cover}';
+  function addCss(){ if(document.getElementById('tc-auto-css')) return; var s=document.createElement('style'); s.id='tc-auto-css'; s.textContent=CSS; document.head.appendChild(s); }
+
+  window._tcAutoCam = function(o){
+    addCss(); _tcScanEnsureUi();
+    var face = o.mode === 'face', HOLD = face ? 1500 : 1200;
+    _tcScanView(_tcTop(o.title) +
+      '<div class="tcs-stage"><video autoplay playsinline muted' + (face ? ' style="transform:scaleX(-1)"' : '') + '></video>' +
+      '<div class="tcs-frame' + (face ? ' tcs-oval' : '') + '" id="tca-frame" style="aspect-ratio:' + o.aspect + '">' + (face ? '' : '<i></i><i></i><i></i><i></i>') + '<div class="tca-line"></div></div>' +
+      '<div class="tcs-live" id="tcs-live" style="display:block">Starting camera…</div><div class="tca-flash" id="tca-flash"></div>' +
+      '<div class="tcs-hint"><b>' + safeText(o.heading) + '</b>' + safeText(o.hint) + '</div></div>' +
+      '<div class="tca-prog"><div id="tca-bar"></div></div>' +
+      (o.consent ? '<div class="tcs-consent">' + safeText(o.consent) + '</div>' : '') +
+      '<div class="tcs-bar"><button type="button" class="tcs-side" id="tcs-gal"' + (face ? ' style="visibility:hidden"' : '') + '>🖼️<br>Upload photo</button>' +
+      '<button type="button" class="tcs-shot" id="tcs-shot" style="visibility:hidden" aria-label="Capture now"></button>' +
+      '<button type="button" class="tcs-side" id="tcs-nat">📷<br>Phone camera</button></div>' +
+      '<input type="file" id="tcs-in-gal" accept="image/*,.jpg,.jpeg,.png" style="display:none"/><input type="file" id="tcs-in-nat" accept="image/*" capture="' + (face ? 'user' : 'environment') + '" style="display:none"/>');
+    var root = _tcScan.el, video = root.querySelector('video'), frame = root.querySelector('#tca-frame'),
+        live = root.querySelector('#tcs-live'), bar = root.querySelector('#tca-bar'), flash = root.querySelector('#tca-flash');
+    _tcOn('[data-a=close]', function(){ if (o.onClose) o.onClose(); _tcScanClose(); });
+    var pick = function(e){ var f = e.target.files && e.target.files[0]; if (f) o.onCapture(f); };
+    root.querySelector('#tcs-in-gal').addEventListener('change', pick);
+    root.querySelector('#tcs-in-nat').addEventListener('change', pick);
+    _tcOn('#tcs-gal', function(){ root.querySelector('#tcs-in-gal').click(); });
+    _tcOn('#tcs-nat', function(){ root.querySelector('#tcs-in-nat').click(); });
+
+    var done = false, since = 0, prev = null, W = 128, H = 96, busy = false, started = Date.now();
+    var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    var cx = cv.getContext('2d', { willReadFrequently: true });
+    var fd = null; if (face && window.FaceDetector) { try { fd = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 3 }); } catch (e) { fd = null; } }
+    function say(t, good){ live.style.display = 'block'; live.textContent = t; live.className = 'tcs-live' + (good ? ' ok' : ''); }
+    function capture(){
+      if (done) return; done = true;
+      var vw = video.videoWidth, vh = video.videoHeight, k = Math.min(1, (face ? 1100 : 1800) / Math.max(vw, vh));
+      var c = document.createElement('canvas'); c.width = Math.round(vw * k); c.height = Math.round(vh * k);
+      c.getContext('2d').drawImage(video, 0, 0, c.width, c.height);
+      flash.classList.add('on'); setTimeout(function(){ flash.classList.remove('on'); }, 60);
+      say('✓ Captured', true);
+      c.toBlob(function(b){ _tcScanStopCam(); if (b) o.onCapture(b); }, 'image/jpeg', 0.9);
+    }
+    // frame rectangle in analysis-canvas coordinates (accounts for object-fit:cover)
+    function frameRect(){
+      var vr = video.getBoundingClientRect(), fr = frame.getBoundingClientRect(), vw = video.videoWidth, vh = video.videoHeight;
+      var sc = Math.max(vr.width / vw, vr.height / vh), ox = (vr.width - vw * sc) / 2, oy = (vr.height - vh * sc) / 2, mx = face ? -1 : 1;
+      var x0 = (fr.left - vr.left - ox) / sc, x1 = (fr.right - vr.left - ox) / sc, y0 = (fr.top - vr.top - oy) / sc, y1 = (fr.bottom - vr.top - oy) / sc;
+      if (face) { var t = vw - x0; x0 = vw - x1; x1 = t; }
+      var kx = W / vw, ky = H / vh, cl = function(v, m){ return Math.max(0, Math.min(m, v)); };
+      return { x0: cl(Math.round(x0 * kx), W - 1), x1: cl(Math.round(x1 * kx), W - 1), y0: cl(Math.round(y0 * ky), H - 1), y1: cl(Math.round(y1 * ky), H - 1) };
+    }
+    function analyse(){
+      cx.drawImage(video, 0, 0, W, H);
+      var d = cx.getImageData(0, 0, W, H).data, g = new Float32Array(W * H), i, j;
+      for (i = 0, j = 0; i < d.length; i += 4, j++) g[j] = d[i] * .299 + d[i+1] * .587 + d[i+2] * .114;
+      var diff = 99; if (prev) { diff = 0; for (j = 0; j < g.length; j++) diff += Math.abs(g[j] - prev[j]); diff /= g.length; } prev = g;
+      var r = frameRect(), mean = 0, n = 0, x, y, m, edgy = 0;
+      var gm = new Float32Array(W * H);
+      for (y = 1; y < H - 1; y++) for (x = 1; x < W - 1; x++) { j = y * W + x; gm[j] = Math.abs(g[j+1] - g[j-1]) + Math.abs(g[j+W] - g[j-W]); }
+      for (y = r.y0; y <= r.y1; y++) for (x = r.x0; x <= r.x1; x++) { j = y * W + x; mean += g[j]; n++; if (gm[j] > 36) edgy++; }
+      mean /= Math.max(1, n); edgy /= Math.max(1, n);
+      var res = { diff: diff, mean: mean, edgy: edgy, sides: 0, skin: 0 };
+      if (!face) { // does the document line up with the four edges of the frame?
+        var band = 3, side = function(xa, ya, xb, yb){ var c = 0, t = 0; for (var yy = ya; yy <= yb; yy++) for (var xx = xa; xx <= xb; xx++) { t++; if (gm[yy * W + xx] > 30) c++; } return t ? c / t : 0; };
+        var rx0 = Math.max(1, r.x0), rx1 = Math.min(W - 2, r.x1), ry0 = Math.max(1, r.y0), ry1 = Math.min(H - 2, r.y1), s = 0;
+        if (side(rx0, Math.max(1, ry0 - band), rx1, ry0 + band) > .3) s++; if (side(rx0, Math.max(1, ry1 - band), rx1, Math.min(H - 2, ry1 + band)) > .3) s++;
+        if (side(Math.max(1, rx0 - band), ry0, rx0 + band, ry1) > .3) s++; if (side(Math.max(1, rx1 - band), ry0, Math.min(W - 2, rx1 + band), ry1) > .3) s++;
+        res.sides = s;
+      } else { // skin-tone share inside the oval vs. outside it (fallback when FaceDetector is unavailable)
+        var cxm = (r.x0 + r.x1) / 2, cym = (r.y0 + r.y1) / 2, rx = (r.x1 - r.x0) / 2, ry = (r.y1 - r.y0) / 2, inS = 0, inN = 0, outS = 0, outN = 0;
+        for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
+          var k4 = (y * W + x) * 4, R = d[k4], G = d[k4+1], B = d[k4+2], Cb = 128 - .168736 * R - .331264 * G + .5 * B, Cr = 128 + .5 * R - .418688 * G - .081312 * B;
+          var sk = Cb > 77 && Cb < 127 && Cr > 133 && Cr < 173 && R > 60, e = ((x - cxm) / rx) * ((x - cxm) / rx) + ((y - cym) / ry) * ((y - cym) / ry);
+          if (e <= 1) { inN++; if (sk) inS++; } else if (e > 1.6) { outN++; if (sk) outS++; }
+        }
+        res.skin = inS / Math.max(1, inN); res.skinOut = outS / Math.max(1, outN);
+      }
+      return res;
+    }
+    function tick(){
+      if (done || busy || !video.videoWidth) return;
+      var a; try { a = analyse(); } catch (e) { return; }
+      var msg = null, ready = false;
+      if (a.mean < 45) msg = 'Too dark — move to better light';
+      else if (a.mean > 225) msg = 'Too bright — avoid glare or flash';
+      else if (face) {
+        if (fd) {
+          busy = true;
+          fd.detect(video).then(function(fs){
+            busy = false; if (done) return;
+            var okF = false;
+            if (fs && fs.length === 1) { var bb = fs[0].boundingBox, vw = video.videoWidth, vh = video.videoHeight, cxF = (bb.x + bb.width / 2) / vw, cyF = (bb.y + bb.height / 2) / vh;
+              okF = bb.width / vw > .28 && bb.width / vw < .8 && Math.abs(cxF - .5) < .14 && Math.abs(cyF - .46) < .16; }
+            finish(a, okF, fs && fs.length > 1 ? 'Only one face please' : (fs && fs.length ? 'Centre your face in the oval' : 'Looking for your face…'));
+          }).catch(function(){ busy = false; fd = null; });
+          return;
+        }
+        ready = a.skin > .38 && a.skinOut < .45; if (!ready) msg = a.skin > .38 ? 'Move back a little' : 'Align your face inside the oval';
+      } else {
+        if (a.edgy < .05) msg = 'Looking for the document… move closer, fill the frame';
+        else ready = a.sides >= 3 || a.edgy > .16;
+        if (!ready && !msg) msg = 'Line the document up with the frame';
+      }
+      finish(a, ready, msg);
+    }
+    function finish(a, ready, msg){
+      if (done) return;
+      if (ready && a.diff >= (face ? 7 : 6)) { ready = false; msg = 'Hold steady…'; }
+      frame.classList.toggle('ready', ready);
+      if (ready) {
+        if (!since) since = Date.now();
+        var p = Math.min(1, (Date.now() - since) / HOLD); bar.style.width = (p * 100) + '%';
+        say(face ? 'Hold still — scanning your face…' : 'Scanning… hold steady', true);
+        if (p >= 1) capture();
+      } else { since = 0; bar.style.width = '0'; if (msg) say(msg, false); }
+    }
+    function startManualHint(){ var s = root.querySelector('#tcs-shot'); if (s && !done) s.style.visibility = 'visible'; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { say('Camera unavailable — use Phone camera' + (face ? '' : ' or Upload photo')); return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: face ? 'user' : 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false }).then(function(st){
+      if (!_tcScan.el || _tcScan.el.style.display === 'none') { st.getTracks().forEach(function(t){ t.stop(); }); return; }
+      _tcScan.stream = st; video.srcObject = st; video.play && video.play().catch(function(){});
+      say(face ? 'Align your face inside the oval' : 'Place the document inside the frame');
+      _tcScan.timer = setInterval(tick, 160);
+      setTimeout(startManualHint, 8000);
+    }).catch(function(){ say('Camera blocked or unavailable — use Phone camera' + (face ? '' : ' or Upload photo')); });
+    _tcOn('#tcs-shot', function(){ if (video.videoWidth) capture(); });
+  };
+
+  // Review screen for captured ID / face (capture-only items)
+  function review(o, blob){
+    var url = URL.createObjectURL(blob);
+    _tcScanView(_tcTop(o.title) + '<div class="tcs-panel"><div class="tcs-h">' + safeText(o.reviewTitle) + '</div><div class="tcs-p" style="margin-bottom:12px">' + safeText(o.reviewSub) + '</div>' +
+      '<img class="tca-prev' + (o.mode === 'face' ? ' face' : '') + '" src="' + url + '" alt="Captured"/>' +
+      '<button type="button" class="tcs-btn" data-a="ok">✓ Use this scan</button><button type="button" class="tcs-btn o" data-a="again">Retake</button></div>');
+    _tcOn('[data-a=close]', function(){ URL.revokeObjectURL(url); _tcScanClose(); });
+    _tcOn('[data-a=again]', function(){ URL.revokeObjectURL(url); run(o); });
+    _tcOn('[data-a=ok]', function(){ _tcScanClose(); o.onAccept(blob, url); });
+  }
+  function run(o){ window._tcAutoCam({ title: o.title, mode: o.mode, aspect: o.aspect, heading: o.heading, hint: o.hint, onCapture: function(b){ review(o, b); } }); }
+
+  window._tcIdScan = function(){
+    run({ title: 'Scan your ID', mode: 'doc', aspect: 1.586, heading: 'Place your ID inside the frame', hint: 'Keep it flat and well lit — it captures automatically',
+      reviewTitle: 'Is your ID clear?', reviewSub: 'All text and your photo must be readable. Retake if there is glare or blur.',
+      onAccept: function(blob){
+        dData.idFileObj = blob; dData.idPhoto = 'pending-upload'; try { _saveOBState(); } catch (e) {}
+        _tcIdScanPaint(); toast('✅ ID scanned');
+      } });
+  };
+  window._tcFaceScan = function(cb){
+    run({ title: 'Face scan', mode: 'face', aspect: 0.78, heading: 'Centre your face in the oval', hint: 'Look straight at the camera — it captures automatically',
+      reviewTitle: 'Is this you?', reviewSub: 'Your face must be clearly visible. This is compared with your ID by our team.',
+      onAccept: function(blob){ dData.faceFileObj = blob; dData.facePhoto = 'pending-upload'; try { _saveOBState(); } catch (e) {} cb(blob); } });
+  };
+  window._tcIdScanOk = function(){ return !!(dData.idFileObj instanceof Blob || (typeof _tcIsTest === 'function' && _tcIsTest())); };
+  window._tcIdScanPaint = function(){
+    var box = document.getElementById('idscan-box'); if (!box) return;
+    var has = dData.idFileObj instanceof Blob;
+    box.style.borderColor = has ? '#4ade80' : '';
+    document.getElementById('idscan-icon').textContent = has ? '✅' : '🪪';
+    document.getElementById('idscan-status').innerHTML = has ? '<span style="color:#166534;">ID scanned ✓ · tap to rescan</span>' : 'Tap to scan — it captures automatically';
+    var e = document.getElementById('d-eidscan'); if (e && has) e.style.display = 'none';
+  };
+  window._tcInjectIdScan = function(){
+    if (typeof dStep === 'undefined' || dStep !== 1 || document.getElementById('idscan-box')) return;
+    var btn = document.getElementById('d-next-btn'); if (!btn) return;
+    var box = document.createElement('div'); box.className = 'upload-box'; box.id = 'idscan-box';
+    box.innerHTML = '<div style="font-size:28px;margin-bottom:8px;" id="idscan-icon">🪪</div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Scan your ID or passport</div><div style="font-size:11px;color:var(--muted);" id="idscan-status"></div>';
+    var err = document.createElement('div'); err.className = 'err-msg'; err.id = 'd-eidscan'; err.textContent = 'Please scan your ID to continue.';
+    btn.parentNode.insertBefore(box, btn); btn.parentNode.insertBefore(err, btn);
+    box.addEventListener('click', function(){ window._tcIdScan(); });
+    window._tcIdScanPaint();
+  };
+})();
 
 function _tcScanWorking(msg, sub) {
   _tcScanStopCam();
@@ -4136,6 +4333,12 @@ window._tcPrepareScanRecords = async function(uid) {
     };
     if (kind === 'licence') out.licencePath = path; if (kind === 'prdp') out.prdpPath = path;
   }
+  async function _upCap(k, nm) {
+    var b = dData[k]; if (!(b instanceof Blob)) return null;
+    if (FB && FB.storageRef && FB.uploadBytes) { try { var p = 'driver-docs/' + uid + '/' + nm + '-' + Date.now() + '.jpg'; await FB.uploadBytes(FB.storageRef(FB.storage, p), b); return p; } catch (e) {} }
+    (window._tcUploadFails = window._tcUploadFails || []).push(nm); return null;
+  }
+  out.idPath = await _upCap('idFileObj', 'id-card'); out.facePath = await _upCap('faceFileObj', 'face-scan');
   if (Object.keys(scans).length) out.docScans = scans;
   return out;
 };
@@ -4243,6 +4446,43 @@ function _tcNotifSvg(title){
     p='<path d="M16 26a16 16 0 0 1 32 0c0 11 4 15 4 15H12s4-4 4-15z"/><path d="M26 50a6 6 0 0 0 12 0"/>';
   return '<svg viewBox="0 0 64 64" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
 }
+/* Tell the worker something happened (cancel, chat, dispute...). It decides who gets a push. */
+function _tcEvent(type,bookingId,vars,extra){
+  try{
+    var FB=window._FB;
+    if(!FB||!FB.auth||!FB.auth.currentUser)return;
+    FB.auth.currentUser.getIdToken().then(function(t){
+      return fetch(TC_FCM_WORKER_URL+'/event',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},
+        body:JSON.stringify(Object.assign({type:type,bookingId:bookingId||'',vars:vars||{}},extra||{}))});
+    }).catch(function(){});
+  }catch(e){}
+}
+window._tcEvent=_tcEvent;
+
+/* Heading back? Tell the driver where return trips are, right after a delivery. */
+function _tcReturnNudge(jobId){
+  try{
+    if(localStorage.getItem('tc_ret_nudge_off')==='1')return;
+    if(window._tcCanReturnTrip&&!window._tcCanReturnTrip())return;
+    if(document.getElementById('tc-ret-nudge'))return;
+    var ov=document.createElement('div');ov.id='tc-ret-nudge';
+    ov.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99990;background:#111;color:#fff;border-radius:22px 22px 0 0;padding:22px 20px calc(26px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.5);font-family:inherit;';
+    ov.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:6px;">Delivered. Heading back?</div>'+
+      '<div style="font-size:13.5px;line-height:1.5;opacity:.8;margin-bottom:16px;">Post a return trip so customers going your way can book your empty truck. You do not need to set a price.</div>'+
+      '<button id="tc-rn-go" style="width:100%;padding:15px;border:0;border-radius:14px;background:#1677F2;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">Post my return trip</button>'+
+      '<button id="tc-rn-no" style="width:100%;padding:12px;border:0;background:none;color:#fff;opacity:.7;font-size:13px;margin-top:6px;cursor:pointer;">Not now</button>'+
+      '<button id="tc-rn-off" style="width:100%;padding:6px;border:0;background:none;color:#fff;opacity:.45;font-size:12px;cursor:pointer;text-decoration:underline;">Do not show this again</button>';
+    document.body.appendChild(ov);
+    document.getElementById('tc-rn-go').onclick=function(){ov.remove();if(window._tcOpenReturn)window._tcOpenReturn('new');};
+    document.getElementById('tc-rn-no').onclick=function(){ov.remove();};
+    document.getElementById('tc-rn-off').onclick=function(){try{localStorage.setItem('tc_ret_nudge_off','1');}catch(e){}ov.remove();};
+    setTimeout(function(){try{ov.remove();}catch(e){}},20000);
+    try{_tcEvent('return_hint',jobId,{});}catch(e){}
+  }catch(e){}
+}
+window._tcReturnNudge=_tcReturnNudge;
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#dh-return-btn');if(b&&window._tcOpenReturn)window._tcOpenReturn('new');});
+
 function _notifyCustomer(uid, title, body, bookingId, icon, kind){
   if(!uid)return;
   title=_tcNotifClean(title)||'Truck Connect'; body=_tcNotifClean(body);
@@ -4531,6 +4771,11 @@ function _tcNeedsPrdp(gvm,payload){
 var BANKS=["Capitec Bank","FNB","Standard Bank","ABSA","Nedbank","TymeBank","African Bank","Discovery Bank","Other"];
 var BRANCH={"Capitec Bank":"470010","FNB":"250655","Standard Bank":"051001","ABSA":"632005","Nedbank":"198765","TymeBank":"678910"};
 var PROVS=["Gauteng","Western Cape","KwaZulu-Natal","Eastern Cape","Limpopo","Mpumalanga","North West","Free State","Northern Cape"];
+var TC_ALL_COUNTRIES=[['ZA','South Africa'],['BW','Botswana'],['NA','Namibia'],['ZW','Zimbabwe'],['MZ','Mozambique'],['SZ','Eswatini'],['LS','Lesotho'],['ZM','Zambia'],['MW','Malawi'],['XX','Other country']];
+// Launch markets. Add codes here (e.g. 'BW','NA') to open other countries later.
+var TC_ENABLED_COUNTRIES=['ZA'];
+var TC_COUNTRIES=TC_ALL_COUNTRIES.filter(function(c){return TC_ENABLED_COUNTRIES.indexOf(c[0])>-1;});
+function _tcIsForeign(){return !!(dData&&dData.country&&dData.country!=='ZA');}
 var dData={},dStep=0,isOnline=false,is3D=true;
 
 // Registration is strict: licence, PrDP, disc, selfie, truck photo and the Terms are all required. There is no developer bypass.
@@ -4541,7 +4786,7 @@ var dData={},dStep=0,isOnline=false,is3D=true;
 // wipes the driver's progress.
 // FIX: document photos are Blobs. JSON/sessionStorage turns a Blob into {} so after Android reloads the
 // page (common when the camera opens) the photo was silently lost. Blobs now live in IndexedDB.
-var _TC_BLOB_KEYS=['licenceFileObj','prdpFileObj','discFileObj','bankProofFileObj','operatorCardFileObj'];
+var _TC_BLOB_KEYS=['licenceFileObj','prdpFileObj','discFileObj','bankProofFileObj','operatorCardFileObj','idFileObj','faceFileObj'];
 var _tcBlobDB=null;
 function _tcBlobOpen(){
   return new Promise(function(res){
@@ -4573,7 +4818,7 @@ function _tcBlobClearAll(){
 // Add lower-case emails, e.g. ['yourtest@gmail.com']. Leave [] to disable completely.
 var TC_TEST_EMAILS=[];
 function _tcIsTest(){return !!(dData&&dData.email&&TC_TEST_EMAILS.indexOf(String(dData.email).trim().toLowerCase())>-1);}
-var _TC_SENSITIVE_KEYS=['password','idNumber','passportCountry','bank','accountHolder','accountNumber','accountType','branchCode'];
+var _TC_SENSITIVE_KEYS=['password','idNumber','passportCountry','permitNumber','bank','accountHolder','accountNumber','accountType','branchCode'];
 function _tcStripSensitive(k,v){
   if(v instanceof Blob)return undefined;
   if(k&&_TC_SENSITIVE_KEYS.indexOf(k)>-1)return undefined;
@@ -4593,7 +4838,7 @@ function _restoreOBState(){
       // Sensitive values are deliberately not stored, so ask for them again after a reload.
       if(dStep>5&&s.bankEntered&&!dData.accountNumber)dStep=5;
       // Re-attach saved document photos; if one is gone, clear its "saved" flag so the driver is asked again.
-      var _map={licenceFileObj:'licensePhoto',prdpFileObj:'prdpPhoto',discFileObj:'discPhoto',bankProofFileObj:'bankProofPhoto',operatorCardFileObj:'operatorCardPhoto'};
+      var _map={licenceFileObj:'licensePhoto',prdpFileObj:'prdpPhoto',discFileObj:'discPhoto',bankProofFileObj:'bankProofPhoto',operatorCardFileObj:'operatorCardPhoto',idFileObj:'idPhoto',faceFileObj:'facePhoto'};
       window._tcOBBlobsReady=Promise.all(_TC_BLOB_KEYS.map(function(k){
         return _tcBlobGet(k).then(function(b){
           if(b){dData[k]=b;}
@@ -4722,6 +4967,7 @@ function stepBar(steps,cur){
 }
 
 function renderStep(){
+  setTimeout(function(){try{window._tcInjectIdScan&&window._tcInjectIdScan();}catch(e){}},30);
   var badge=document.getElementById('auth-step-badge');
   if(badge)badge.textContent='STEP '+(dStep+1)+'/7';
   stepBar(['Info','License','Vehicle','Docs','Selfie','Bank','T&C'],dStep);
@@ -4732,6 +4978,10 @@ function renderStep(){
   if(dStep===0){
     body.innerHTML='<div class="section-title">Driver Info</div><div class="section-sub">Details must match your official documents.</div>'+
       '<div class="sec-badge">🔒 Your details are stored securely and only used to verify you</div>'+
+      (TC_COUNTRIES.length<2?'<div style="display:none">':'<div class="fg">')+'<span class="fl">Country</span><select class="fs" id="d-country" onchange="window._dAcctUI&&window._dAcctUI()">'+TC_COUNTRIES.map(function(c){return '<option value="'+c[0]+'"'+((dData.country||'ZA')===c[0]?' selected':'')+'>'+c[1]+'</option>';}).join('')+'</select><div id="d-country-note" style="display:none;font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.45;">Drivers outside South Africa are not checked by TruckConnect. You enter your details yourself and the customer sees that they are not verified.</div></div>'+
+      '<div class="fg"><span class="fl">Account type</span><select class="fs" id="d-accttype" onchange="window._dAcctUI&&window._dAcctUI()"><option value="individual"'+((dData.entityType||'individual')==='individual'?' selected':'')+'>Individual driver</option><option value="company"'+(dData.entityType==='company'?' selected':'')+'>Company / fleet owner</option></select></div>'+
+      '<div id="d-co-wrap" style="display:none;"><div class="fg"><span class="fl">Company Name</span><input class="fi" id="d-coname" maxlength="80" placeholder="Registered company name" value="'+(dData.companyName||'')+'"/><div class="err-msg" id="d-econame"></div></div>'+
+      '<div class="fg"><span class="fl">Company Registration Number</span><input class="fi" id="d-coreg" maxlength="30" placeholder="e.g. 2015/123456/07" value="'+(dData.companyReg||'')+'"/><div class="err-msg" id="d-ecoreg"></div></div></div>'+
       '<div class="fg"><span class="fl">Full Name</span><input class="fi" id="d-name" placeholder="As on your ID" value="'+(dData.name||'')+'"/><div class="err-msg" id="d-en"></div></div>'+
       '<div class="fg"><span class="fl">Phone Number</span><input class="fi" id="d-phone" type="tel" placeholder="e.g. 082 345 6789" value="'+(dData.phone||'')+'"/><div class="err-msg" id="d-ep"></div></div>'+
       '<div class="fg"><span class="fl">Email Address</span><input class="fi" id="d-email" type="email" placeholder="you@example.com" value="'+(dData.email||'')+'"/><div class="err-msg" id="d-ee"></div></div>'+
@@ -4748,13 +4998,36 @@ function renderStep(){
       var labels=['','Weak','Fair','Good','Strong','Very Strong'][score];
       fill.style.width=pct+'%';fill.style.background=colors;lbl.textContent=labels;lbl.style.color=colors;
     };
+    window._dAcctUI=function(){
+      var c=document.getElementById('d-country'),a=document.getElementById('d-accttype');
+      var w=document.getElementById('d-co-wrap'),n=document.getElementById('d-country-note');
+      if(w)w.style.display=(a&&a.value==='company')?'block':'none';
+      if(n)n.style.display=(c&&c.value!=='ZA')?'block':'none';
+    };
+    window._dAcctUI();
     on('d-next-btn','click',dNext);
+  } else if(dStep===1&&_tcIsForeign()){
+    body.innerHTML='<div class="section-title">Your Licence Details</div><div class="section-sub">TruckConnect does not check these. The customer will see that they are not verified.</div>'+
+      '<div class="fg"><span class="fl">Full Name</span><input class="fi" id="d-lic-name" placeholder="As it appears on your ID or passport" value="'+(dData.name||'')+'"/><div class="err-msg" id="d-elname"></div></div>'+
+      '<div class="fg"><span class="fl">ID or Passport Number</span><input class="fi" id="d-idnum" maxlength="30" placeholder="Your national ID or passport number" value="'+(dData.idNumber||'')+'"/><div class="err-msg" id="d-eid"></div></div>'+
+      '<div class="fg"><span class="fl">Licence Class / Code (optional)</span><input class="fi" id="d-lic-text" maxlength="30" placeholder="As on your driver\'s licence" value="'+((dData.licenseCode&&dData.licenseCode!=='FOREIGN')?dData.licenseCode:'')+'"/></div>'+
+      '<label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:14px;background:rgba(255,255,255,.06);border:1.5px solid var(--border);border-radius:12px;margin-bottom:16px;"><input type="checkbox" id="d-age18" style="width:18px;height:18px;accent-color:var(--dark);flex-shrink:0;margin-top:2px;"'+(dData.age18?' checked':'')+'/><span style="font-size:13px;color:#e6edf3;line-height:1.5;">I am 18 years or older and hold a valid driver\'s licence for this vehicle.</span></label><div class="err-msg" id="d-eage"></div>'+
+      '<button class="btn btn-dark" id="d-next-btn">Continue →</button><button class="btn btn-outline" id="d-back-btn">← Back</button>';
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=0;renderStep();});
   } else if(dStep===1){
     body.innerHTML='<div class="section-title">Your License Details</div><div class="section-sub">We use this to confirm you\'re legally allowed to drive for TruckConnect.</div>'+
       '<div class="fg"><span class="fl">Full Name</span><input class="fi" id="d-lic-name" placeholder="As it appears on your ID" value="'+(dData.name||'')+'"/><div class="err-msg" id="d-elname"></div></div>'+
-      '<div class="fg"><span class="fl">SA ID Number</span><input class="fi" id="d-idnum" type="tel" placeholder="13-digit SA ID number" maxlength="13" oninput="window._dValidateSAID()" value="'+(dData.idNumber||'')+'"/><div id="d-said-status" class="id-status"></div><div class="err-msg" id="d-eid"></div></div>'+
+      '<div class="fg"><span class="fl">I identify with</span><select class="fs" id="d-idtype" onchange="window._dIdUI()"><option value="sa"'+(dData.idType!=='Passport + SA permit'?' selected':'')+'>South African ID</option><option value="permit"'+(dData.idType==='Passport + SA permit'?' selected':'')+'>Passport + work permit (living in South Africa)</option></select></div>'+
+      '<div id="d-sa-wrap"><div class="fg"><span class="fl">SA ID Number</span><input class="fi" id="d-idnum" type="tel" placeholder="13-digit SA ID number" maxlength="13" oninput="window._dValidateSAID()" value="'+(dData.idType!=='Passport + SA permit'?(dData.idNumber||''):'')+'"/><div id="d-said-status" class="id-status"></div><div class="err-msg" id="d-eid"></div></div></div>'+
+      '<div id="d-pm-wrap" style="display:none"><div class="fg"><span class="fl">Passport Number</span><input class="fi" id="d-pp-num" maxlength="30" placeholder="As on your passport" value="'+(dData.idType==='Passport + SA permit'?(dData.idNumber||''):'')+'"/><div class="err-msg" id="d-epp"></div></div>'+
+      '<div class="fg"><span class="fl">Nationality</span><input class="fi" id="d-pp-nat" maxlength="40" placeholder="e.g. Botswana" value="'+(dData.passportCountry||'')+'"/><div class="err-msg" id="d-enat"></div></div>'+
+      '<div class="fg"><span class="fl">SA Work / Residence Permit Number</span><input class="fi" id="d-pm-num" maxlength="40" placeholder="Permit or visa number" value="'+(dData.permitNumber||'')+'"/><div class="err-msg" id="d-epm"></div></div>'+
+      '<div class="fg"><span class="fl">Permit Expiry Date</span><input class="fi" id="d-pm-exp" type="date" value="'+(dData.permitExpiry||'')+'"/><div class="err-msg" id="d-epmx"></div></div>'+
+      '<label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:14px;background:rgba(255,255,255,.06);border:1.5px solid var(--border);border-radius:12px;margin-bottom:16px;"><input type="checkbox" id="d-age18" style="width:18px;height:18px;accent-color:var(--dark);flex-shrink:0;margin-top:2px;"'+(dData.age18?' checked':'')+'/><span style="font-size:13px;color:#e6edf3;line-height:1.5;">I am 18 years or older and I am legally allowed to work and drive in South Africa.</span></label><div class="err-msg" id="d-eage"></div></div>'+
       '<div class="fg"><span class="fl">License Code</span><select class="fs" id="d-licensecode"><option value="">Select code</option><option value="8"'+(dData.licenseCode==='8'?' selected':'')+'>Code 8 — Light motor vehicle</option><option value="10"'+(dData.licenseCode==='10'?' selected':'')+'>Code 10 — Heavy motor vehicle</option><option value="14"'+(dData.licenseCode==='14'?' selected':'')+'>Code 14 — Extra heavy vehicle</option></select><div class="err-msg" id="d-elic"></div></div>'+
       '<button class="btn btn-dark" id="d-next-btn">Continue →</button><button class="btn btn-outline" id="d-back-btn">← Back</button>';
+    window._dIdUI=function(){var t=document.getElementById('d-idtype');var p=t&&t.value==='permit';var a=document.getElementById('d-sa-wrap'),b=document.getElementById('d-pm-wrap');if(a)a.style.display=p?'none':'block';if(b)b.style.display=p?'block':'none';};
+    window._dIdUI();
     window._dValidateSAID=function(){
       var id=(val('d-idnum')||'').replace(/\D/g,'');
       var st=document.getElementById('d-said-status');if(!st)return;
@@ -4781,18 +5054,32 @@ function renderStep(){
       '<div class="fg"><span class="fl">VIN / Chassis Number</span><input class="fi" id="d-vin" placeholder="e.g. AHTGK12M30045678" value="'+(dData.vin||'')+'"/><div class="err-msg" id="d-evin"></div></div>'+
       '<div class="fg"><span class="fl">Engine Number</span><input class="fi" id="d-engine" placeholder="e.g. 2TR789456" value="'+(dData.engineNumber||'')+'"/><div class="err-msg" id="d-eengine"></div></div>'+
       '<div class="fg"><span class="fl">Payload Capacity</span><select class="fs" id="d-payload"><option value="">Select capacity</option>'+
-        [1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,8.5].map(function(t){return '<option value="'+t+'"'+(dData.payloadCapacity===String(t)?' selected':'')+'>'+t+'-Ton</option>';}).join('')+
+        [1,2,3,4,5,6,7,8,9,10,12,15,20,28,34].map(function(t){return '<option value="'+t+'"'+(dData.payloadCapacity===String(t)?' selected':'')+'>'+t+'-Ton'+(t>10?' (heavy)':'')+'</option>';}).join('')+
         '</select><div class="err-msg" id="d-epayload"></div></div>'+
       '<div class="fg"><span class="fl">GVM — Gross Vehicle Mass (kg)</span><input class="fi" id="d-gvm" type="tel" inputmode="numeric" maxlength="6" placeholder="e.g. 3500 (see your licence disc)" value="'+(dData.gvm||'')+'"/><div style="font-size:11px;color:var(--muted);margin-top:4px;">Printed on your vehicle licence disc. Vehicles over 3,500 kg need a PrDP and an operator card.</div><div class="err-msg" id="d-egvm"></div></div>'+
       '<div id="d-heavy" style="display:none;"><div class="fg"><span class="fl">PrDP (Goods) Expiry Date</span><input class="fi" id="d-prdpexp" type="date" value="'+(dData.prdpExpiry||'')+'"/><div class="err-msg" id="d-eprdpexp"></div></div></div>'+
-      '<div class="fg"><span class="fl">Body Type</span><select class="fs" id="d-bodytype"><option value="">Select body type</option><option value="open"'+(dData.bodyType==='open'?' selected':'')+'>Open</option><option value="closed"'+(dData.bodyType==='closed'?' selected':'')+'>Closed</option><option value="fridge"'+(dData.bodyType==='fridge'?' selected':'')+'>Fridge</option></select><div class="err-msg" id="d-ebodytype"></div></div>'+
+      '<div class="fg"><span class="fl">Body Type</span><select class="fs" id="d-bodytype"><option value="">Select body type</option><option value="open"'+(dData.bodyType==='open'?' selected':'')+'>Open</option><option value="closed"'+(dData.bodyType==='closed'?' selected':'')+'>Closed</option><option value="fridge"'+(dData.bodyType==='fridge'?' selected':'')+'>Fridge</option><option value="dropside"'+(dData.bodyType==='dropside'?' selected':'')+'>Dropside</option><option value="curtain-side"'+(dData.bodyType==='curtain-side'?' selected':'')+'>Curtain-side</option><option value="flatbed"'+(dData.bodyType==='flatbed'?' selected':'')+'>Flatbed</option><option value="tautliner"'+(dData.bodyType==='tautliner'?' selected':'')+'>Tautliner</option><option value="tipper"'+(dData.bodyType==='tipper'?' selected':'')+'>Tipper</option><option value="side tipper"'+(dData.bodyType==='side tipper'?' selected':'')+'>Side tipper</option></select><div class="err-msg" id="d-ebodytype"></div></div>'+
+      '<div class="fg"><span class="fl">Truck ownership</span><select class="fs" id="d-owner"><option value="">Select</option><option value="owner"'+(dData.ownership==='owner'?' selected':'')+'>I own this truck</option><option value="employee"'+(dData.ownership==='employee'?' selected':'')+'>I drive it for a company or owner</option></select><div style="font-size:11px;color:var(--muted);margin-top:4px;">If you drive for someone else, TruckConnect may ask for a letter from the owner.</div></div>'+
+      (_tcIsForeign()?'<div class="fg"><span class="fl">Cross-border permit number (optional)</span><input class="fi" id="d-xperm" maxlength="40" placeholder="If you have one" value="'+(dData.xPermit||'')+'"/></div>':'')+
       '<div class="fg"><span class="fl">Fragile Care vehicle (optional)</span><select class="fs" id="d-courierveh"><option value="">Not for Fragile Care</option><option value="bakkie"'+(dData.courierVehicle==='bakkie'?' selected':'')+'>Closed bakkie (any make)</option><option value="van"'+(dData.courierVehicle==='van'?' selected':'')+'>Panel van / minivan with no seats</option></select><div style="font-size:11px;color:var(--muted,#888);margin-top:6px;">For small furniture and fragile goods in a closed vehicle. Our team checks your vehicle photos before you can take these jobs.</div></div>'+
       '<div class="fg"><span class="fl">License Disc Expiry Date</span><input class="fi" id="d-discexp" type="date" value="'+(dData.discExpiry||'')+'"/><div class="err-msg" id="d-ediscexp"></div></div>'+
       '<button class="btn btn-dark" id="d-next-btn">Continue →</button><button class="btn btn-outline" id="d-back-btn">← Back</button>';
-    window._dHeavy=function(){var h=document.getElementById('d-heavy');if(h)h.style.display=_tcNeedsPrdp(val('d-gvm'),val('d-payload'))?'block':'none';};
+    window._dHeavy=function(){var h=document.getElementById('d-heavy');if(h)h.style.display=(_tcIsForeign()||_tcNeedsPrdp(val('d-gvm'),val('d-payload')))?'block':'none';};
     ['d-gvm','d-payload'].forEach(function(i){var el=document.getElementById(i);if(el){el.addEventListener('input',window._dHeavy);el.addEventListener('change',window._dHeavy);}});
     window._dHeavy();
+    if(_tcIsForeign()){
+      ['d-vin','d-engine','d-gvm','d-discexp','d-prdpexp'].forEach(function(id){
+        var el=document.getElementById(id),lb=el&&el.closest('.fg')&&el.closest('.fg').querySelector('.fl');
+        if(lb&&!/optional/i.test(lb.textContent))lb.textContent=lb.textContent.replace('PrDP (Goods) Expiry Date','PrDP / permit expiry date')+' (optional)';
+      });
+    }
     on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=1;renderStep();});
+  } else if(dStep===3&&_tcIsForeign()){
+    body.innerHTML='<div class="section-title">Your Documents</div><div class="section-sub">Drivers outside South Africa do not upload documents in the app.</div>'+
+      '<div style="background:#fff6e0;border:1px solid #f1d28a;color:#7a5200;border-radius:14px;padding:14px;font-size:13.5px;line-height:1.55;margin-bottom:16px;"><b>What happens next</b><br/>TruckConnect connects you with customers but does not check your licence, permits or truck papers. Keep them with you, and have your driver\'s licence, truck papers and any cross-border permit ready to show the customer. We may also contact you on WhatsApp or email to confirm your details.</div>'+
+      '<div class="err-msg" id="d-edocs" style="display:none;"></div>'+
+      '<button class="btn btn-dark" id="d-next-btn">Continue →</button><button class="btn btn-outline" id="d-back-btn">← Back</button>';
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=2;renderStep();});
   } else if(dStep===3){
     body.innerHTML='<div class="section-title">Upload Your Documents</div><div class="section-sub">Tap each card to add a photo. Make sure text is clear and readable.</div>'+
       '<div class="err-msg" id="d-edocs" style="margin-bottom:8px;">Please upload all the documents to continue.</div>'+
@@ -4837,7 +5124,7 @@ function renderStep(){
     setTimeout(function(){
       var selfieBtn=document.getElementById('selfie-uas-btn');
       if(selfieBtn){selfieBtn.addEventListener('click',function(){
-        window._uasOpen('Live Selfie',function(file){
+        window._tcFaceScan(function(file){
           compressSelfie(file,function(dataUrl){
             if(!dataUrl){toast('Could not read that photo. Please try again.');return;}
             dData.selfiePhoto=dataUrl;
@@ -4886,7 +5173,8 @@ function renderStep(){
       '7. No commission or hidden fees apply — you keep 100% of every job you complete. All pricing is displayed upfront during onboarding.<br/>'+
       '8. The platform is not responsible for accidents, damages, delays, disputes, or losses that occur during transport services, as all activities are carried out between drivers and clients at their own risk.<br/>'+
       '9. User data is stored securely and handled in accordance with South African data protection laws (POPIA), and may not be shared without consent except where required by law.<br/>'+
-      '10. The platform may update these terms at any time. Continued use of the app constitutes acceptance of the updated terms.</div>'+
+      '10. The platform may update these terms at any time. Continued use of the app constitutes acceptance of the updated terms.'+
+      (_tcIsForeign()?'<br/><br/><strong style="color:var(--text);">Drivers outside South Africa</strong><br/>11. TruckConnect only connects you with customers. It does not check or verify your licence, permits, truck papers or any other document, and customers are told this.<br/>12. You are responsible for your licence, cross-border permits, customs papers, insurance, border fees and for obeying the laws of every country you drive in.<br/>13. Payment, currency and any dispute are agreed directly between you and the customer.':'')+'</div>'+
       '<label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:14px;background:#fff;border:1.5px solid var(--border);border-radius:12px;margin-bottom:16px;">'+
       '<input type="checkbox" id="d-tc-agree" style="width:18px;height:18px;accent-color:var(--dark);flex-shrink:0;margin-top:2px;"/>'+
       '<span style="font-size:13px;color:var(--text);line-height:1.5;">I have read and agree to the TruckConnect Driver Terms &amp; Conditions and the <a href="privacy.html" target="_blank" rel="noopener" style="color:#1677F2;">Privacy Policy</a>. <a href="terms.html#drivers" target="_blank" rel="noopener" style="color:#1677F2;">Read the full terms</a></span></label>'+
@@ -4897,24 +5185,56 @@ function renderStep(){
 }
 
 function dNext(){
+  if(dStep===1&&window._tcIdScanOk&&!window._tcIdScanOk()){var _ie=document.getElementById('d-eidscan');if(_ie)_ie.style.display='block';toast('Please scan your ID first');return;}
   if(dStep===0){
     var n=val('d-name').trim(),p=val('d-phone').trim(),e=val('d-email').trim(),w=val('d-pass');
     var ok=true;
     if(!n){showErr('d-en','Full name required');ok=false;}else hideErr('d-en');
-    if(p.replace(/\D/g,'').length<10){showErr('d-ep','Valid SA phone required');ok=false;}else hideErr('d-ep');
+    var _ctry=(val('d-country')||'ZA'),_acct=(val('d-accttype')||'individual'),_foreign0=(_ctry!=='ZA');
+    if(p.replace(/\D/g,'').length<(_foreign0?7:10)){showErr('d-ep',_foreign0?'Enter your phone number with the country code':'Valid SA phone required');ok=false;}else hideErr('d-ep');
+    var _coN='',_coR='';
+    if(_acct==='company'){
+      _coN=(val('d-coname')||'').trim();_coR=(val('d-coreg')||'').trim();
+      if(_coN.length<2){showErr('d-econame','Company name required');ok=false;}else hideErr('d-econame');
+      if(_coR.length<5){showErr('d-ecoreg','Company registration number required');ok=false;}else hideErr('d-ecoreg');
+    }
     var isFake = /temp|trash|mailinator|disposable|fake/i.test(e);
     if(!e.includes('@')){ showErr('d-ee','Valid email required'); ok=false; }
     else if(isFake){ showErr('d-ee','Please use a permanent email address'); ok=false; }
     else { hideErr('d-ee'); }
     if(w.length<6){showErr('d-ew','Minimum 6 characters');ok=false;}else hideErr('d-ew');
     if(!ok)return; // strict outside dev mode — Firebase Auth genuinely needs a real email+password; in dev mode steps pass so every screen can be screenshotted
-    dData.name=n;dData.phone=p;dData.email=e;dData.password=w;dStep=1;_saveOBState();renderStep();
+    dData.name=n;dData.phone=p;dData.email=e;dData.password=w;dData.country=_ctry;dData.entityType=_acct;dData.companyName=(_acct==='company')?_coN:'';dData.companyReg=(_acct==='company')?_coR:'';dStep=1;_saveOBState();renderStep();
+  } else if(dStep===1&&_tcIsForeign()){
+    var fname=val('d-lic-name').trim(),fid=(val('d-idnum')||'').trim(),flic=(val('d-lic-text')||'').trim();
+    var fok=true;
+    if(fname.length<3){showErr('d-elname','Full name required');fok=false;}else hideErr('d-elname');
+    if(fid.length<5){showErr('d-eid','Enter your ID or passport number');fok=false;}else hideErr('d-eid');
+    var ac=$('d-age18');if(!ac||!ac.checked){showErr('d-eage','Please confirm you are 18 or older with a valid licence');fok=false;}else hideErr('d-eage');
+    if(!fok)return;
+    var _cn=''; TC_COUNTRIES.forEach(function(c){if(c[0]===dData.country)_cn=c[1];});
+    dData.name=fname;dData.idNumber=fid;dData.idType='Foreign ID / Passport';dData.passportCountry=_cn||dData.country;dData.licenseCode=flic||'FOREIGN';dData.age18=true;
+    dStep=2;_saveOBState();renderStep();
   } else if(dStep===1){
     var lname=val('d-lic-name').trim();
-    var id=val('d-idnum').replace(/\D/g,'');
+    var _permit=(val('d-idtype')==='permit');
+    var id=_permit?'':val('d-idnum').replace(/\D/g,'');
     var lic=val('d-licensecode');
     var ok=true;
     if(lname.length<3){showErr('d-elname','Full name required');ok=false;}else hideErr('d-elname');
+    if(_permit){
+      var ppn=(val('d-pp-num')||'').trim(),nat=(val('d-pp-nat')||'').trim(),pmn=(val('d-pm-num')||'').trim(),pmx=(val('d-pm-exp')||'');
+      if(ppn.length<5){showErr('d-epp','Enter your passport number');ok=false;}else hideErr('d-epp');
+      if(nat.length<3){showErr('d-enat','Enter your nationality');ok=false;}else hideErr('d-enat');
+      if(pmn.length<4){showErr('d-epm','Enter your permit number');ok=false;}else hideErr('d-epm');
+      if(!pmx||pmx<new Date().toISOString().slice(0,10)){showErr('d-epmx','Enter a permit expiry date that has not passed');ok=false;}else hideErr('d-epmx');
+      var ac2=$('d-age18');if(!ac2||!ac2.checked){showErr('d-eage','Please confirm you are 18 or older and allowed to work in South Africa');ok=false;}else hideErr('d-eage');
+      if(!lic){showErr('d-elic','Please select your license code');ok=false;}else hideErr('d-elic');
+      if(!ok)return;
+      dData.name=lname;dData.idNumber=ppn;dData.idType='Passport + SA permit';dData.passportCountry=nat;dData.permitNumber=pmn;dData.permitExpiry=pmx;dData.licenseCode=lic;dData.age18=true;
+      dStep=2;_saveOBState();renderStep();return;
+    }
+    dData.permitNumber='';dData.permitExpiry='';
     if(!validateSAID(id)){showErr('d-eid','Invalid SA ID number. Please check and try again.');ok=false;}
     else if(_tcAgeFromID(id)<18){showErr('d-eid','You must be 18 or older to drive on Truck Connect.');ok=false;}
     else hideErr('d-eid');
@@ -4924,26 +5244,27 @@ function dNext(){
     dStep=2;_saveOBState();renderStep();
   } else if(dStep===2){
     var pl=val('d-plate').trim(),t=val('d-truck').trim(),vin=val('d-vin').trim().toUpperCase(),eng=val('d-engine').trim().toUpperCase(),payload=val('d-payload'),body_=val('d-bodytype'),discexp=val('d-discexp');
-    var ok=true;
+    var ok=true,_fx=_tcIsForeign();
     if(!pl){showErr('d-epl','Registration number required');ok=false;}else hideErr('d-epl');
     if(!t){showErr('d-etk','Please enter make and model');ok=false;}else hideErr('d-etk');
-    if(!vin||vin.length<11){showErr('d-evin','Please enter a valid VIN / chassis number');ok=false;}else hideErr('d-evin');
-    if(!eng){showErr('d-eengine','Engine number required');ok=false;}else hideErr('d-eengine');
+    if(!_fx&&(!vin||vin.length<11)){showErr('d-evin','Please enter a valid VIN / chassis number');ok=false;}else hideErr('d-evin');
+    if(!_fx&&!eng){showErr('d-eengine','Engine number required');ok=false;}else hideErr('d-eengine');
     if(!payload){showErr('d-epayload','Please select payload capacity');ok=false;}else hideErr('d-epayload');
-    var gvm=val('d-gvm').replace(/\D/g,''),gvmN=parseInt(gvm,10),heavy=_tcNeedsPrdp(gvm,payload),pexp=val('d-prdpexp');
-    if(!(gvmN>=1000&&gvmN<=60000)){showErr('d-egvm','Enter the GVM in kg from your licence disc (e.g. 3500)');ok=false;}
+    var gvm=val('d-gvm').replace(/\D/g,''),gvmN=parseInt(gvm,10),heavy=_fx?false:_tcNeedsPrdp(gvm,payload),pexp=val('d-prdpexp');
+    if(_fx){hideErr('d-egvm');}
+    else if(!(gvmN>=1000&&gvmN<=60000)){showErr('d-egvm','Enter the GVM in kg from your licence disc (e.g. 3500)');ok=false;}
     else if(gvmN>3500&&dData.licenseCode==='8'){showErr('d-egvm','Code 8 only covers vehicles up to 3,500 kg. Go back and select the code on your licence.');ok=false;}
     else if(gvmN>16000&&dData.licenseCode==='10'){showErr('d-egvm','Vehicles over 16,000 kg need a Code 14 licence. Go back and check your licence code.');ok=false;}
     else hideErr('d-egvm');
     if(heavy){ if(!pexp){showErr('d-eprdpexp','Please select your PrDP expiry date');ok=false;}else if(pexp<_tcTodayStr()){showErr('d-eprdpexp','Your PrDP has expired. You need a valid PrDP to drive this vehicle.');ok=false;}else hideErr('d-eprdpexp'); }
     if(!body_){showErr('d-ebodytype','Please select body type');ok=false;}else hideErr('d-ebodytype');
-    if(!discexp){showErr('d-ediscexp','Please select license disc expiry date');ok=false;}else if(discexp<_tcTodayStr()){showErr('d-ediscexp','Your licence disc has expired. Renew it before registering.');ok=false;}else hideErr('d-ediscexp');
+    if(_fx){hideErr('d-ediscexp');}else if(!discexp){showErr('d-ediscexp','Please select license disc expiry date');ok=false;}else if(discexp<_tcTodayStr()){showErr('d-ediscexp','Your licence disc has expired. Renew it before registering.');ok=false;}else hideErr('d-ediscexp');
     if(!ok)return;
-    dData.plate=pl;dData.truck=t;dData.vin=vin;dData.engineNumber=eng;dData.payloadCapacity=payload;dData.gvm=gvm;dData.needsPrdp=heavy;dData.prdpExpiry=heavy?pexp:null;dData.bodyType=body_;dData.discExpiry=discexp;dData.courierVehicle=($('d-courierveh')||{}).value||'';
+    dData.plate=pl;dData.truck=t;dData.vin=vin;dData.engineNumber=eng;dData.payloadCapacity=payload;dData.gvm=gvm;dData.needsPrdp=heavy;dData.prdpExpiry=heavy?pexp:((_fx&&pexp)?pexp:null);dData.bodyType=body_;dData.discExpiry=discexp||null;dData.ownership=val('d-owner')||null;dData.xPermit=_fx?((val('d-xperm')||'').trim()||null):null;dData.courierVehicle=($('d-courierveh')||{}).value||'';try{var _pt=parseFloat(payload);if(_pt>(window.TC_RETURN_MAX_T||10))dData.courierVehicle='';}catch(e){}
     dData.truckType=(payload?payload+'-Ton':'')+(body_?((payload?', ':'')+body_.charAt(0).toUpperCase()+body_.slice(1)):''); // kept for backward-compat with admin app display
     dStep=3;_saveOBState();renderStep();
   } else if(dStep===3){
-    if(!_tcIsTest()&&(!dData.licensePhoto||!dData.discPhoto||(dData.needsPrdp&&(!dData.prdpPhoto||!dData.operatorCardPhoto)))){
+    if(!_tcIsForeign()&&!_tcIsTest()&&(!dData.licensePhoto||!dData.discPhoto||(dData.needsPrdp&&(!dData.prdpPhoto||!dData.operatorCardPhoto)))){
       var e=document.getElementById('d-edocs');if(e)e.style.display='block';
       return;
     }
@@ -5097,13 +5418,20 @@ function createAccount(){
     return Promise.all([discUploadPromise,_scanPrep,bankUploadPromise,opUploadPromise]).then(function(_r){
       var discStoragePath=_r[0],_scanExtra=_r[1]||{},_bankPath=_r[2],_opPath=_r[3];
       if(window._tcUploadFails&&window._tcUploadFails.length){try{toast('⚠ Could not upload: '+window._tcUploadFails.join(', ')+'. An admin may ask you to re-upload.');}catch(e){}}
-      var docData={uid:uid,id:'DRV-'+Date.now(),courierVehicle:dData.courierVehicle||'',courierStatus:dData.courierVehicle?'unverified':'',name:dData.name||'',phone:dData.phone||'',email:dData.email||'',idNumber:dData.idNumber||'',idType:dData.idType||'SA ID',passportCountry:dData.passportCountry||null,licenseCode:dData.licenseCode||'',prdpExpiry:dData.prdpExpiry||null,truck:dData.truck||'',truckType:dData.truckType||'',vin:dData.vin||'',engineNumber:dData.engineNumber||'',payloadCapacity:dData.payloadCapacity||'',bodyType:dData.bodyType||'',discExpiry:dData.discExpiry||null,plate:dData.plate||'',province:dData.province||'',truckColor:dData.truckColor||'',truckPhoto:dData.truckPhoto||null,bank:dData.bank||'',accountHolder:dData.accountHolder||'',accountNumber:dData.accountNumber||'',accountType:dData.accountType||'Cheque',branchCode:dData.branchCode||'',selfiePhoto:dData.selfiePhoto||null,licensePhoto:dData.licensePhoto||null,prdpPhoto:dData.prdpPhoto||null,discPhoto:discStoragePath||dData.discPhoto||null,bankProofPhoto:dData.bankProofPhoto||null,prdpVerification:dData.prdpVerification||null,discVerification:dData.discVerification||null,applied:new Date().toLocaleDateString('en-ZA'),status:'pending',online:false,subscription:'none',trialStartDate:null,type:'driver'};
+      var docData={uid:uid,id:'DRV-'+Date.now(),courierVehicle:dData.courierVehicle||'',courierStatus:dData.courierVehicle?'unverified':'',name:dData.name||'',phone:dData.phone||'',email:dData.email||'',idNumber:dData.idNumber||'',idType:dData.idType||'SA ID',passportCountry:dData.passportCountry||null,permitNumber:dData.permitNumber||'',permitExpiry:dData.permitExpiry||'',licenseCode:dData.licenseCode||'',prdpExpiry:dData.prdpExpiry||null,truck:dData.truck||'',truckType:dData.truckType||'',vin:dData.vin||'',engineNumber:dData.engineNumber||'',payloadCapacity:dData.payloadCapacity||'',bodyType:dData.bodyType||'',discExpiry:dData.discExpiry||null,plate:dData.plate||'',province:dData.province||'',truckColor:dData.truckColor||'',truckPhoto:dData.truckPhoto||null,bank:dData.bank||'',accountHolder:dData.accountHolder||'',accountNumber:dData.accountNumber||'',accountType:dData.accountType||'Cheque',branchCode:dData.branchCode||'',selfiePhoto:dData.selfiePhoto||null,licensePhoto:dData.licensePhoto||null,prdpPhoto:dData.prdpPhoto||null,discPhoto:discStoragePath||dData.discPhoto||null,bankProofPhoto:dData.bankProofPhoto||null,prdpVerification:dData.prdpVerification||null,discVerification:dData.discVerification||null,applied:new Date().toLocaleDateString('en-ZA'),status:'pending',online:false,subscription:'none',trialStartDate:null,type:'driver'};
       if(_bankPath)docData.bankProofPhoto=_bankPath;
       ['bank','accountHolder','accountNumber','accountType','branchCode'].forEach(function(k){if(dData[k])docData[k]=dData[k];});
       docData.gvm=dData.gvm||null;docData.needsPrdp=!!dData.needsPrdp;
+      // New: country, account type, ownership. Drivers with no country are South African (existing behaviour).
+      docData.country=dData.country||'ZA';
+      docData.entityType=dData.entityType==='company'?'company':'individual';
+      if(docData.entityType==='company'){docData.companyName=dData.companyName||'';docData.companyReg=dData.companyReg||'';docData.companyStatus='pending';}
+      docData.ownership=dData.ownership||null;
+      if(docData.country!=='ZA'){docData.foreign=true;docData.docsVerified=false;docData.crossBorderPermit=dData.xPermit||null;if(dData.prdpExpiry)docData.prdpExpiry=dData.prdpExpiry;}
       if(_tcIsTest())docData.testAccount=true;
       docData.licenceExpiry=(dData.licenceScan&&dData.licenceScan.expiry_date)||null;
       if(_opPath)docData.operatorCardPhoto=_opPath;
+      if(_scanExtra.idPath)docData.idPhoto=_scanExtra.idPath;if(_scanExtra.facePath)docData.facePhoto=_scanExtra.facePath;
       if(_scanExtra.docScans){ // AI document scan results (sensitive values already encrypted)
         if(_scanExtra.docScans.disc&&discStoragePath)_scanExtra.docScans.disc.storage_path=discStoragePath;
         docData.docScans=_scanExtra.docScans;
@@ -5114,7 +5442,7 @@ function createAccount(){
       // photos and AI scan results go in driverPrivate/{uid} (owner + admin only). Bank details (optional,
       // for customers who pay by EFT) also go in driverPrivate, encrypted. A customer only ever sees them
       // through bookings/{id}/payout/bank for a trip that driver accepted.
-      var _PRIV=['idNumber','idType','passportCountry','licenseCode','vin','engineNumber','licensePhoto','prdpPhoto','discPhoto','bankProofPhoto','operatorCardPhoto','bank','accountHolder','accountNumber','accountType','branchCode','prdpVerification','discVerification','docScans'];
+      var _PRIV=['idNumber','idType','passportCountry','permitNumber','permitExpiry','licenseCode','vin','engineNumber','licensePhoto','prdpPhoto','discPhoto','idPhoto','facePhoto','bankProofPhoto','operatorCardPhoto','bank','accountHolder','accountNumber','accountType','branchCode','prdpVerification','discVerification','docScans'];
       var _DROP=[];
       var _privDoc={uid:uid},_pubDoc={};
       Object.keys(docData).forEach(function(k){
@@ -5124,7 +5452,15 @@ function createAccount(){
       return encryptSensitiveFields(uid, _privDoc).then(function(encryptedPriv){
         return FB.setDoc(FB.doc(FB.db,'driverPrivate',uid),encryptedPriv);
       }).then(function(){
-        return _tcLoadFbx().then(function(x){_pubDoc.consentVersion=TC_CONSENT_VERSION;_pubDoc.consentAcceptedAt=x.fs.serverTimestamp();return FB.setDoc(FB.doc(FB.db,'drivers',uid),_pubDoc);});
+        return _tcLoadFbx().then(function(x){_pubDoc.consentVersion=TC_CONSENT_VERSION;_pubDoc.consentAcceptedAt=x.fs.serverTimestamp();var _dref=FB.doc(FB.db,'drivers',uid);return FB.setDoc(_dref,_pubDoc).catch(function(err){
+          // Safety net: if the database rules refuse the new fields, still create the driver without them.
+          if(err&&err.code==='permission-denied'&&!_pubDoc.foreign){
+            var _base=Object.assign({},_pubDoc);['country','entityType','companyName','companyReg','companyStatus','ownership','foreign','docsVerified','crossBorderPermit'].forEach(function(k){delete _base[k];});
+            try{console.warn('[TC] drivers rules rejected new fields; saved without them');}catch(e){}
+            return FB.setDoc(_dref,_base);
+          }
+          throw err;
+        });});
       }).then(function(){
         return Promise.resolve().then(function(){
           try{window._tcSavePhoneLogin&&window._tcSavePhoneLogin(uid,dData.email,dData.phone);}catch(ex){}
@@ -5150,7 +5486,7 @@ function createAccount(){
               reviewed_by:null,
               reviewed_at:null
             };
-            FB.addDoc(FB.collection(FB.db,'vehicleDocVerifications'),rec).catch(function(){});
+            FB.addDoc(FB.collection(FB.db,'vehicleDocVerifications'),rec).then(function(){try{_tcEvent('docs_submitted','',{name:(dData&&dData.name)||'A driver'});}catch(e){}}).catch(function(){});
           }
           return docData;
         });
@@ -5591,8 +5927,12 @@ function getTruckCapacity(){return dData.truckType||dData.truck||'';}
 // ===== COURIER MODE =====
 var _tcCourierOn=false;try{_tcCourierOn=localStorage.getItem('tc_courier_on')==='1';}catch(e){}
 var TC_COURIER_SIZES={S:'Small item',M:'Medium item',L:'Large item'};
-function _tcCourierPending(){var st=dData&&dData.courierStatus;return !!(dData&&dData.courierVehicle&&(st==='unverified'||st==='rejected'));}
-function _tcCourierVeh(){var v=dData&&dData.courierVehicle;if(_tcCourierPending())return'';return(v==='bakkie'||v==='van')?v:'';}
+var TC_RETURN_MAX_T=10; // return trips and Fragile Care are for trucks up to this payload (tons)
+function _tcIsHeavyDriver(){try{var t=_tcDriverTons();return t!=null&&t>TC_RETURN_MAX_T;}catch(e){return false;}}
+function _tcCanReturnTrip(){try{if(!_tcIsHeavyDriver())return true;return (dData.fleet||[]).some(function(x){var p=parseFloat(x&&x.payload);return p>=1&&p<=TC_RETURN_MAX_T;});}catch(e){return true;}}
+window.TC_RETURN_MAX_T=TC_RETURN_MAX_T;window._tcIsHeavyDriver=_tcIsHeavyDriver;window._tcCanReturnTrip=_tcCanReturnTrip;
+function _tcCourierPending(){if(_tcIsHeavyDriver())return false;var st=dData&&dData.courierStatus;return !!(dData&&dData.courierVehicle&&(st==='unverified'||st==='rejected'));}
+function _tcCourierVeh(){if(_tcIsHeavyDriver())return'';var v=dData&&dData.courierVehicle;if(_tcCourierPending())return'';return(v==='bakkie'||v==='van')?v:'';}
 // A bakkie parcel can be taken by a closed bakkie or a panel van; a van parcel needs a panel van.
 function _tcCourierJobOk(b){var dv=_tcCourierVeh();if(!dv)return false;var jv=b.courierVehicle||'bakkie';return jv==='van'?dv==='van':true;}
 // Courier jobs reach any courier-eligible driver, even with courier mode off. In courier mode only courier jobs show.
@@ -5608,8 +5948,12 @@ function _tcApplyCourierUi(){
   var b=$('courier-mode-btn');if(b)b.setAttribute('aria-checked',_tcCourierOn?'true':'false');
   var sub=$('courier-mode-sub');if(sub)sub.textContent=_tcCourierOn?'On · Fragile goods only':(_tcCourierVeh()?'Off · Truck jobs':(_tcCourierPending()?'Vehicle waiting for approval':'Add a Fragile Care vehicle to use'));
   var f=$('find-jobs-txt');if(f)f.textContent=_tcCourierOn?'Find Fragile Care Jobs':'Find Available Jobs';
+  try{var _hv=_tcIsHeavyDriver();if(_hv&&_tcCourierOn){_tcCourierOn=false;try{localStorage.setItem('tc_courier_on','0');}catch(e){}document.body.classList.remove('tc-courier');}
+    if(b)b.style.display=_hv?'none':'';
+    var _rb=$('dh-return-btn');if(_rb)_rb.style.display=_tcCanReturnTrip()?'':'none';}catch(e){}
 }
 window._tcSetCourier=function(on,silent){
+  if(on&&_tcIsHeavyDriver()){if(!silent)toast('Fragile Care is not available for heavy trucks.');on=false;_tcCourierOn=false;try{localStorage.setItem('tc_courier_on','0');}catch(e){}_tcApplyCourierUi();return;}
   if(on&&!_tcCourierVeh()){
     if(!silent){if(_tcCourierPending()){toast(dData.courierStatus==='rejected'?'Your Fragile Care vehicle was not approved. Contact support.':'Your vehicle is being checked by our team. You will be able to use Fragile Care once it is approved.');}else{toast('Fragile Care needs a closed bakkie or panel van. Add it under your profile.');try{openProfileSheet();}catch(e){}}}
     on=false;
@@ -5647,6 +5991,7 @@ function truckMatches(jobTruck,driverTruck){
   var jt=_tcTons(jobTruck);
   if(jt==null)return true;
   var dt=_tcDriverTons();
+  if(jt>10)return dt!=null&&dt>=jt;   // heavy request: any truck that can carry it may quote
   return dt!=null&&dt===jt;
 }
 
@@ -5683,10 +6028,10 @@ function listenForJobs(){
         if(snap.size>0&&!avail.length&&isOnline){
           window._tcHideToastAt=Date.now();
           var _w=[];
-          if(_hid.truck)_w.push(_hid.truck+' job(s) need a different truck size (job: '+_hid.job+' / yours: '+(dTruck||'not set')+')');
+          // Jobs for other truck sizes are not this driver's business, so we no longer announce them.
           if(_hid.declined)_w.push(_hid.declined+' declined earlier');
           if(_hid.countered)_w.push(_hid.countered+' already countered');
-          toast('Jobs found but hidden: '+_w.join('; '));
+          if(_w.length)toast('Jobs found but hidden: '+_w.join('; '));
         } else if(avail.length&&!isOnline){
           window._tcHideToastAt=Date.now();
           toast('New job waiting - switch to Online to see it');
@@ -5753,6 +6098,7 @@ function _truckMatchLevel(jobTruck,driverTruck){
   var jt=_tcTons(jobTruck);
   if(jt==null)return'compat';
   var dt=_tcDriverTons();
+  if(jt>10)return (dt!=null&&dt>=jt)?'perfect':'none';
   return (dt!=null&&dt===jt)?'perfect':'none';
 }
 
@@ -5878,6 +6224,7 @@ window.quickAcceptJob=function(jobId){
         if(!snap.exists()){toast('❌ This job no longer exists.');return;}
         var b=snap.data();
         if(b.ds!=='avail'){toast('❌ Job already taken by another driver.');return;}
+        if(b.heavy){var _sh=$('avail-jobs-sheet');if(_sh)_sh.style.transform='translateY(100%)';pendingJob=null;showJobPopup(Object.assign({id:jobId},b));return;}
         // Now update — only this driver can set it to accepted at this moment
         return window._tcDriverPublic().then(function(_pub){ return FB.updateDoc(FB.doc(FB.db,'bookings',jobId),Object.assign({
           ds:'accepted',
@@ -6091,6 +6438,7 @@ window._tcCountered=window._tcCountered||{};
 // A driver who already sent a counter-offer is not shown the same job again,
 // unless the customer has accepted that counter-offer.
 window._tcSkipCountered=function(b){
+  if(b.heavy&&!(b.counterAccepted&&b.driverUid===currentUid)&&window._hqSent(b.id))return true;
   var c=window._tcCountered[b.id];
   if(!c)return false;
   if(b.counterAccepted&&b.driverUid===currentUid)return false;
@@ -6124,6 +6472,113 @@ window._tcNegoPopup=function(b){
     var days=Math.round((ts-Date.now())/86400000);
     txt('jp-sched-in',days<=1?'Tomorrow':'In '+days+' days');
   }
+};
+
+
+// ───────── HEAVY LOADS (12 to 34 ton): request quotes ─────────
+// Customers post a heavy load with no price. Verified trucks send their own price for
+// the whole trip as an offer (bookings/{id}/offers/{driverUid}, kind:'quote'). The
+// customer compares quotes and accepts one; the job then continues like any other.
+var HQ_INCL=[['tolls','Tolls'],['fuel','Fuel'],['loading','Loading help'],['return','Return load']];
+window._hqSent=function(id){try{return !!(JSON.parse(localStorage.getItem('tc_hq_sent')||'{}')[id]);}catch(e){return false;}};
+function _hqMarkSent(id){try{var m=JSON.parse(localStorage.getItem('tc_hq_sent')||'{}');m[id]=Date.now();var k=Object.keys(m);if(k.length>60){k.sort(function(a,b){return m[a]-m[b];}).slice(0,k.length-60).forEach(function(x){delete m[x];});}localStorage.setItem('tc_hq_sent',JSON.stringify(m));}catch(e){}}
+function _hqWhy(b){
+  if(!dData||dData.status!=='approved')return 'Only approved trucks can send quotes for heavy loads.';
+  if(dData.foreign)return 'Heavy loads are only open to drivers verified by TruckConnect.';
+  if(dData.entityType==='company'&&dData.companyStatus!=='verified')return 'Your company must be verified by TruckConnect before you can quote on heavy loads.';
+  var jt=_tcTons(b&&(b.truckType||b.truck)),dt=_tcDriverTons();
+  if(jt!=null&&(dt==null||dt<jt))return 'This load needs a truck of '+jt+' ton or more.';
+  return '';
+}
+function _hqEnsureBox(){
+  var box=$('jp-hq');if(box)return box;
+  var cb=$('jp-counter-box');if(!cb||!cb.parentNode)return null;
+  box=document.createElement('div');box.id='jp-hq';box.style.display='none';
+  cb.parentNode.insertBefore(box,cb);
+  return box;
+}
+window._hqSel={};
+window._hqTog=function(k){window._hqSel[k]=!window._hqSel[k];var e=document.querySelector('[data-hqk="'+k+'"]');if(e){e.style.background=window._hqSel[k]?'var(--blue,#1677F2)':'';e.style.color=window._hqSel[k]?'#fff':'';}};
+function _hqFill(b,why){
+  var box=_hqEnsureBox();if(!box)return;
+  var E=function(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+  var h='<div class="jq-box" style="margin-bottom:8px;"><div class="jq-sm">Heavy load · '+E(b.heavySize||_tcTons(b.truckType)||'')+' ton'+(b.bodyWanted?' · '+E(b.bodyWanted):'')+'</div>'
+    +'<div style="font-size:14px;font-weight:700;margin-top:4px;">'+E(b.cargo||'Heavy load')+'</div>'
+    +(b.notes?'<div class="jq-sm" style="margin-top:4px;">'+E(b.notes)+'</div>':'')+'</div>';
+  if(why){h+='<div class="jq-box"><div class="jq-sm" style="color:#b45309;font-weight:600;">'+E(why)+'</div></div>';}
+  else if(window._hqSent(b.id)){h+='<div class="jq-box"><div class="jq-sm" style="font-weight:600;">You already sent a quote for this load. The customer will reply here.</div></div>';}
+  else{
+    h+='<div class="jq-sm" style="margin:6px 0;">What is included in your price?</div><div class="jq-chips" style="flex-wrap:wrap;margin-bottom:8px;">';
+    HQ_INCL.forEach(function(x){h+='<span class="jq-chip" data-hqk="'+x[0]+'" onclick="_hqTog(\''+x[0]+'\')" style="cursor:pointer;">'+x[1]+'</span>';});
+    h+='</div><input id="jp-hq-note" class="jq-input" style="width:100%;box-sizing:border-box;margin-bottom:8px;font-size:14px;" maxlength="90" placeholder="Note to customer (optional)">';
+  }
+  box.innerHTML=h;box.style.display='block';
+}
+window._hqSendQuote=function(b){
+  var FB=window._FB;
+  var why=_hqWhy(b);if(why){toast(why);return;}
+  if(window._hqSent(b.id)){toast('You already sent a quote for this load.');return;}
+  if(!FB||!currentUid){toast('Not connected. Please try again.');return;}
+  var n=parseInt(String(($('jp-counter-input')||{}).value||'').replace(/[^0-9]/g,''),10);
+  if(!n||n<500){toast('Enter your price for the whole trip (at least R500).');return;}
+  if(n>3000000){toast('That price looks too high. Check it and try again.');return;}
+  var incl=HQ_INCL.filter(function(x){return window._hqSel[x[0]];}).map(function(x){return x[1];});
+  var note=(($('jp-hq-note')||{}).value||'').trim().slice(0,90);
+  var btn=$('jp-counter-send');if(btn)btn.disabled=true;
+  FB.setDoc(FB.doc(FB.db,'bookings',b.id,'offers',currentUid),{
+    kind:'quote',
+    driverUid:currentUid,
+    driverName:(dData&&dData.name)||'Driver',
+    truck:(dData&&(dData.truckType||dData.truck))||'',
+    plate:(dData&&dData.plate)||'',
+    color:(dData&&dData.truckColor)||'',
+    rating:(dData&&dData.rating)||null,
+    trips:Number(typeof dTrips!=='undefined'?dTrips:0)||0,
+    capacityTons:_tcDriverTons(),
+    bodyType:(dData&&dData.bodyType)||'',
+    companyName:(dData&&dData.entityType==='company')?(dData.companyName||''):'',
+    companyVerified:!!(dData&&dData.entityType==='company'&&dData.companyStatus==='verified'),
+    verified:true,
+    pickupTime:(b.date?b.date:'As requested')+(b.time?' at '+b.time:''),
+    included:incl,
+    note:note,
+    price:n,
+    status:'offered',
+    createdAt:new Date().toISOString()
+  }).then(function(){
+    _hqMarkSent(b.id);window._hqSel={};
+    if(btn)btn.disabled=false;
+    hideJobPopup();
+    toast('Quote of R'+n.toLocaleString()+' sent. We will tell you when the customer replies.');
+    try{_notifyCustomer(b.customerUid,'New quote','A driver quoted R'+n.toLocaleString()+' for your heavy load.',b.id,'\ud83d\udcac','price_offer');}catch(e){}
+  }).catch(function(e){
+    if(btn)btn.disabled=false;
+    toast('Could not send your quote. '+_tcFriendly(e));
+  });
+};
+window._tcNegoPopupBase=window._tcNegoPopup;
+window._tcNegoPopup=function(b){
+  function show(id,on,d){var el=$(id);if(el)el.style.display=on?(d||'block'):'none';}
+  var mine=!!(b.counterAccepted&&b.driverUid===currentUid);
+  if(!b.heavy||mine){
+    show('jp-hq',false);
+    var _ab=$('jp-accept-btn');if(_ab)_ab.style.display='';
+    var _cs=$('jp-counter-send');if(_cs)_cs.textContent='Send my price';
+    window._tcNegoPopupBase(b);return;
+  }
+  var why=_hqWhy(b),sent=window._hqSent(b.id);
+  txt('jp-badge-txt','Quote request');
+  var bd=$('jp-badge');if(bd)bd.className='jq-badge amber';
+  show('jp-tag',false);show('jp-app-price',false);show('jp-scheduled-row',false);show('jp-sched-note',false);
+  show('jp-price-lbl',true);txt('jp-price-lbl','Customer wants quotes');
+  txt('jp-earn','Your quote');
+  _hqFill(b,why);
+  var canSend=!why&&!sent;
+  show('jp-counter-box',canSend);show('jp-counter-send',canSend);
+  txt('jp-counter-hint',canSend?'Your price for the whole trip, in rand.':'');
+  var ci=$('jp-counter-input');if(ci&&canSend)ci.value='';
+  var cs=$('jp-counter-send');if(cs)cs.textContent='Send quote';
+  show('jp-accept-btn',false);
 };
 
 // ───────── PAIRED JOBS (truck + closed bakkie ordered together) ─────────
@@ -6553,6 +7008,7 @@ function acceptJob(){
   var _why=_tcWorkBlockReason(); if(_why){ hideJobPopup(); toast(_why); return; }
   if(_tcBillingBlocked()){ hideJobPopup(); showTrialExpired(); return; }
   var b=pendingJob;
+  if(b.heavy&&!(b.counterAccepted&&b.driverUid===currentUid)){toast('Heavy loads need a quote first.');return;}
   if(b.courier&&!b._rulesOk){if(!confirm('Fragile Care job. Small furniture and fragile goods only. No letters or documents, no illegal goods. Refuse the load at pickup if it breaks these rules. Accept this job?'))return;b._rulesOk=true;}
   var FB=window._FB;
   if(FB){
@@ -6567,7 +7023,7 @@ function acceptJob(){
         // to accept; anything else means someone else already grabbed it or
         // the customer cancelled/re-targeted it.
         var d = snap.exists() ? snap.data() : null;
-        var okBroadcast = d && d.ds === 'avail';
+        var okBroadcast = d && d.ds === 'avail' && !d.heavy;
         var okTargeted = d && d.ds === 'requested' && d.driverUid === currentUid;
         if (!d || !(okBroadcast || okTargeted)) {
           throw new Error('Job already taken');
@@ -6612,7 +7068,7 @@ function acceptJob(){
       if(e.message==='Job already taken') {
         toast('❌ Job already taken.'); hideJobPopup();
       } else {
-        toast('Could not accept. '+_tcFriendly(e));
+        toast('Could not accept. '+_tcFriendly(e)+' ('+String((e&&e.code)||(e&&e.message)||'').replace(/^firestore\//,'').slice(0,40)+')');
       }
     });
   } else {
@@ -6675,6 +7131,7 @@ window.cancelTrip=function(jobId){
     if(FB){
       FB.updateDoc(FB.doc(FB.db,'bookings',jobId),{ds:'avail',driverUid:null,driverName:null,driverTruck:null,acceptedAt:null})
         .then(function(){
+          try{_tcEvent('cancelled_by_driver',jobId,{});}catch(e){}
           acceptedJobs=acceptedJobs.filter(function(x){return x.id!==jobId;});
           renderJobs();toast('Job returned to available pool.');
         })
@@ -6893,13 +7350,13 @@ function _jrInitMap(job){
 function _jrBuildNavUrls(job){
   var orig=(driverLat&&driverLng)?(driverLat+','+driverLng):'';
   var destCoords=job.toCoords,destAddr=job.to;
-  var destStr=(destCoords&&destCoords[0])?(destCoords[1]+','+destCoords[0]):(destAddr?(destAddr+', South Africa'):'');
+  var destStr=(destCoords&&destCoords[0])?(destCoords[1]+','+destCoords[0]):(destAddr?destAddr:'');
   var gUrl='https://www.google.com/maps/dir/?api=1&travelmode=driving';
   if(orig)gUrl+='&origin='+encodeURIComponent(orig);
   if(destStr)gUrl+='&destination='+encodeURIComponent(destStr);
   var wUrl='';
   if(destCoords&&destCoords[0])wUrl='https://waze.com/ul?ll='+destCoords[1]+','+destCoords[0]+'&navigate=yes';
-  else if(destAddr)wUrl='https://waze.com/ul?q='+encodeURIComponent(destAddr+', South Africa')+'&navigate=yes';
+  else if(destAddr)wUrl='https://waze.com/ul?q='+encodeURIComponent(destAddr)+'&navigate=yes';
   if(orig&&wUrl)wUrl+='&from='+encodeURIComponent(orig);
   return {gUrl:gUrl,wUrl:wUrl};
 }
@@ -7298,6 +7755,7 @@ async function _tcUploadProof(input) {
       reason: '',
       createdAt: new Date().toISOString()
     });
+    try{_tcEvent('payment_proof','',{name:(dData&&dData.name)||'Driver'});}catch(e){}
     say('⏳ Proof received. We will confirm your payment and unlock you.');
   } catch (e) {
     say('Could not upload: ' + (e.message || e), 'var(--red,#ef4444)');
@@ -7401,7 +7859,7 @@ function _nsBuildUrls(job) {
   if (destCoords && destCoords[0] && destCoords[1]) {
     destStr = destCoords[1] + ',' + destCoords[0];
   } else if (destAddr) {
-    destStr = destAddr + ', South Africa';
+    destStr = destAddr;
   }
 
   var gUrl = 'https://www.google.com/maps/dir/?api=1&travelmode=driving';
@@ -7412,7 +7870,7 @@ function _nsBuildUrls(job) {
   if (destCoords && destCoords[0] && destCoords[1]) {
     wUrl = 'https://waze.com/ul?ll=' + destCoords[1] + ',' + destCoords[0] + '&navigate=yes';
   } else if (destAddr) {
-    wUrl = 'https://waze.com/ul?q=' + encodeURIComponent(destAddr + ', South Africa') + '&navigate=yes';
+    wUrl = 'https://waze.com/ul?q=' + encodeURIComponent(destAddr) + '&navigate=yes';
   }
   if (orig) { if (wUrl) wUrl += '&from=' + encodeURIComponent(orig); }
 
@@ -7462,7 +7920,9 @@ var TC_TRUCK_PROFILES=[
   {t:5,  kg:9500, l:7.5, w:2.4, h:3.3},   // 5 ton
   {t:6,  kg:11000,l:8.0, w:2.5, h:3.5},   // 6 ton
   {t:7,  kg:12500,l:8.5, w:2.5, h:3.6},   // 7 ton
-  {t:1e9,kg:15000,l:9.0, w:2.55,h:3.8}    // 8 ton (and anything larger)
+  {t:8,  kg:15000,l:9.0, w:2.55,h:3.8},   // 8 ton
+  {t:9,  kg:16500,l:9.5, w:2.55,h:3.9},   // 9 ton
+  {t:1e9,kg:18000,l:10.0,w:2.55,h:4.0}    // 10 ton (and anything larger)
 ];
 function _tcTruckProfile(job){
   var txt=[(dData&&dData.truck)||'',(dData&&dData.truckType)||'',(job&&job.truck)||''].join(' ');
@@ -8281,7 +8741,7 @@ window._skipPOD = function() {
   }
 };
 
-function _finishDelivery(jobId) {
+function _finishDelivery(jobId) {try{_tcReturnNudge(jobId);}catch(e){}
   var job = acceptedJobs.find(function(j) { return j.id === jobId; });
   var customerName = job ? (job.customerName || '') : '';
   // ── Record to job history ──
@@ -8451,7 +8911,7 @@ on('profile-save-btn', 'click', function() {
   if (_vehChanged && dData.status === 'approved' &&
       !confirm('Changing your name, truck, truck size or registration means TruckConnect must re-verify you. You will go offline until approved again. Continue?')) return;
   dData.name = name; dData.phone = phone; dData.truck = truck;
-  dData.truckType = truckType; dData.plate = plate; var _cvChg=(_courierVeh!==(dData.courierVehicle||''));dData.courierVehicle = _courierVeh;if(_cvChg)dData.courierStatus=_courierVeh?'unverified':'';
+  dData.truckType = truckType; dData.plate = plate; var _cvChg=(_courierVeh!==(dData.courierVehicle||''));dData.courierVehicle = _courierVeh;try{if(window._tcIsHeavyDriver&&window._tcIsHeavyDriver()){dData.courierVehicle='';_courierVeh='';}}catch(e){}if(_cvChg)dData.courierStatus=_courierVeh?'unverified':'';
   if (!_courierVeh && window._tcSetCourier) window._tcSetCourier(false, true);
   var _ptn = _tcTons(truckType); if (_ptn != null) dData.payloadCapacity = String(_ptn);
   saveSession();
@@ -9389,7 +9849,7 @@ function sendDriverChatMessage(){
     senderRole:'driver',
     ts:new Date(now).toISOString(),
     tsMs:now
-  }).catch(function(e){
+  }).then(function(){try{_tcEvent('chat_message',_dChatBookingId,{msg:text});}catch(e){}}).catch(function(e){
     console.warn('Driver chat send err:',e);
     toast('Message not sent. Check your connection.');
     if(inp&&!inp.value){inp.value=text;TCChat.sendState('d-chat');}
@@ -9524,6 +9984,7 @@ function sendDriverChatMessage(){
   on('jp-counter-cancel','click',function(){var box=$('jp-counter-box');if(box)box.style.display='none';});
   on('jp-counter-send','click',function(){
     if(!pendingJob)return;
+    if(pendingJob.heavy&&!(pendingJob.counterAccepted&&pendingJob.driverUid===currentUid)){window._hqSendQuote(pendingJob);return;}
     var b=pendingJob,FB=window._FB;
     var lo=Number(b.offerPrice)||0,hi=Number(b.suggestedPriceNum)||0;
     var n=parseInt(String(($('jp-counter-input')||{}).value||'').replace(/[^0-9]/g,''),10);
@@ -10646,9 +11107,10 @@ try{TCCall.init('driver',function(bid){var j=(typeof acceptedJobs!=='undefined'?
       var FB=window._FB;if(!FB||!currentUid)return;
       var b=await loadBank();
       if(!b.bank||!b.accountNumber||!b.accountHolder){ if(!(o&&o.silent))window.tcOpenBankSheet({job:job}); return; }
-      await FB.setDoc(FB.doc(FB.db,'bookings',job.id,'payout','bank'),{
+      var _co={};try{var _ds=await FB.getDoc(FB.doc(FB.db,'drivers',currentUid));var _dd=_ds.exists()?_ds.data():{};if(_dd.entityType==='company')_co={isCompany:true,companyName:String(_dd.companyName||''),companyReg:String(_dd.companyReg||'')};}catch(e){}
+      await FB.setDoc(FB.doc(FB.db,'bookings',job.id,'payout','bank'),Object.assign({
         bank:b.bank,accountHolder:b.accountHolder,accountNumber:b.accountNumber,accountType:b.accountType||'',branchCode:b.branchCode||'',
-        reference:'TC-'+String(job.id).slice(-6).toUpperCase(),driverUid:currentUid,customerUid:job.customerUid||'',updatedAt:new Date().toISOString()});
+        reference:'TC-'+String(job.id).slice(-6).toUpperCase(),driverUid:currentUid,customerUid:job.customerUid||'',updatedAt:new Date().toISOString()},_co));
       _shared[job.id]=1;
     }catch(e){ try{console.warn('payout share failed',e);}catch(_){} if(!(o&&o.silent))say('Could not share your bank details with the customer yet.'); }
   };
@@ -10691,7 +11153,7 @@ try{TCCall.init('driver',function(bid){var j=(typeof acceptedJobs!=='undefined'?
     ov.querySelectorAll('[data-rcv]').forEach(function(b){b.onclick=function(){
       var id=b.getAttribute('data-rcv'),FB=window._FB;b.disabled=true;b.textContent='Saving…';
       FB.updateDoc(FB.doc(FB.db,'bookings',id),{paymentStatus:'received',paymentReceivedAt:new Date().toISOString()})
-        .then(function(){say('Payment confirmed');}).catch(function(){b.disabled=false;b.textContent='Payment received';say('Could not save. Try again.');});
+        .then(function(){try{_tcEvent('payment_confirmed',id,{});}catch(e){}say('Payment confirmed');}).catch(function(){b.disabled=false;b.textContent='Payment received';say('Could not save. Try again.');});
     };});
   }
   window._tcPayWatch=function(job){
@@ -10919,6 +11381,147 @@ if(document.body)start();else document.addEventListener('DOMContentLoaded',start
     document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});
   }catch(e){}
 })();
+</script>
+<script>
+/* TruckConnect: fleet + return trips */
+var TC_CITIES=[["Johannesburg",-26.2041,28.0473],["Pretoria",-25.7479,28.1879],["Midrand",-25.9992,28.1263],["Germiston",-26.2178,28.1678],["Kempton Park",-26.1,28.2294],["Boksburg",-26.2125,28.2594],["Benoni",-26.1885,28.3207],["Vereeniging",-26.6731,27.9261],["Secunda",-26.5125,29.1706],["eMalahleni (Witbank)",-25.8727,29.2335],["Mbombela (Nelspruit)",-25.4753,30.9694],["Polokwane",-23.9045,29.4689],["Musina",-22.3527,30.0382],["Rustenburg",-25.6676,27.2421],["Potchefstroom",-26.7145,27.097],["Klerksdorp",-26.8521,26.6667],["Sasolburg",-26.8133,27.8289],["Kroonstad",-27.6504,27.234],["Welkom",-27.9771,26.7351],["Bloemfontein",-29.0852,26.1596],["Kimberley",-28.7282,24.7499],["Upington",-28.4478,21.2561],["Durban",-29.8587,31.0218],["Pinetown",-29.8167,30.8667],["Pietermaritzburg",-29.6006,30.3794],["Richards Bay",-28.7807,32.0383],["Newcastle",-27.7575,29.9318],["Ladysmith",-28.5586,29.7783],["East London",-33.0153,27.9116],["Mthatha",-31.5889,28.7844],["Gqeberha (Port Elizabeth)",-33.9608,25.6022],["George",-33.963,22.4617],["Cape Town",-33.9249,18.4241]];
+function tcCityOpts(sel){return TC_CITIES.map(function(c,i){return '<option value="'+i+'"'+(sel===i?' selected':'')+'>'+c[0]+'</option>';}).join('');}
+function tcCity(i){var c=TC_CITIES[parseInt(i,10)];return c?{city:c[0],lat:c[1],lng:c[2]}:null;}
+function tcSeg(a,b,p){var k=Math.cos(((a.lat+b.lat)/2)*Math.PI/180)*111.32,L=110.57;
+ var ax=a.lng*k,ay=a.lat*L,bx=b.lng*k,by=b.lat*L,px=p.lng*k,py=p.lat*L;var dx=bx-ax,dy=by-ay,den=dx*dx+dy*dy;
+ var t=den?((px-ax)*dx+(py-ay)*dy)/den:0;t=Math.max(0,Math.min(1,t));var qx=ax+t*dx,qy=ay+t*dy;return {d:Math.sqrt((px-qx)*(px-qx)+(py-qy)*(py-qy)),t:t};}
+function tcRouteFits(trip,pick,drop){var a=trip.from,b=trip.to;var sp=tcSeg(a,b,pick),sd=tcSeg(a,b,drop);return sp.d<=80&&sd.d<=80&&sd.t>sp.t+0.08;}
+function tcRand2(n){return Math.random().toString(36).slice(2,2+(n||5));}
+function tcEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function tcId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+
+(function(){
+if(window._tcFleetInit)return;window._tcFleetInit=1;
+var E=tcEsc;
+function FBx(){return window._FB;}
+function UID(){return window.currentUid||null;}
+function say(m){try{if(window.toast)window.toast(m,3500);else alert(m);}catch(e){}}
+var me=null;
+function loadMe(){var f=FBx(),u=UID();if(!f||!u)return Promise.reject(new Error('nouser'));
+ return f.getDoc(f.doc(f.db,'drivers',u)).then(function(s){me=s.exists()?s.data():{};return me;});}
+var CSS='#tc-sh{position:fixed;inset:0;z-index:9000;background:var(--bg,#070F14);color:var(--text,#fff);overflow:auto;-webkit-overflow-scrolling:touch;font-family:inherit}'+
+'#tc-sh .h{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card,#171D20);border-bottom:1px solid var(--border,#222629)}'+
+'#tc-sh .h b{font-size:18px}#tc-sh .bk{width:40px;height:40px;border-radius:50%;border:none;background:rgba(127,127,127,.18);color:inherit;font-size:20px;cursor:pointer}'+
+'#tc-sh .b{padding:16px 16px 40px}#tc-sh .card{background:var(--card,#171D20);border:1.5px solid var(--border,#222629);border-radius:16px;padding:14px;margin-bottom:12px}'+
+'#tc-sh .l{display:block;font-size:11px;font-weight:700;color:var(--muted,#888);text-transform:uppercase;letter-spacing:.7px;margin:12px 0 6px}'+
+'#tc-sh input,#tc-sh select{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:12px;border:1.5px solid var(--border,#222629);background:rgba(127,127,127,.1);color:inherit;font-size:15px}'+
+'#tc-sh .btn{display:block;width:100%;box-sizing:border-box;text-align:center;padding:15px;border-radius:14px;border:none;font-weight:700;font-size:15px;cursor:pointer;background:#fff;color:#111;margin-top:14px}'+
+'#tc-sh .btn.o{background:transparent;color:inherit;border:1.5px solid var(--border,#222629)}#tc-sh .btn.r{background:transparent;color:#e03131;border:1.5px solid rgba(224,49,49,.5)}'+
+'#tc-sh .m{color:var(--muted,#888);font-size:13px;line-height:1.45}#tc-sh .p{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(127,127,127,.2)}'+
+'#tc-sh .row{display:flex;gap:10px}#tc-sh .row>*{flex:1}#tc-sh .err{color:#e03131;font-size:12px;margin-top:4px;display:none}#tc-sh .tabs{display:flex;gap:8px;margin-bottom:14px}'+
+'#tc-sh .tab{flex:1;text-align:center;padding:11px;border-radius:12px;border:1.5px solid var(--border,#222629);font-weight:700;font-size:13px;cursor:pointer}#tc-sh .tab.on{background:#fff;color:#111}'+
+'#tc-sh .av{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#243b55;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}';
+function sheet(title,html,onBack){var o=document.getElementById('tc-sh');if(o)o.remove();
+ if(!document.getElementById('tc-sh-css')){var s=document.createElement('style');s.id='tc-sh-css';s.textContent=CSS;document.head.appendChild(s);}
+ o=document.createElement('div');o.id='tc-sh';o.innerHTML='<div class="h"><button class="bk" id="tc-bk" aria-label="Back">←</button><b>'+E(title)+'</b></div><div class="b" id="tc-sb">'+html+'</div>';
+ document.body.appendChild(o);document.getElementById('tc-bk').onclick=function(){if(onBack)onBack();else o.remove();};return o;}
+function $s(id){return document.getElementById(id);}
+function money(n){return 'R '+Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+function fmtDate(iso){try{var d=new Date(iso);return d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'})+', '+d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}}
+function closeMenu(){try{$s('d-sidemenu').style.left='-290px';$s('d-menu-overlay').style.display='none';}catch(e){}}
+function approved(){return me&&me.status==='approved';}
+
+/* ---------- FLEET ---------- */
+function shrinkPhoto(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var m=180,sc=Math.min(1,m/Math.max(im.width,im.height));var c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',0.6));};im.onerror=function(){rej(new Error('img'));};im.src=r.result;};r.onerror=function(){rej(new Error('read'));};r.readAsDataURL(file);});}
+function saveFleet(fleet){var f=FBx();return f.updateDoc(f.doc(f.db,'drivers',UID()),{fleet:fleet}).then(function(){me.fleet=fleet;});}
+function openFleet(){closeMenu();sheet('My fleet','<div class="m">Loading…</div>');
+ loadMe().then(renderFleet).catch(function(){sheet('My fleet','<div class="m">Could not load. Check your connection and try again.</div>');});}
+function renderFleet(){var fl=me.fleet||[];var h='<div class="m" style="margin-bottom:14px">Add every truck and the driver who drives it. Customers see the driver and truck on the jobs you win.</div>';
+ fl.forEach(function(t,i){h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b>'+E(t.name)+'</b><span class="p">'+E(t.payload)+' t · '+E(t.body)+'</span></div><div class="m" style="margin:4px 0 10px">Plate '+E(t.plate)+'</div>'+
+  '<div style="display:flex;gap:12px;align-items:center;border-top:1px solid var(--border,#222629);padding-top:12px">'+(t.dphoto?'<img class="av" src="'+E(t.dphoto)+'" alt="">':'<div class="av">'+E((t.dname||'?').slice(0,2).toUpperCase())+'</div>')+
+  '<div style="flex:1"><div class="m">Driver</div><b>'+E(t.dname)+'</b><div class="m">Code '+E(t.dcode)+' · '+E(t.dphone)+'</div></div></div>'+
+  '<div class="row"><button class="btn o" data-ed="'+i+'">Edit</button><button class="btn r" data-rm="'+i+'">Remove</button></div></div>';});
+ if(!fl.length)h+='<div class="card m">No trucks yet.</div>';
+ h+=(fl.length<15?'<button class="btn" id="tc-addt">+ Add a truck</button>':'<div class="m">You have reached 15 trucks.</div>');
+ sheet('My fleet',h);
+ var a=$s('tc-addt');if(a)a.onclick=function(){fleetForm(-1);};
+ document.querySelectorAll('#tc-sh [data-ed]').forEach(function(b){b.onclick=function(){fleetForm(parseInt(b.getAttribute('data-ed'),10));};});
+ document.querySelectorAll('#tc-sh [data-rm]').forEach(function(b){b.onclick=function(){if(!confirm('Remove this truck from your fleet?'))return;var n=(me.fleet||[]).slice();n.splice(parseInt(b.getAttribute('data-rm'),10),1);saveFleet(n).then(renderFleet).catch(function(){say('Could not save. Please try again.');});};});}
+function fleetForm(i){var t=(i>=0&&me.fleet&&me.fleet[i])||{};var photo=t.dphoto||'';
+ var body=['Closed','Open','Flat deck','Tautliner','Curtain-side','Dropside','Tipper','Side tipper','Fridge'];
+ var h='<span class="l">Truck make and model</span><input id="f-n" maxlength="40" placeholder="e.g. Scania R500" value="'+E(t.name||'')+'"><div class="err" id="e-n">Enter the truck name</div>'+
+ '<div class="row"><div><span class="l">Plate</span><input id="f-p" maxlength="14" placeholder="ND 482-117" value="'+E(t.plate||'')+'"><div class="err" id="e-p">Enter the plate</div></div><div><span class="l">Payload (tons)</span><input id="f-t" type="number" min="1" max="60" placeholder="34" value="'+E(t.payload||'')+'"><div class="err" id="e-t">1 to 60</div></div></div>'+
+ '<span class="l">Body type</span><select id="f-b">'+body.map(function(b){return '<option'+(t.body===b?' selected':'')+'>'+b+'</option>';}).join('')+'</select>'+
+ '<div style="height:10px"></div><b>Driver of this truck</b><span class="l">Full name</span><input id="f-dn" maxlength="50" value="'+E(t.dname||'')+'"><div class="err" id="e-dn">Enter the driver name</div>'+
+ '<span class="l">Phone</span><input id="f-dp" type="tel" maxlength="16" placeholder="082 000 0000" value="'+E(t.dphone||'')+'"><div class="err" id="e-dp">Enter a valid phone number</div>'+
+ '<span class="l">Licence code</span><select id="f-dc">'+['8','10','14'].map(function(c){return '<option'+(t.dcode===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select>'+
+ '<span class="l">Driver photo</span><input id="f-ph" type="file" accept="image/*" capture="user"><div class="m" id="f-pm">'+(photo?'Photo saved. Choose another to replace it.':'A clear photo of the driver is required.')+'</div><div class="err" id="e-ph">Add a photo of the driver</div>'+
+ '<div class="m" style="margin-top:10px">The driver agrees that the customer can see their name, photo and phone number for jobs on this truck.</div>'+
+ '<button class="btn" id="f-save">Save truck</button><button class="btn o" id="f-cancel">Cancel</button>';
+ sheet(i>=0?'Edit truck':'Add a truck',h,renderFleet);
+ $s('f-cancel').onclick=renderFleet;
+ $s('f-ph').onchange=function(){var f=this.files&&this.files[0];if(!f)return;shrinkPhoto(f).then(function(d){photo=d;$s('f-pm').textContent='Photo ready.';}).catch(function(){say('That photo could not be read.');});};
+ $s('f-save').onclick=function(){var v=function(id){return ($s(id).value||'').trim();},bad=false;
+  var chk=function(ok,id){$s(id).style.display=ok?'none':'block';if(!ok)bad=true;};
+  var pay=parseInt(v('f-t'),10);chk(v('f-n').length>=2,'e-n');chk(v('f-p').length>=3,'e-p');chk(pay>=1&&pay<=60,'e-t');chk(v('f-dn').length>=3,'e-dn');chk(v('f-dp').replace(/\D/g,'').length>=10,'e-dp');chk(!!photo,'e-ph');
+  if(bad)return;var item={name:v('f-n'),plate:v('f-p').toUpperCase(),payload:pay,body:$s('f-b').value,dname:v('f-dn'),dphone:v('f-dp'),dcode:$s('f-dc').value,dphoto:photo};
+  var n=(me.fleet||[]).slice();if(i>=0)n[i]=item;else n.push(item);
+  $s('f-save').disabled=true;saveFleet(n).then(function(){say('Truck saved');renderFleet();}).catch(function(e){$s('f-save').disabled=false;say('Could not save. If this keeps happening, contact support.');});};}
+
+/* ---------- RETURN TRIPS ---------- */
+function openReturn(tab){closeMenu();sheet('Return trips','<div class="m">Loading…</div>');
+ loadMe().then(function(){drawReturn(tab||'req');}).catch(function(){sheet('Return trips','<div class="m">Could not load. Check your connection and try again.</div>');});}
+function drawReturn(tab){var f=FBx(),u=UID();
+ var shell='<div class="tabs"><div class="tab'+(tab==='req'?' on':'')+'" id="t-req">Requests</div><div class="tab'+(tab==='my'?' on':'')+'" id="t-my">My trips</div><div class="tab'+(tab==='new'?' on':'')+'" id="t-new">Post a trip</div></div><div id="tc-tb"><div class="m">Loading…</div></div>';
+ sheet('Return trips',shell);
+ $s('t-req').onclick=function(){drawReturn('req');};$s('t-my').onclick=function(){drawReturn('my');};$s('t-new').onclick=function(){drawReturn('new');};
+ if(tab==='new')return postForm();
+ var col=tab==='req'?'returnRequests':'returnTrips';
+ f.getDocs(f.query(f.collection(f.db,col),f.where('driverUid','==',u))).then(function(snap){var a=[];snap.forEach(function(d){a.push(d.data());});
+  a.sort(function(x,y){return String(y.createdAt||'').localeCompare(String(x.createdAt||''));});
+  tab==='req'?drawReqs(a):drawTrips(a);}).catch(function(){$s('tc-tb').innerHTML='<div class="card m">Could not load. Return trips may not be switched on yet. Contact support.</div>';});}
+function drawTrips(a){var h='';a.forEach(function(t){h+='<div class="card"><div style="display:flex;justify-content:space-between"><b>'+E(t.from.city)+' → '+E(t.to.city)+'</b><span class="p">'+(t.status==='open'?'Open':'Closed')+'</span></div><div class="m" style="margin:6px 0">Leaves '+fmtDate(t.departAt)+' · '+E(t.truck.name)+' · '+E(t.truck.plate)+'</div><div>'+(t.priceMode==='fixed'?'Your price '+money(t.price):'Open to offers')+'</div>'+(t.status==='open'?'<button class="btn o" data-cl="'+E(t.id)+'">Close this trip</button>':'')+'</div>';});
+ $s('tc-tb').innerHTML=h||'<div class="card m">You have not posted a return trip yet.</div>';
+ document.querySelectorAll('#tc-tb [data-cl]').forEach(function(b){b.onclick=function(){var f=FBx();f.updateDoc(f.doc(f.db,'returnTrips',b.getAttribute('data-cl')),{status:'closed'}).then(function(){drawReturn('my');}).catch(function(){say('Could not close the trip.');});};});}
+function drawReqs(a){var h='';a.forEach(function(r){var st=r.status;var pill={pending:'New',countered:'Waiting for customer',accepted:'Accepted',declined:'Declined',cancelled:'Cancelled'}[st]||st;
+  h+='<div class="card"><div style="display:flex;justify-content:space-between"><b>'+E(r.pickup.city)+' → '+E(r.dropoff.city)+'</b><span class="p">'+E(pill)+'</span></div>'+
+  '<div class="m" style="margin:6px 0">'+E(r.customerName)+' · '+E(r.load)+' · pick-up '+E(r.pickupTime)+'</div><div style="font-size:22px;font-weight:700">'+money(st==='countered'?r.counter:(r.finalPrice||r.offer))+'</div><div class="m">'+(st==='countered'?'Your price. Customer offered '+money(r.offer):'Customer offers')+'</div>';
+  if(st==='pending')h+='<button class="btn" data-ac="'+E(r.id)+'">Accept '+money(r.offer)+'</button><div class="row"><input type="number" placeholder="Your price" id="c-'+E(r.id)+'"><button class="btn o" style="margin-top:0" data-co="'+E(r.id)+'">Send my price</button></div><button class="btn r" data-de="'+E(r.id)+'">Decline</button>';
+  if(st==='accepted')h+='<a class="btn" href="tel:'+E((r.customerPhone||'').replace(/[^+\d]/g,''))+'">Call '+E(r.customerName)+' · '+E(r.customerPhone)+'</a>';
+  h+='</div>';});
+ $s('tc-tb').innerHTML=h||'<div class="card m">No requests yet. When a customer asks for your truck it shows here.</div>';
+ var upd=function(id,data){var f=FBx();data.updatedAt=new Date().toISOString();return f.updateDoc(f.doc(f.db,'returnRequests',id),data).then(function(){drawReturn('req');}).catch(function(){say('Could not update. Please try again.');});};
+ document.querySelectorAll('#tc-tb [data-ac]').forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-ac');var r=a.filter(function(x){return x.id===id;})[0];upd(id,{status:'accepted',finalPrice:r.offer,driverPhone:me.phone||'',driverName:me.name||''});};});
+ document.querySelectorAll('#tc-tb [data-co]').forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-co'),v=parseInt($s('c-'+id).value,10);if(!(v>=100&&v<=500000)){say('Enter a price');return;}upd(id,{status:'countered',counter:v,driverPhone:me.phone||'',driverName:me.name||''});};});
+ document.querySelectorAll('#tc-tb [data-de]').forEach(function(b){b.onclick=function(){upd(b.getAttribute('data-de'),{status:'declined'});};});}
+function tcOkT(p){p=parseFloat(p);return p>=1&&p<=(window.TC_RETURN_MAX_T||10);}
+function trucks(){var t=[];(me.fleet||[]).forEach(function(x){if(!tcOkT(x.payload))return;t.push({name:x.name,plate:x.plate,body:x.body,payload:x.payload,driverName:x.dname,driverPhoto:x.dphoto||''});});
+ if(!t.length&&!(me.fleet&&me.fleet.length)&&me.truck&&(me.payloadCapacity===''||me.payloadCapacity==null||tcOkT(me.payloadCapacity)))t.push({name:me.truck,plate:me.plate||'',body:me.bodyType||'',payload:me.payloadCapacity||'',driverName:me.name||'',driverPhoto:''});return t;}
+function postForm(){var tr=trucks();
+ if(!approved()){$s('tc-tb').innerHTML='<div class="card m">Your account must be approved before you can post a return trip.</div>';return;}
+ if(!tr.length){$s('tc-tb').innerHTML='<div class="card m">'+((me.fleet&&me.fleet.length)||me.payloadCapacity?'Return trips are for trucks of 1 to 10 tons. Heavy trucks cannot post return trips.':'Add your truck first.')+'</div>';return;}
+ var now=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+ $s('tc-tb').innerHTML='<div class="card m">You do not have to set a price. Customers send an offer and you accept it or send your own price.</div>'+
+ '<span class="l">Where I am now</span><select id="r-f">'+tcCityOpts(22)+'</select><span class="l">Where I am going</span><select id="r-t">'+tcCityOpts(0)+'</select><div class="err" id="e-rt">Choose two different places</div>'+
+ '<span class="l">Leaving</span><input id="r-d" type="datetime-local" min="'+now+'"><div class="err" id="e-rd">Choose a time that has not passed</div>'+
+ '<span class="l">Truck</span><select id="r-k">'+tr.map(function(x,i){return '<option value="'+i+'">'+E(x.name)+' · '+E(x.plate)+(x.driverName?' · '+E(x.driverName):'')+'</option>';}).join('')+'</select>'+
+ '<span class="l">Space free</span><select id="r-s"><option value="full">Full truck</option><option value="half">Half</option><option value="part">A few pallets</option></select>'+
+ '<span class="l">Price</span><select id="r-m"><option value="open">Open to offers</option><option value="fixed">I set a price</option></select><input id="r-p" type="number" placeholder="Your price in rand" style="display:none;margin-top:8px"><div class="err" id="e-rp">Enter a price</div>'+
+ '<button class="btn" id="r-go">Post my return trip</button>';
+ $s('r-m').onchange=function(){$s('r-p').style.display=this.value==='fixed'?'block':'none';};
+ $s('r-go').onclick=function(){var bad=false,f=tcCity($s('r-f').value),t=tcCity($s('r-t').value),d=$s('r-d').value;
+  var ck=function(ok,id){$s(id).style.display=ok?'none':'block';if(!ok)bad=true;};
+  ck(f.city!==t.city,'e-rt');ck(!!d&&new Date(d)>new Date(),'e-rd');var fixed=$s('r-m').value==='fixed',price=parseInt($s('r-p').value,10);ck(!fixed||(price>=100&&price<=500000),'e-rp');if(bad)return;
+  var k=tr[parseInt($s('r-k').value,10)];var id=tcId();
+  var data={id:id,driverUid:UID(),driverName:me.name||'',company:(me.entityType==='company'?(me.companyName||''):''),from:f,to:t,departAt:new Date(d).toISOString(),space:$s('r-s').value,truck:{name:k.name,plate:k.plate,body:k.body,payload:k.payload},fleetDriver:{name:k.driverName,photo:k.driverPhoto},priceMode:fixed?'fixed':'open',price:fixed?price:null,status:'open',createdAt:new Date().toISOString()};
+  $s('r-go').disabled=true;var fb=FBx();fb.setDoc(fb.doc(fb.db,'returnTrips',id),data).then(function(){say('Return trip posted');drawReturn('my');}).catch(function(){$s('r-go').disabled=false;say('Could not post. Return trips may not be switched on yet. Contact support.');});};}
+
+/* ---------- MENU ---------- */
+function addMenu(){var nav=document.querySelector('#d-sidemenu .sidemenu-nav');if(!nav||document.getElementById('menu-fleet'))return;
+ var sep=nav.querySelector('.sm-sep');var ic='<span class="sm-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg></span>';
+ var mk=function(id,label,fn){var b=document.createElement('button');b.className='sidemenu-btn';b.id=id;b.innerHTML=ic+label;b.onclick=fn;nav.insertBefore(b,sep);return b;};
+ mk('menu-return','Return trips',function(){openReturn('req');});
+ var fb=mk('menu-fleet','My fleet',openFleet);fb.style.display='none';
+ var mb=document.getElementById('d-menu-btn');if(mb)mb.addEventListener('click',function(){loadMe().then(function(){fb.style.display=(me.entityType==='company'||(me.fleet&&me.fleet.length))?'':'none';}).catch(function(){});});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addMenu);else addMenu();
+window._tcOpenFleet=openFleet;window._tcOpenReturn=openReturn;
+})();
+
 </script>
 </body>
 </html>
