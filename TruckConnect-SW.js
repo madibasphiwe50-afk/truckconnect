@@ -16,12 +16,14 @@ self.addEventListener('push', event => {
   const n = p.notification || {};
   const title = d.title || n.title || 'Truck Connect';
   const ring = d.ring === '1';
+  // Keep a price together: "R 1 850" never splits across two lines.
+  const keepPrice = t => String(t || '').replace(/(^|[^A-Za-z])R\s*(\d[\d\s,.]*\d|\d)/g, (m, pre, num) => pre + 'R\u00A0' + num.trim().replace(/\s+/g, '\u00A0'));
   const actions = [];
   if (ring && d.actionToken) {
-    actions.push({ action: 'accept', title: '✅ Accept' }, { action: 'decline', title: '✖ Decline' });
+    actions.push({ action: 'accept', title: 'Accept' }, { action: 'decline', title: 'Decline' });
   }
   const opts = {
-    body: d.body || n.body || '',
+    body: keepPrice(d.body || n.body || ''),
     icon: d.icon || LOGO,
     badge: d.badge || BADGE,
     tag: d.tag || ('tc-' + (d.kind || 'msg')),
@@ -92,5 +94,5 @@ async function openApp(d) {
   }
   const scope = self.registration.scope;
   const page = d.app === 'customer' ? 'customer.html' : d.app === 'admin' ? 'admin.html' : 'driver.html';
-  return self.clients.openWindow(scope + page + '?tcn=' + encodeURIComponent(d.screen || '') + '&id=' + encodeURIComponent(d.id || ''));
+  return self.clients.openWindow(scope + page + '?screen=' + encodeURIComponent(d.screen || '') + '&id=' + encodeURIComponent(d.id || ''));
 }

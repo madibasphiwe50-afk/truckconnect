@@ -116,7 +116,7 @@ export default {
         return json({
           ok: true,
           service: "TruckConnect FCM Worker",
-          version: "2026-11-03-ring-alert",
+          version: "2026-11-03-ring-alert-2",
           projectId: sa.project_id,
           hasAdminSecret: !!env.ADMIN_API_SECRET
         });
@@ -1040,7 +1040,7 @@ async function notifyNewJob(request, env) {
       : b.price ? "Fare: " + formatRand(b.price) : ""
   ]
     .filter(Boolean)
-    .join(" • ");
+    .join("\n");
 
   const results = await Promise.all(
     drivers.map(async d => {
