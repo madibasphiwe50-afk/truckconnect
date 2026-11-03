@@ -1,0 +1,5 @@
+{
+  "name": "truckconnect-fcm",
+  "main": "fcm-worker.js",
+  "compatibility_date": "2025-01-01"
+}

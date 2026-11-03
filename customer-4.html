@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="tc-build" content="customer-20261028-1">
 <script>
 /* TruckConnect protective layer — keeps the app standing when something goes wrong.
    Nothing here shows technical text on screen. Errors are reported quietly to the admin app. */
@@ -1469,7 +1470,7 @@ if ('serviceWorker' in navigator) {
   // For a lock-screen test open the app address with  ?testpush=1&delay=10
   // then lock the phone: the push arrives 10 seconds later.
   // Set TC_WELCOME_PUSH to false when you no longer want it.
-  var TC_WELCOME_PUSH = false;
+  var TC_WELCOME_PUSH = true; // welcome push is sent once per person per phone
   window.tcSendTestPush = async function(delay) {
     try {
       var FB = window._FB;
@@ -1512,8 +1513,9 @@ if ('serviceWorker' in navigator) {
       if (!TC_WELCOME_PUSH && !forced) return;
       var last = 0;
       try { last = Number(localStorage.getItem('tc_welcome_at') || 0); } catch (e) {}
-      if (!forced && Date.now() - last < 600000) return;
-      try { localStorage.setItem('tc_welcome_at', String(Date.now())); } catch (e) {}
+      var _wk = 'tc_welcome_done_' + (window.currentUid || '');
+      try { if (!forced && localStorage.getItem(_wk)) return; } catch (e) {}
+      try { localStorage.setItem(_wk, String(Date.now())); } catch (e) {}
       window.tcSendTestPush(forced ? Math.min(20, Number(params.get('delay')) || 10) : 10);
     } catch (e) {}
   };
@@ -1716,6 +1718,47 @@ body:not(.light-mode) .fc-box{background:rgba(214,66,42,.12)}
 .fc-sizes .tcc-opt{padding:9px 2px;border-radius:14px;font-size:13px}
 #hs-fc .tcc-fr{margin-top:10px;margin-bottom:0}
 #hs-fc .tcc-rules{margin-top:10px;background:var(--card)}
+</style>
+<style id="hq-css">
+.hq-chips5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
+.hq-c5{border:1.5px solid var(--border);background:var(--card);color:var(--text);border-radius:12px;padding:9px 2px 7px;text-align:center;cursor:pointer;font-family:inherit}
+.hq-c5 b{display:block;font-size:17px;font-weight:800;line-height:1.1}
+.hq-c5 small{display:block;font-size:9.5px;color:var(--muted);margin-top:2px;line-height:1.15}
+.hq-c5.on{border-color:var(--tc-blue);background:var(--tc-blue);color:#fff}.hq-c5.on small{color:#e6f0ff}
+.hq-note{font-size:12px;line-height:1.5;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.hq-in{width:100%;box-sizing:border-box;margin-bottom:8px;padding:13px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:14px;font-family:inherit}
+.hq-row2{display:flex;gap:8px}.hq-row2 .hq-in{flex:1;min-width:0}
+.hq-screen{display:none;position:fixed;inset:0;z-index:99950;background:var(--bg);color:var(--text);flex-direction:column;font-family:Roboto,sans-serif}
+.hq-top{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 10px;border-bottom:1px solid var(--border)}
+.hq-x{width:38px;height:38px;border-radius:50%;border:none;background:var(--card);color:var(--text);font-size:20px;cursor:pointer}
+.hq-t{font-size:17px;font-weight:700}.hq-s{font-size:12px;color:var(--muted);margin-top:2px}
+.hq-f{display:flex;gap:8px;padding:10px 14px;overflow-x:auto}
+.hq-f button{white-space:nowrap;border:1.5px solid var(--border);background:var(--card);color:var(--text);border-radius:18px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.hq-f button.on{background:var(--tc-blue);border-color:var(--tc-blue);color:#fff}
+.hq-list{flex:1;overflow-y:auto;padding:4px 14px 12px}
+.hq-card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
+.hq-card.best{border-color:var(--tc-blue)}
+.hq-h{display:flex;gap:10px;align-items:flex-start}
+.hq-av{width:42px;height:42px;border-radius:50%;background:var(--tc-blue);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hq-nm{font-size:15px;font-weight:700}.hq-sb{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
+.hq-pr{margin-left:auto;text-align:right}.hq-pr b{display:block;font-size:22px;font-weight:800;color:var(--tc-blue)}.hq-pr small{font-size:10.5px;color:var(--muted)}
+.hq-bd{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;margin:8px 6px 0 0;background:rgba(22,119,242,.12);color:var(--tc-blue)}
+.hq-bd.g{background:rgba(0,168,89,.14);color:#0a8a4f}
+.hq-inc{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.hq-inc span{font-size:11.5px;padding:4px 9px;border-radius:10px;border:1px solid var(--border);color:var(--text)}
+.hq-nt{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic}
+.hq-btns{display:flex;gap:8px;margin-top:12px}
+.hq-btns button{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);background:var(--bg);color:var(--text)}
+.hq-btns button.p{background:var(--tc-blue);border-color:var(--tc-blue);color:#fff;flex:2}
+.hq-empty{text-align:center;padding:48px 24px;color:var(--muted);font-size:14px;line-height:1.6}
+.hq-spin{width:46px;height:46px;border-radius:50%;border:5px solid var(--border);border-top-color:var(--tc-blue);margin:0 auto 18px;animation:hqspin 1s linear infinite}
+@keyframes hqspin{to{transform:rotate(360deg)}}
+.hq-foot{padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border)}
+.hq-foot button{width:100%;padding:13px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+#hq-pill{display:none;position:fixed;left:14px;right:14px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:99940;background:var(--tc-blue);color:#fff;border:none;border-radius:16px;padding:15px 16px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(22,119,242,.35);font-family:inherit;text-align:center}
+</style>
+<style id="co-css">
+body.tc-acct-company #hm-seg,body.tc-acct-company .hm-help,body.tc-acct-company #tcc-seg,
+body.tc-acct-company #hs-both-card,body.tc-acct-company #hs-fc{display:none!important}
 </style>
 </head>
 <style id="tc-both-css">
@@ -2165,6 +2208,16 @@ window._tcFlushErrors();
     <div class="tc-ob-body">
       <button class="tc-ob-back" id="tc-final-back"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
       <h1 class="tc-ob-h1">A few last details</h1>
+      <div id="tc-acct-type" style="display:flex;gap:0;background:#f1f1f1;border-radius:14px;padding:4px;margin:4px 0 18px;">
+        <button type="button" id="tc-at-ind" style="flex:1;border:0;border-radius:11px;padding:13px 0;font-weight:700;font-size:15px;font-family:Roboto,sans-serif;background:#111;color:#fff;">Individual</button>
+        <button type="button" id="tc-at-co" style="flex:1;border:0;border-radius:11px;padding:13px 0;font-weight:700;font-size:15px;font-family:Roboto,sans-serif;background:transparent;color:#111;">Company</button>
+      </div>
+      <div id="tc-co-fields" style="display:none;">
+        <div class="fg" style="margin-bottom:16px;"><span style="font-size:12px;font-weight:700;color:#888;letter-spacing:.5px;">COMPANY NAME</span><input id="tc-co-name" maxlength="80" placeholder="Registered company name" style="border:1.5px solid #111;border-radius:12px;padding:15px;font-size:16px;font-family:Roboto,sans-serif;color:#111;background:#fff;width:100%;box-sizing:border-box;margin-top:6px;"/></div>
+        <div class="fg" style="margin-bottom:16px;"><span style="font-size:12px;font-weight:700;color:#888;letter-spacing:.5px;">REGISTRATION NUMBER</span><input id="tc-co-reg" maxlength="30" placeholder="e.g. 2015/123456/07" style="border:1.5px solid #111;border-radius:12px;padding:15px;font-size:16px;font-family:Roboto,sans-serif;color:#111;background:#fff;width:100%;box-sizing:border-box;margin-top:6px;"/></div>
+        <div class="fg" style="margin-bottom:10px;"><span style="font-size:12px;font-weight:700;color:#888;letter-spacing:.5px;">VAT NUMBER (OPTIONAL)</span><input id="tc-co-vat" maxlength="20" inputmode="numeric" placeholder="10 digits" style="border:1.5px solid #111;border-radius:12px;padding:15px;font-size:16px;font-family:Roboto,sans-serif;color:#111;background:#fff;width:100%;box-sizing:border-box;margin-top:6px;"/></div>
+        <div style="font-size:12px;color:#8a5a00;background:#fff6e0;border:1px solid #f1d28a;border-radius:10px;padding:10px 12px;margin-bottom:16px;line-height:1.45;">Company accounts are checked by TruckConnect before they get the <b>Verified company</b> badge. You can still book trucks while you wait.</div>
+      </div>
       <div class="fg" style="margin-bottom:16px;">
         <span style="font-size:12px;font-weight:700;color:#888;letter-spacing:.5px;">FIRST NAME</span>
         <input id="tc-final-fname" placeholder="Your first name" style="border:1.5px solid #111;border-radius:12px;padding:15px;font-size:16px;font-family:Roboto,sans-serif;color:#111;background:#fff;width:100%;box-sizing:border-box;margin-top:6px;"/>
@@ -2390,14 +2443,34 @@ window._tcFlushErrors();
           <div id="hs-ton-label" style="color:var(--text);">1 Ton — Bakkie</div>
         </div>
         <div class="hs2-step">
-          <button onclick="hsTonStep(-1)" aria-label="Less">&minus;</button>
+          <button onclick="hsTonStep(-1);_hqClear()" aria-label="Less">&minus;</button>
           <div style="flex:1;text-align:center;">
             <span id="hs-ton-num" style="color:var(--text);">1</span><span class="hs2-unit">ton</span>
           </div>
-          <button onclick="hsTonStep(1)" aria-label="More">+</button>
+          <button onclick="hsTonStep(1);_hqClear()" aria-label="More">+</button>
         </div>
-        <input id="hs-ton-slider" type="range" min="0" max="7" step="1" value="0" oninput="hsTonSlide(this.value)" style="width:100%;accent-color:var(--tc-blue);"/>
-        <div class="hs2-range"><span>1 ton</span><span>8 ton</span></div>
+        <input id="hs-ton-slider" type="range" min="0" max="9" step="1" value="0" oninput="hsTonSlide(this.value);_hqClear()" style="width:100%;accent-color:var(--tc-blue);"/>
+        <div class="hs2-range"><span>1 ton</span><span>10 ton</span></div>
+      </div>
+    </div>
+
+    <!-- HEAVY LOADS: 12 to 34 ton, request quotes -->
+    <div id="hs-heavy" style="margin-bottom:18px;">
+      <div class="hs2-sec">Heavy load? 12 ton and up</div>
+      <div class="hq-chips5">
+        <button type="button" class="hq-c5" id="hq-chip-12" onclick="_hqPick(12)"><b>12</b><small>Large rigid</small></button>
+        <button type="button" class="hq-c5" id="hq-chip-15" onclick="_hqPick(15)"><b>15</b><small>6x4 rigid</small></button>
+        <button type="button" class="hq-c5" id="hq-chip-20" onclick="_hqPick(20)"><b>20</b><small>8x4 rigid</small></button>
+        <button type="button" class="hq-c5" id="hq-chip-28" onclick="_hqPick(28)"><b>28</b><small>Truck + trailer</small></button>
+        <button type="button" class="hq-c5" id="hq-chip-34" onclick="_hqPick(34)"><b>34</b><small>Interlink</small></button>
+      </div>
+      <div id="hs-hv-form" style="display:none;">
+        <div class="hq-note">Big trucks have no fixed price. Verified truck owners send you their own price for the whole trip. You compare and pick one.</div>
+        <input id="hs-hv-cargo" class="hq-in" placeholder="What are you moving? e.g. gravel, steel, pallets" maxlength="80" autocomplete="off"/>
+        <select id="hs-hv-body" class="hq-in"><option value="">Any body type</option><option value="Tipper">Tipper</option><option value="Side tipper">Side tipper</option><option value="Tautliner">Tautliner</option><option value="Flatdeck">Flatdeck / flatbed</option><option value="Closed">Closed body</option><option value="Curtain-side">Curtain-side</option></select>
+        <div class="hq-row2"><input id="hs-hv-date" type="date" class="hq-in"/><input id="hs-hv-time" type="time" class="hq-in" value="08:00"/></div>
+        <select id="hs-hv-pay" class="hq-in"><option value="eft">Pay by EFT</option><option value="cash">Cash on delivery</option></select>
+        <input id="hs-hv-notes" class="hq-in" placeholder="Notes: loading, access, weight (optional)" maxlength="120" autocomplete="off"/>
       </div>
     </div>
 
@@ -2457,6 +2530,8 @@ window._tcFlushErrors();
     <option value="6ton|6 Ton Medium Truck|48">6 Ton — Medium Truck</option>
     <option value="7ton|7 Ton Medium Truck|53">7 Ton — Medium Truck</option>
     <option value="8ton|8 Ton Medium Truck|58">8 Ton — Medium Truck</option>
+    <option value="9ton|9 Ton Heavy Truck|63">9 Ton — Heavy Truck</option>
+    <option value="10ton|10 Ton Heavy Truck|68">10 Ton — Heavy Truck</option>
   </select>
 
   <div class="tcc-seg" id="tcc-seg"><button id="tcc-m-truck" class="on" onclick="_tcSetMode(false)">Truck</button><button id="tcc-m-courier" onclick="_tcSetMode(true)">Fragile Care</button></div>
@@ -2919,7 +2994,7 @@ window._tcFlushErrors();
         <div style="flex:1;min-width:0;">
           <div class="dfound-name" id="dfound-name">—</div>
           <div class="dfound-rating"><svg width="15" height="15" viewBox="0 0 20 20" fill="#fbbf24"><path d="M10 1.5l2.6 5.7 6.2.7-4.6 4.3 1.2 6.2L10 15.3l-5.4 3.1 1.2-6.2L1.2 7.9l6.2-.7z"/></svg><span class="dfound-rating-num" id="dfound-rating-num">5.0</span><span class="dfound-rating-div">|</span><span class="dfound-trips" id="dfound-trips"></span></div>
-          <div class="dfound-verified"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2l6 2.5v4.7c0 4-2.6 6.9-6 8.3-3.4-1.4-6-4.3-6-8.3V4.5Z"/><polyline points="7 10 9 12 13 7.5"/></svg>Verified Driver</div>
+          <div class="dfound-verified" id="dfound-verified-lbl"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2l6 2.5v4.7c0 4-2.6 6.9-6 8.3-3.4-1.4-6-4.3-6-8.3V4.5Z"/><polyline points="7 10 9 12 13 7.5"/></svg><span id="dfound-verified-txt">Verified Driver</span></div>
         </div>
       </div>
     </div>
@@ -3443,8 +3518,25 @@ function createAccountFromCData(){
 
     function saveCustDoc(uid){
       var docData={uid:uid,id:'CUS-'+Date.now(),name:cData.name,email:cData.email,phone:cData.phone,photo:cData.photo||null,idNumber:cData.idNumber||null,idType:cData.idType||null,passportCountry:cData.passportCountry||null,joined:new Date().toLocaleDateString('en-ZA'),bookings:0,status:'active',type:'customer',consentVersion:TC_CONSENT_VERSION};
+      // Account type (Individual / Company). Existing accounts have none and count as individual.
+      var _isCo=cData.accountType==='company';
+      var _acctExtra={accountType:_isCo?'company':'individual'};
+      if(_isCo){_acctExtra.companyName=cData.companyName||'';_acctExtra.companyReg=cData.companyReg||'';_acctExtra.vatNumber=cData.vatNumber||null;_acctExtra.companyStatus='pending';}
+      Object.assign(docData,_acctExtra);
       return encryptCustomerFields(uid,docData).then(function(enc){
-        return _tcLoadFbx().then(function(x){return FB.setDoc(FB.doc(FB.db,'customers',uid),Object.assign({},enc,{consentVersion:TC_CONSENT_VERSION,consentAcceptedAt:x.fs.serverTimestamp()}));}).then(function(){
+        return _tcLoadFbx().then(function(x){
+          var ref=FB.doc(FB.db,'customers',uid),stamp={consentVersion:TC_CONSENT_VERSION,consentAcceptedAt:x.fs.serverTimestamp()};
+          return FB.setDoc(ref,Object.assign({},enc,stamp)).catch(function(err){
+            // Safety net: if the database rules refuse the new account-type fields, still create the account without them.
+            if(err&&err.code==='permission-denied'){
+              var base=Object.assign({},enc);['accountType','companyName','companyReg','vatNumber','companyStatus'].forEach(function(k){delete base[k];});
+              try{console.warn('[TC] customers rules rejected account-type fields; saved without them');}catch(e){}
+              docData.accountType='individual';docData._acctFieldsRejected=true;
+              return FB.setDoc(ref,Object.assign({},base,stamp));
+            }
+            throw err;
+          });
+        }).then(function(){
           return _writePhoneIndex(uid,cData.phone).then(function(){return docData;});
         });
       });
@@ -3526,7 +3618,7 @@ function createAccountFromCData(){
 }
 
 // ══ POPIA: CONSENT + DATA RIGHTS ══
-var TC_CONSENT_VERSION='2026-10';
+var TC_CONSENT_VERSION='2026-11';
 var TC_CONSENT_ERR='Please tick the box to agree to the Terms of Service and the Privacy Policy.';
 var _tcConsentOk=false;
 function _tcConsentSync(){
@@ -4249,6 +4341,19 @@ function _broadcastNewJob(bookingId){
 }
 window._broadcastNewJob=_broadcastNewJob; // the Take Both companion saver (a later script) calls it
 
+/* Tell the worker something happened (cancel, chat, dispute...). It decides who gets a push. */
+function _tcEvent(type,bookingId,vars,extra){
+  try{
+    var FB=window._FB;
+    if(!FB||!FB.auth||!FB.auth.currentUser)return;
+    FB.auth.currentUser.getIdToken().then(function(t){
+      return fetch(TC_FCM_WORKER_URL+'/event',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},
+        body:JSON.stringify(Object.assign({type:type,bookingId:bookingId||'',vars:vars||{}},extra||{}))});
+    }).catch(function(){});
+  }catch(e){}
+}
+window._tcEvent=_tcEvent;
+
 // ── END NOTIFICATION SYSTEM ───────────────────────────────────────────────────
 // Same VAPID key as the driver app — both use the same Firebase project
 var FCM_VAPID_KEY = 'BLjg-tEF3iP4wGWSp1lh4PW2-cteT98wXJBluC-Y6kCJWH4nVsNKeHDt61aDIqKRcd00IehNBRHo7HVJ7LPJQQ8';
@@ -4567,8 +4672,29 @@ function stopDriverTracking(){
   var fb=$('follow-driver-btn');if(fb)fb.remove();
 }
 
+var _tcHoldId=null,_tcHoldTimer=null,_tcHeldOnce={};
+// While the customer watches the search screen, hold the jump to live tracking so the driver can be shown on the map first.
+function _tcHoldStart(bk,ms){
+  if(!bk||!bk.id||_tcHeldOnce[bk.id])return false;
+  _tcHoldId=bk.id;clearTimeout(_tcHoldTimer);
+  _tcHoldTimer=setTimeout(function(){
+    var ss=document.getElementById('s-searching'),onSearch=!!(ss&&ss.classList.contains('active'));
+    _tcHoldRelease(bk,function(cur){if(onSearch&&_srchBk&&_srchBk.id===bk.id){_srchStop();}startDriverTracking(cur);});
+  },ms||6500);
+  return true;
+}
+function _tcHoldRelease(bk,fn){
+  clearTimeout(_tcHoldTimer);_tcHoldTimer=null;
+  var id=_tcHoldId;_tcHoldId=null;
+  if(!id)return;_tcHeldOnce[id]=true;
+  var cur=(typeof myBookings!=='undefined'&&myBookings.filter(function(b){return b.id===id;})[0])||bk;
+  try{if(fn)fn(cur);else if(cur)startDriverTracking(cur);}catch(e){console.warn('[TC] release',e);}
+}
 function startDriverTracking(bk){
   if(!bk||!bk.id)return;
+  if(_tcHoldId===bk.id)return; // the "driver found" map is playing; it hands over when done
+  (function(){var ss=document.getElementById('s-searching');if(ss&&ss.classList.contains('active')&&typeof _srchBk!=='undefined'&&_srchBk&&_srchBk.id===bk.id)_tcHoldStart(bk);})();
+  if(_tcHoldId===bk.id)return;
   if(_trackingBookingId===bk.id)return; // already tracking this one
   stopDriverTracking();
   _trackingBookingId=bk.id;
@@ -4750,7 +4876,7 @@ function _buildTruckCards(){
   if(_vals.length){
     _truckGroups=_vals.map(function(v){
       var n=parseFloat(v)||1;
-      return {emoji:_tonEmoji(n),label:n+' Ton',sub:(n===1?'Bakkie':(n<4?'Small truck':'Medium truck')),vals:[v]};
+      return {emoji:_tonEmoji(n),label:n+' Ton',sub:(n===1?'Bakkie':(n<4?'Small truck':(n>=9?'Heavy truck':'Medium truck'))),vals:[v]};
     });
   }
   _truckGroups.forEach(function(g,i){
@@ -5157,6 +5283,28 @@ function showMapAndFare(){
         };
         tl.appendChild(row);
       });
+
+      // TAKE BOTH: show the closed bakkie as its own priced line plus a combined total
+      var _pb2=document.getElementById('proceed-pay-btn');
+      if(bookingData.both&&!_tcCourier.on){
+        var _selT=allTrucks.find(function(t){return t.v===selectedV;})||allTrucks[0];
+        var _tF=_tcFare(_selT,distKm);
+        var _bF=_tcCourierFareNum('bakkie',parseFloat(distLabel)||distKm);
+        var _hd=document.createElement('div');
+        _hd.style.cssText='font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#D6422A;margin:6px 2px 8px;';
+        _hd.textContent='Plus, for your fragile items';
+        tl.appendChild(_hd);
+        var _br=document.createElement('div');
+        _br.className='map-truck-row';
+        _br.style.cssText='background:rgba(214,66,42,.08);border:1.5px dashed rgba(214,66,42,.45);cursor:default;';
+        _br.innerHTML='<div class="mtr-icon">'+_tonEmoji(1)+'</div><div class="mtr-info"><div class="mtr-name">Closed bakkie</div><div class="mtr-sub">Fragile items &middot; added to your order</div></div><div class="mtr-price"><div class="mtr-fare" style="color:#D6422A;">R'+_bF.toLocaleString()+'</div></div>';
+        tl.appendChild(_br);
+        var _tt=document.createElement('div');
+        _tt.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px 2px;';
+        _tt.innerHTML='<div><div class="mtr-name">Total for both</div><div class="mtr-sub">Truck R'+_tF.toLocaleString()+' + bakkie R'+_bF.toLocaleString()+'. Each driver is paid separately.</div></div><div class="mtr-fare" style="font-size:22px;">R'+(_tF+_bF).toLocaleString()+'</div>';
+        tl.appendChild(_tt);
+        if(_pb2)_pb2.textContent='Book Both \u2192';
+      }else if(_pb2&&/^Book Both/.test(_pb2.textContent||'')){_pb2.textContent='Book Now \u2192';}
 
       // Set bookingData to currently selected truck
       var sel=allTrucks.find(function(t){return t.v===selectedV;})||allTrucks[0];
@@ -5670,9 +5818,11 @@ function confirmBooking(){
       _broadcastNewJob(bkId); // push-alert approved drivers, even if their phone is locked
       _tcSaveCompanion(bk,bkId2);
       startDriverSearch(bk);
+      // The Take both switch is for ONE booking: switch it off so the next truck booking is a normal one.
+      try{_tcCourier.both=false;_tcApplyMode();}catch(e){}
     }).catch(function(e){
       console.warn('Booking save error:',e);
-      toast('Error saving booking. Please try again.');
+      toast('Error saving booking. Please try again. ('+String((e&&e.code)||(e&&e.message)||'').replace(/^firestore\//,'').slice(0,40)+')');
       if(btn){btn.disabled=false;btn.textContent='Find a Driver →';}
     });
   } else {
@@ -5720,6 +5870,7 @@ function _srchRender(){
     txt('search-status-sub','Your booking is visible to nearby drivers. We\u2019ll notify you the moment a driver accepts.');
     return;
   }
+  if(_srchBk&&Date.now()-(_srchLastScan||0)>30000){_srchLastScan=Date.now();try{_fetchAvailableDrivers(_srchBk);}catch(e){}}
   var mins=(Date.now()-_srchStart)/60000;
   if(mins>=SRCH_MAX_MIN){
     clearInterval(_driverSearchTimer);
@@ -5736,8 +5887,9 @@ function _srchRender(){
     if(st)st.className='srch-step'+(i<idx?' done':(i===idx?' on':''));
   }
   txt('search-status-title',SRCH_STAGES[idx].t);
-  txt('search-status-sub',SRCH_STAGES[idx].m);
+  txt('search-status-sub',SRCH_STAGES[idx].m+(_srchNearby>0?' '+_srchNearby+' matching driver'+(_srchNearby===1?' is':'s are')+' online and can see your request.':''));
 }
+var _srchNearby=0,_srchLastScan=0;
 
 // ───────── TRUCK + BAKKIE PAIR (two linked bookings) ─────────
 var _tcPair={on:false,a:null,b:null,ua:null,ub:null,tick:null,asking:false,snoozeUntil:0};
@@ -5894,6 +6046,7 @@ function _srchClearMap(){
 }
 function _srchStop(){
   clearInterval(_driverSearchTimer);
+  clearTimeout(_tcHoldTimer);_tcHoldTimer=null;_tcHoldId=null;
   try{_tcPairStop();}catch(e){}
   if(_searchAcceptUnsub){_searchAcceptUnsub();_searchAcceptUnsub=null;}
   _srchClearMap();
@@ -5960,6 +6113,7 @@ function _srchOnFound(bk,data){
   _srchDrvPos=_ltDriverPos(data);
   if(first){
     clearInterval(_driverSearchTimer);
+    _tcHoldStart(bk,6500);
     _srchSetState('found');
     txt('search-status-title','Driver Found!');
     txt('search-status-sub','Your driver has accepted your booking and is on the way.');
@@ -6006,6 +6160,34 @@ function _srchSchedule(){
       goToHome();
     }).catch(function(e){toast('Could not schedule. '+_tcFriendly(e));});
   };
+}
+// A driver was chosen and accepted: show where he is on the map first, then move on.
+function _tcLocateDriver(bk,data,next){
+  var done=false;function go(){if(done)return;done=true;try{ov&&ov.remove();}catch(e){}try{if(un)un();}catch(e){}clearTimeout(wt);next();}
+  var ov=null,un=null,wt=null,pick=_ltCoord(bk&&bk.fromCoords),FB=window._FB;
+  function show(pos){
+    if(done)return;
+    if(!pick||!pos||!window.google||!google.maps||!google.maps.marker){go();return;}
+    ov=document.createElement('div');ov.id='tc-locate';
+    ov.style.cssText='position:fixed;inset:0;z-index:99997;background:#0b1220;';
+    ov.innerHTML='<div id="tc-locate-map" style="position:absolute;inset:0"></div>'+
+      '<div style="position:absolute;left:14px;right:14px;top:calc(14px + env(safe-area-inset-top,0px));background:#16a34a;color:#fff;border-radius:16px;padding:12px 16px;font-weight:700;font-size:15px;box-shadow:0 6px 24px rgba(0,0,0,.3)">Driver found<div style="font-weight:500;font-size:12.5px;opacity:.92;margin-top:2px">'+tcEsc(data.driverName||'Your driver')+(data.driverNumPlate||data.driverPlate?' · '+tcEsc(data.driverNumPlate||data.driverPlate):'')+'</div></div>'+
+      '<button id="tc-locate-go" type="button" style="position:absolute;left:14px;right:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));height:52px;border:0;border-radius:16px;background:#fff;color:#0D1B2A;font-weight:700;font-size:15px">Continue</button>';
+    document.body.appendChild(ov);
+    document.getElementById('tc-locate-go').onclick=go;
+    try{
+      var map=new google.maps.Map(document.getElementById('tc-locate-map'),{center:pick,zoom:13,mapId:_mapStyle(),renderingType:'VECTOR',colorScheme:_mapScheme(),disableDefaultUI:true,gestureHandling:'greedy',clickableIcons:false});
+      new google.maps.marker.AdvancedMarkerElement({map:map,position:pick,content:_srchPinEl()});
+      setTimeout(function(){if(done)return;new google.maps.marker.AdvancedMarkerElement({map:map,position:pos,content:_srchTruckEl(),zIndex:5});map.panTo(pos);},350);
+      setTimeout(function(){if(done)return;var b=new google.maps.LatLngBounds();b.extend(pick);b.extend(pos);map.fitBounds(b,{top:130,bottom:120,left:56,right:56});},1500);
+      wt=setTimeout(go,4800);
+    }catch(e){go();}
+  }
+  var pos=_ltDriverPos(data);
+  if(pos){_loadGoogleMaps(function(){show(pos);});return;}
+  // his position may arrive a moment after he accepts: wait a few seconds for it, then carry on
+  wt=setTimeout(go,4000);
+  try{un=FB.onSnapshot(FB.doc(FB.db,'bookings',bk.id),function(sn){if(done||!sn.exists())return;var p=_ltDriverPos(sn.data());if(p){clearTimeout(wt);if(un){un();un=null;}_loadGoogleMaps(function(){show(p);});}});}catch(e){go();}
 }
 function _srchRetry(){
   var bk=_srchBk;if(!bk)return;
@@ -6113,29 +6295,13 @@ function _truckTypeMatch(bk,d){
   return dt!=null&&dt===bt;           // exact tonnage only
 }
 
+// There is no list of drivers to choose from any more. The request goes to every matching online driver,
+// the first one to accept gets the load, and this screen only shows how many can see it.
 function _showDriverPicker(bk,drivers){
   if(_srchState==='found')return;
   _currentPickBk=bk;
-  var timerBarEl=$('srch-timer-bar');
-  timerBarEl.style.transition='none';
-  timerBarEl.style.width='100%';
-  timerBarEl.style.background=drivers.length>0?'#22c55e':'#f87171';
-
-  if(drivers.length===0){
-    // No matching driver online yet: the 30-minute staged search keeps running.
-    _srchRender();
-    return;
-  }
-
-  // Store the full matched list, build the ton filter chips, and render cards.
-  _dpickAllDrivers=drivers;
-  _dpickByUid={};
-  drivers.forEach(function(d,i){_dpickByUid[d.uid||d.id||('i'+i)]=d;});
-  _dpickActiveChip='all';
-  var sInp=$('dpick-search-inp'); if(sInp)sInp.value='';
-  _dpickBuildChips(drivers);
-  _dpickRenderCards(drivers);
-  goTo('s-driver-pick');
+  _srchNearby=drivers?drivers.length:0;
+  _srchRender();
 }
 
 // Pull a numeric ton value out of whatever truck-type string the driver doc has,
@@ -6213,7 +6379,7 @@ function _dpickRenderCards(drivers){
         '<div class="dcard-info">'+
           '<div class="dcard-name">'+tcEsc(d.name||'Driver')+'</div>'+
           '<div class="dcard-rating"><svg width="13" height="13" viewBox="0 0 20 20" fill="#fbbf24"><path d="M10 1.5l2.6 5.7 6.2.7-4.6 4.3 1.2 6.2L10 15.3l-5.4 3.1 1.2-6.2L1.2 7.9l6.2-.7z"/></svg><span class="dcard-rating-num">'+ratingNum+'</span>'+(trips!=null?'<span class="dcard-trips">('+trips+' trip'+(trips===1?'':'s')+')</span>':'')+'</div>'+
-          '<div class="dcard-verified"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2l6 2.5v4.7c0 4-2.6 6.9-6 8.3-3.4-1.4-6-4.3-6-8.3V4.5Z"/><polyline points="7 10 9 12 13 7.5"/></svg>Verified Driver</div>'+
+          '<div class="dcard-verified"'+(d.foreign?' style="color:#b45309"':'')+'><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2l6 2.5v4.7c0 4-2.6 6.9-6 8.3-3.4-1.4-6-4.3-6-8.3V4.5Z"/><polyline points="7 10 9 12 13 7.5"/></svg>'+(d.foreign?'Not verified by TruckConnect':'Verified Driver')+'</div>'+
         '</div>'+
         '<span class="dcard-avail-badge"><span></span>Available Now</span>'+
       '</div>'+
@@ -6275,7 +6441,7 @@ function _dpickOpenSheet(d,cardEl){
         '<div style="flex:1;min-width:0;">'+
           '<div style="font-size:19px;font-weight:700;color:var(--text);line-height:1.2;">'+tcEsc(name)+'</div>'+
           '<div style="margin-top:5px;font-size:13px;color:var(--muted);"><span style="color:#fbbf24;">★</span> <b style="color:var(--text);">'+rating+'</b>'+(trips!=null?' · '+trips+' trips':'')+'</div>'+
-          '<div style="margin-top:5px;font-size:12px;font-weight:700;color:var(--tc-blue);">✔ Verified Driver</div>'+
+          '<div style="margin-top:5px;font-size:12px;font-weight:700;color:'+(d.foreign?'#b45309':'var(--tc-blue)')+';">'+(d.foreign?'Not verified by TruckConnect':'✔ Verified Driver')+'</div>'+
         '</div>'+
         '<span class="dcard-avail-badge"><span></span>Available</span>'+
       '</div>'+
@@ -6311,7 +6477,7 @@ function _dpickCall(phone){
 // customer picked from s-driver-pick accepts the request.
 var _dfoundBk=null, _dfoundDriver=null;
 function _dfoundBodyLabel(b){
-  var m={open:'Open Body',closed:'Closed Body',fridge:'Fridge Body'};
+  var m={open:'Open Body',closed:'Closed Body',fridge:'Fridge Body',dropside:'Dropside','curtain-side':'Curtain-side',flatbed:'Flatbed',tautliner:'Tautliner',tipper:'Tipper','side tipper':'Side tipper'};
   return m[String(b||'').toLowerCase()]||'—';
 }
 function showDriverFoundScreen(bk,driver){
@@ -6323,6 +6489,7 @@ function showDriverFoundScreen(bk,driver){
   var avEl=$('dfound-avatar');
   if(avEl)avEl.innerHTML=selfie?('<img src="'+selfie+'" alt="'+initials+'">'):initials;
   txt('dfound-name',name);
+  (function(){var vl=$('dfound-verified-lbl'),vt=$('dfound-verified-txt');if(vt)vt.textContent=d.foreign?'Not verified by TruckConnect':'Verified Driver';if(vl)vl.style.color=d.foreign?'#b45309':'';})();
   txt('dfound-rating-num',_tcRatingTxt(d));
   var trips=(d.completedTrips!=null&&isFinite(+d.completedTrips))?+d.completedTrips:((d.driverTrips!=null&&isFinite(+d.driverTrips))?+d.driverTrips:null);
   txt('dfound-trips',trips!=null?'('+trips+' trip'+(trips===1?'':'s')+')':'');
@@ -6459,7 +6626,8 @@ function _listenForChosenDriverResponse(bk, driver, btn, cardEl){
       toast('Driver confirmed! Arriving '+whenStr+'.');
       // FIX: removed auto-opening WhatsApp message (it hijacked the app and showed raw SVG code).
       // The customer already gets the in-app notification + push above.
-      setTimeout(function(){showDriverFoundScreen(bk,driver);},1200);
+      _tcHoldId=bk.id;clearTimeout(_tcHoldTimer);_tcHeldOnce[bk.id]=false;
+      _tcLocateDriver(bk,data,function(){_tcHoldRelease(bk,function(cur){showDriverFoundScreen(bk,driver);startDriverTracking(cur);});});
     } else if(data.ds==='declined'&&data.declinedBy===wantUid){
       _stop();
       toast((driver.name||'That driver')+' declined the request. Please choose another driver.');
@@ -6545,8 +6713,10 @@ function _tcMarkGoogleAcUp(){
   window._tcAcDownUntil=0;window._tcAcDiagShown=false;
   try{localStorage.removeItem('tcGoogleAcDownUntil');}catch(e){}
 }
+// Launch markets for address search. Add codes (e.g. 'bw','na') to open other countries later.
+var TC_ENABLED_REGIONS=['za','bw','na','zw','mz','sz','ls','zm','mw'];
 function _tcOsmFetch(params){
-  var url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=za&'+params;
+  var url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes='+TC_ENABLED_REGIONS.join(',')+'&'+params;
   return fetch(url,{headers:{'Accept':'application/json'}}).then(function(r){
     if(!r.ok)throw new Error('Backup search replied HTTP '+r.status);return r.json();
   });
@@ -6585,7 +6755,7 @@ function _mbSearchGoogle(q, lng, lat) {
   return new Promise(function(resolve){
     _loadGoogleMaps(function(){
       if(_tcGoogleAcDown()){_tcOsmSearch(q,lng,lat).then(resolve).catch(function(){resolve([]);});return;}
-      var request={input:q,includedRegionCodes:['za'],language:'en'};
+      var request={input:q,includedRegionCodes:TC_ENABLED_REGIONS,language:'en'};
       if(lng&&lat){request.locationBias={center:{lat:lat,lng:lng},radius:50000};}
       if(!google.maps.places||!google.maps.places.AutocompleteSuggestion){_tcDiag('Address suggestions unavailable','Places library did not load. Using free backup search.');_tcOsmSearch(q,lng,lat).then(resolve).catch(function(){resolve([]);});return;}
       google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request)
@@ -6869,15 +7039,15 @@ var _hsTons=1; // currently selected tons
 // at a cheaper long-distance rate (reflects real fuel/return-trip economics).
 function _tonBase(t){ return Math.round(386.17 + (t-1) * 110.3344); }
 function _tonRate(t){ return Math.round((13.2401 + (t-1) * 2.2067)*100)/100; } // short-distance rate (≤50km)
-var _TON_RATE_LONG=[8.28,9.38,10.48,12.14,13.79,15.45,17.11,18.77]; // long-distance rate (>50km), per ton 1-8
+var _TON_RATE_LONG=[8.28,9.38,10.48,12.14,13.79,15.45,17.11,18.77,20.43,22.09]; // long-distance rate (>50km), per ton 1-10 (9 and 10 continue the 1.66 step: confirm against real rates)
 // Sizes customers can pick. Half-tons exist only where listed here.
-var _TON_STEPS=[1,2,3,4,5,6,7,8];
+var _TON_STEPS=[1,2,3,4,5,6,7,8,9,10];
 // Long-distance rate: whole tons use the table; half-tons sit midway between neighbours (8.5 continues the last step).
 function _tonRateLong(t){
   var i=Math.floor(t),f=t-i;
-  var a=_TON_RATE_LONG[Math.max(0,Math.min(7,i-1))];
+  var a=_TON_RATE_LONG[Math.max(0,Math.min(9,i-1))];
   if(f===0)return a;
-  var b=(i>=8)?a+(_TON_RATE_LONG[7]-_TON_RATE_LONG[6]):_TON_RATE_LONG[Math.max(0,Math.min(7,i))];
+  var b=(i>=10)?a+(_TON_RATE_LONG[9]-_TON_RATE_LONG[8]):_TON_RATE_LONG[Math.max(0,Math.min(9,i))];
   return Math.round((a+(b-a)*f)*100)/100;
 }
 function _calcFareStd(base,rateShort,rateLong,distKm){
@@ -6917,14 +7087,14 @@ function _calcFare(base,rateShort,rateLong,distKm){
   return p>0?Math.round(list*(1-p/100)):list;
 }
 // These live inside a closed function, but _tcFare/_tcFareL (a later script) call them.
-window._calcFare=_calcFare;window._calcFareList=_calcFareList;
+window._calcFare=_calcFare;window._calcFareList=_calcFareList;window._tonBase=_tonBase;window._tonRate=_tonRate;window._tonRateLong=_tonRateLong;
 // ── Truck pictures, 1 to 8 ton ──────────────────────────────────────────────
 // Each size gets its own picture, getting bigger from a 1-ton bakkie to an 8-ton truck.
 // To use real photos instead: put 1ton.jpg ... 8ton.jpg in a folder called "trucks" next to this app
 // and set TC_TRUCK_PHOTOS to true. A missing photo falls back to the drawing automatically.
 var TC_TRUCK_PHOTOS=false;
 window._tonSvg=function(t){
-  t=Math.max(1,Math.min(8,Math.floor(Number(t)||1)));
+  t=Math.max(1,Math.min(10,Math.floor(Number(t)||1)));
   var ink='#0B1730',body='#F4F7FB',glass='#BFD9FF',blue='#1677F2',tyre='#2B3138',rim='#9AA3B5';
   var gy=90,o='',w;
   function wheel(cx,r){return '<ellipse cx="'+cx+'" cy="'+(gy-r)+'" rx="'+r+'" ry="'+r+'" fill="'+tyre+'" stroke="'+rim+'" stroke-width="1.2"/><ellipse cx="'+cx+'" cy="'+(gy-r)+'" rx="'+(r*.42)+'" ry="'+(r*.42)+'" fill="'+rim+'"/>';}
@@ -6954,7 +7124,7 @@ window._tonSvg=function(t){
     w=w+4;
   }
   var tx=Math.max(0,(200-w)/2);
-  return '<svg class="tcart" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+t+' ton truck"><ellipse cx="100" cy="'+(gy+1.5)+'" rx="'+Math.min(92,w/2+6)+'" ry="3.2" fill="rgba(0,0,0,.22)"/><g transform="translate('+tx.toFixed(1)+' 0)">'+o+'</g></svg>';
+  return '<svg class="tcart" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+t+' ton truck"><ellipse cx="100" cy="'+(gy+1.5)+'" rx="'+Math.min(92,w/2+6)+'" ry="3.2" fill="rgba(0,0,0,.22)"/><g transform="'+(w>188?'translate(6 '+(100-100*(188/w)).toFixed(1)+') scale('+(188/w).toFixed(3)+')':'translate('+tx.toFixed(1)+' 0)')+'">'+o+'</g></svg>';
 };
 function _tonEmoji(t){
   if(TC_TRUCK_PHOTOS)return '<img class="tcart" alt="'+t+' ton truck" src="trucks/'+t+'ton.jpg" onerror="this.outerHTML=window._tonSvg('+t+')">';
@@ -6962,6 +7132,7 @@ function _tonEmoji(t){
 }
 function _tonLabel(t){
   if(t<4)return t+' Ton — Small Truck';
+  if(t>=9)return t+' Ton — Heavy Truck';
   return t+' Ton — Medium Truck';
 }
 function _tonId(t){ return t+'ton'; }
@@ -7035,7 +7206,256 @@ window.hsRemoveStop=function(){
   hsStopCoords=null;hsStopVal='';
 };
 
+
+// ───────── HEAVY LOADS (12 to 34 ton): request quotes ─────────
+// No formula price. The load is posted with heavy:true; verified trucks answer with a quote
+// (bookings/{id}/offers/{driverUid}, kind:'quote'); the customer compares and accepts one.
+// After that the job follows the normal flow (driver confirms, chat, tracking, payment).
+var _hqSize=0;
+var _hq={bk:null,offers:{},filter:'low',unsubB:null,unsubO:null,accepting:'',armed:'',open:false,lastCheck:0,seen:{}};
+window._hqPick=function(n){_hqSize=(_hqSize===n)?0:n;_hqUi();};
+window._hqClear=function(){if(_hqSize){_hqSize=0;_hqUi();}};
+function _hqUi(){
+  var on=_hqSize>0;
+  [12,15,20,28,34].forEach(function(n){var e=$('hq-chip-'+n);if(e)e.classList.toggle('on',_hqSize===n);});
+  var f=$('hs-hv-form');if(f)f.style.display=on?'block':'none';
+  var w=$('hs-ton-wrap');if(w)w.style.opacity=on?'.35':'';
+  var bc=$('hs-both-card');if(bc)bc.style.display=on?'none':'';
+  var mb=$('hs-more-btn');if(mb)mb.style.display=on?'none':'';
+  var b=$('hs-get-prices-btn');if(b){var tn=b.firstChild;if(tn&&tn.nodeType===3)tn.nodeValue=on?'Request quotes ':'Get Prices ';}
+  var d=$('hs-hv-date');
+  if(d&&on){var t=new Date();var m=t.getMonth()+1,dd=t.getDate();d.min=t.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd;}
+}
+function _hqShort(a){return String(a||'').split(',')[0];}
+function _hqKm(fc,tc){
+  function hav(){var R=6371,r=Math.PI/180,dLa=(tc[1]-fc[1])*r,dLo=(tc[0]-fc[0])*r;var a=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(fc[1]*r)*Math.cos(tc[1]*r)*Math.sin(dLo/2)*Math.sin(dLo/2);return Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))*1.3);}
+  return new Promise(function(res){
+    var done=false;function fin(v){if(!done){done=true;res(v);}}
+    setTimeout(function(){fin(hav());},6000);
+    try{fetch('https://router.project-osrm.org/route/v1/driving/'+fc[0]+','+fc[1]+';'+tc[0]+','+tc[1]+'?overview=false').then(function(r){return r.json();}).then(function(d){fin(d&&d.routes&&d.routes[0]?Math.round(d.routes[0].distance/1000):hav());}).catch(function(){fin(hav());});}catch(e){fin(hav());}
+  });
+}
+function _hqSubmit(){
+  var FB=window._FB;
+  if(!currentUid||!FB){toast('Session expired. Please sign in again.');return;}
+  try{if(_tcCourier&&(_tcCourier.on||_tcCourier.both)){toast('Heavy loads cannot be combined with Fragile Care.');return;}}catch(e){}
+  var fromVal=(($('hs-from')||{}).value||'').trim(),toVal=(($('hs-to')||{}).value||'').trim(),stopVal=(($('hs-stop')||{}).value||'').trim();
+  if(!fromVal||!toVal){toast('Please enter both pickup and delivery locations.');return;}
+  if(!hsFrCoords||!hsToCoords){toast('Please select addresses from the dropdown suggestions.');return;}
+  var cargo=(($('hs-hv-cargo')||{}).value||'').trim(),date=(($('hs-hv-date')||{}).value||''),time=(($('hs-hv-time')||{}).value||'08:00');
+  if(cargo.length<3){toast('Tell drivers what you are moving.');return;}
+  if(!date){toast('Choose the pickup date.');return;}
+  var active=myBookings.find(function(b){return b.ds==='avail'||b.ds==='requested'||b.ds==='accepted'||b.ds==='in_progress';});
+  if(active){toast('You already have an active booking (#'+active.id+'). Cancel it before creating a new one.');return;}
+  var btn=$('hs-get-prices-btn');if(btn)btn.disabled=true;
+  var size=_hqSize,body=(($('hs-hv-body')||{}).value||''),pay=(($('hs-hv-pay')||{}).value==='cash'?'cash':'eft'),notes=(($('hs-hv-notes')||{}).value||'').trim();
+  _hqKm(hsFrCoords,hsToCoords).then(function(km){
+    var bkId='BK-'+Date.now().toString().slice(-8);
+    var label=size+' Ton Heavy Truck';
+    var bk={
+      id:bkId,heavy:true,quoteMode:true,heavySize:size,bodyWanted:body,
+      customerUid:currentUid,
+      customerName:(cData&&cData.name)||'Customer',
+      customerEmail:(cData&&cData.email)||'',
+      customerPhoto:tcSmallImg((cData&&cData.photo)||'',60000)||'',
+      from:fromVal,to:toVal,fromCoords:hsFrCoords||null,toCoords:hsToCoords||null,
+      truck:label,truckType:label,truckV:size+'ton',
+      cargo:cargo,weight:size+' tons',notes:notes,dist:km+' km',
+      stop:(hsStopCoords&&stopVal)?stopVal:'',stopCoords:(hsStopCoords&&stopVal)?hsStopCoords:null,
+      price:'Quotes',priceNum:0,suggestedPriceNum:0,offerPrice:null,
+      date:date,time:time,payMethod:pay,ds:'avail',
+      pickupTimestamp:(function(){try{return new Date(date+'T'+time+':00+02:00').getTime();}catch(e){return null;}})(),
+      pickupNotifSent:false,created:new Date().toISOString(),
+      recurring:false,courier:false,fragile:false
+    };
+    return Promise.all([
+      FB.setDoc(FB.doc(FB.db,'bookings',bkId),bk),
+      FB.updateDoc(FB.doc(FB.db,'customers',currentUid),{bookings:(myBookings.length+1)}).catch(function(){})
+    ]).then(function(){
+      myBookings.push(bk);
+      if(btn)btn.disabled=false;
+      _hqSize=0;_hqUi();closeBookingSheet();
+      try{_broadcastNewJob(bkId);}catch(e){}
+      toast('Quote request sent to verified trucks.');
+      _hqOpen(bk);
+    });
+  }).catch(function(e){
+    if(btn)btn.disabled=false;
+    toast('Could not send your request. Please try again. ('+String((e&&e.code)||(e&&e.message)||'').replace(/^firestore\//,'').slice(0,40)+')');
+  });
+}
+function _hqDom(){
+  var el=$('hq-screen');if(el)return el;
+  el=document.createElement('div');el.id='hq-screen';el.className='hq-screen';
+  el.innerHTML='<div class="hq-top"><button class="hq-x" aria-label="Back" onclick="_hqHide()">&#8249;</button><div><div class="hq-t">Quotes for your load</div><div class="hq-s" id="hq-sum"></div></div></div>'+
+    '<div class="hq-f" id="hq-f"><button data-f="low" class="on">Lowest price</button><button data-f="rated">Best rated</button><button data-f="ver">Verified only</button></div>'+
+    '<div class="hq-list" id="hq-list"></div>'+
+    '<div class="hq-foot"><button onclick="_hqCancel()">Cancel request</button></div>';
+  document.body.appendChild(el);
+  el.querySelector('#hq-f').addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    _hq.filter=b.getAttribute('data-f');
+    el.querySelectorAll('#hq-f button').forEach(function(x){x.classList.toggle('on',x===b);});
+    _hqRender();
+  });
+  return el;
+}
+window._hqOpen=function(bk){
+  var FB=window._FB;if(!FB||!bk)return;
+  var el=_hqDom();
+  if(!_hq.bk||_hq.bk.id!==bk.id){_hqStop();_hq.bk=bk;_hq.offers={};_hq.accepting='';_hq.armed='';_hq.seen={};}
+  _hq.open=true;el.style.display='flex';
+  var pill=$('hq-pill');if(pill)pill.style.display='none';
+  if(!_hq.unsubB){
+    _hq.unsubB=FB.onSnapshot(FB.doc(FB.db,'bookings',bk.id),function(snap){
+      if(!snap.exists()){_hqStop();_hqHide();return;}
+      var d=snap.data();d.id=snap.id;_hq.bk=d;
+      try{for(var i=0;i<myBookings.length;i++){if(myBookings[i].id===d.id)Object.assign(myBookings[i],d);}}catch(e){}
+      if(d.ds==='accepted'||d.ds==='in_progress'||d.ds==='completed'||d.ds==='cancelled'){_hqStop();_hqHide();return;}
+      if(d.ds==='avail'&&_hq.accepting){_hq.accepting='';_hq.listening=false;}
+      if(d.ds==='declined'&&d.heavy){FB.updateDoc(FB.doc(FB.db,'bookings',d.id),{ds:'avail',driverUid:null,driverName:null,declinedBy:null,counterAccepted:false,agreedPrice:null,price:'Quotes',priceNum:0}).catch(function(){});_hq.listening=false;toast('The driver declined. Please pick another quote.');}
+      if(d.ds==='avail'&&d.heavy&&(d.counterAccepted||d.priceNum)){FB.updateDoc(FB.doc(FB.db,'bookings',d.id),{counterAccepted:false,agreedPrice:null,price:'Quotes',priceNum:0}).catch(function(){});}
+      if(d.ds==='requested'&&d.counterAccepted&&d.driverUid&&!_hq.listening){
+        _hq.listening=true;
+        FB.getDoc(FB.doc(FB.db,'drivers',d.driverUid)).then(function(ds){if(ds.exists()&&_hq.bk&&_hq.bk.ds==='requested'){_listenForChosenDriverResponse(d,Object.assign({},ds.data(),{uid:d.driverUid,id:d.driverUid}),null,null);}else{_hq.listening=false;}}).catch(function(){_hq.listening=false;});
+      }
+      _hqRender();
+    },function(){});
+    _hq.unsubO=FB.onSnapshot(FB.collection(FB.db,'bookings',bk.id,'offers'),function(snap){
+      var m={},fresh=null;
+      snap.forEach(function(d){var o=d.data();o.id=d.id;if(o.status==='offered'){m[d.id]=o;if(!_hq.seen[d.id]){_hq.seen[d.id]=1;fresh=o;}}});
+      _hq.offers=m;
+      if(fresh&&_hq.loaded){try{if(navigator.vibrate)navigator.vibrate(150);}catch(e){}toast('New quote: R'+Number(fresh.price||0).toLocaleString()+' from '+(fresh.driverName||'a driver'));}
+      _hq.loaded=true;
+      _hqRender();
+    },function(){});
+    _hq.loaded=false;
+  }
+  _hqRender();
+};
+function _hqStop(){
+  try{if(_hq.unsubB)_hq.unsubB();}catch(e){}try{if(_hq.unsubO)_hq.unsubO();}catch(e){}
+  _hq.unsubB=null;_hq.unsubO=null;_hq.bk=null;_hq.offers={};_hq.accepting='';_hq.armed='';_hq.loaded=false;_hq.seen={};_hq.listening=false;
+}
+function _hqHide(){_hq.open=false;var el=$('hq-screen');if(el)el.style.display='none';_hqPillTick();}
+window._hqHide=_hqHide;
+window._hqCancel=function(){var bk=_hq.bk;if(!bk)return;window.cancelBooking(bk.id);};
+function _hqRender(){
+  var bk=_hq.bk,list=$('hq-list');if(!bk||!list)return;
+  var sum=$('hq-sum');
+  if(sum)sum.textContent=_hqShort(bk.from)+' \u2192 '+_hqShort(bk.to)+' \u00b7 '+(bk.heavySize||'')+' ton'+(bk.bodyWanted?' \u00b7 '+bk.bodyWanted:'');
+  var E=tcEsc;
+  var arr=Object.keys(_hq.offers).map(function(k){return _hq.offers[k];}).filter(function(o){
+    var t=Date.parse(o.createdAt||'');if(isFinite(t)&&Date.now()-t>72*3600000)return false;
+    if(_hq.filter==='ver'&&!(o.verified&&(!o.companyName||o.companyVerified)))return false;
+    return true;
+  });
+  if(_hq.filter==='rated')arr.sort(function(a,b){return (Number(b.rating)||0)-(Number(a.rating)||0)||(Number(b.trips)||0)-(Number(a.trips)||0)||(a.price-b.price);});
+  else arr.sort(function(a,b){return (a.price||0)-(b.price||0);});
+  if(_hq.accepting||(bk.ds==='requested'&&bk.counterAccepted)){
+    var o=_hq.offers[_hq.accepting]||{driverName:bk.driverName,price:bk.priceNum};
+    list.innerHTML='<div class="hq-empty"><div class="hq-spin"></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Waiting for '+E(o.driverName||'the driver')+' to confirm</div>R'+Number(o.price||bk.priceNum||0).toLocaleString()+' agreed. We will let you know as soon as the driver confirms the job.</div>';
+    return;
+  }
+  if(!arr.length){
+    var none=Object.keys(_hq.offers).length>0;
+    list.innerHTML='<div class="hq-empty">'+(none?'No quotes match this filter.':'<div class="hq-spin"></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Waiting for quotes</div>Verified truck owners have been told about your load. Heavy loads can take a few hours. You can close this screen and we will notify you when a quote arrives.')+'</div>';
+    return;
+  }
+  var cheapest=Math.min.apply(null,arr.map(function(o){return Number(o.price)||0;}));
+  var h='';
+  arr.forEach(function(o){
+    var id=E(o.driverUid||o.id),price=Number(o.price)||0,armed=(_hq.armed===(o.driverUid||o.id));
+    var sub=[o.truck||(o.capacityTons?(o.capacityTons+' ton'):''),o.plate].filter(Boolean).join(' \u00b7 ');
+    var rate=[(o.rating?('\u2605 '+o.rating):''),(o.trips?(o.trips+' trips'):'')].filter(Boolean).join(' \u00b7 ');
+    h+='<div class="hq-card'+(price===cheapest&&arr.length>1?' best':'')+'"><div class="hq-h"><div class="hq-av">'+E((o.driverName||'D').charAt(0).toUpperCase())+'</div><div><div class="hq-nm">'+E(o.driverName||'Driver')+'</div><div class="hq-sb">'+E(o.companyName||'')+(o.companyName&&rate?' \u00b7 ':'')+E(rate||'New driver')+'<br>'+E(sub)+'</div></div><div class="hq-pr"><b>R'+price.toLocaleString()+'</b><small>whole trip</small></div></div>'+
+      (o.verified?'<span class="hq-bd">\u2714 Verified truck</span>':'')+(o.companyVerified?'<span class="hq-bd g">Verified company</span>':'')+(price===cheapest&&arr.length>1?'<span class="hq-bd g">Lowest price</span>':'')+
+      '<div class="hq-sb" style="margin-top:8px;">Pickup: '+E(o.pickupTime||'As requested')+'</div>'+
+      ((o.included&&o.included.length)?'<div class="hq-inc">'+o.included.map(function(x){return '<span>\u2713 '+E(x)+'</span>';}).join('')+'</div>':'<div class="hq-sb" style="margin-top:6px;">Nothing extra included.</div>')+
+      (o.note?'<div class="hq-nt">\u201c'+E(o.note)+'\u201d</div>':'')+
+      '<div class="hq-btns"><button onclick="_hqDecline(\''+id+'\')">No thanks</button><button class="p" onclick="_hqAccept(\''+id+'\')">'+(armed?'Tap again to confirm R'+price.toLocaleString():'Accept R'+price.toLocaleString())+'</button></div></div>';
+  });
+  list.innerHTML=h;
+}
+window._hqDecline=function(duid){
+  var FB=window._FB,bk=_hq.bk;if(!FB||!bk||!duid)return;
+  FB.updateDoc(FB.doc(FB.db,'bookings',bk.id,'offers',duid),{status:'declined'}).catch(function(){toast('Could not decline. Try again.');});
+};
+window._hqAccept=function(duid){
+  var FB=window._FB,bk=_hq.bk,o=_hq.offers[duid];
+  if(!FB||!bk||!o||_hq.accepting)return;
+  if(_hq.armed!==duid){_hq.armed=duid;_hqRender();setTimeout(function(){if(_hq.armed===duid){_hq.armed='';_hqRender();}},4000);return;}
+  _hq.armed='';
+  var price=Number(o.price)||0;
+  Promise.all([FB.getDoc(FB.doc(FB.db,'bookings',bk.id)),FB.getDoc(FB.doc(FB.db,'drivers',duid))]).then(function(r){
+    var cur=r[0].exists()?r[0].data():null,dd=r[1].exists()?r[1].data():null;
+    if(!cur||cur.ds!=='avail'){toast('Sorry, this request is no longer open.');return;}
+    if(!dd){toast('That driver is no longer available. Pick another quote.');_hqDecline(duid);return;}
+    var driver=Object.assign({},dd,{uid:duid,id:duid});
+    var updates={
+      ds:'requested',driverUid:duid,driverName:driver.name||o.driverName||'Driver',driverPhone:driver.phone||'',
+      driverTruck:driver.truckType||driver.truck||'',driverNumPlate:driver.plate||driver.numPlate||'',driverColor:driver.truckColor||'',
+      driverPhotoUrl:tcSmallImg(driver.selfiePhoto||driver.photoUrl||'',60000),
+      driverTruckPhotoUrl:tcSmallImg(driver.truckPhoto||driver.truckPhotoUrl||'',140000),
+      price:'R'+price.toLocaleString(),priceNum:price,agreedPrice:price,counterAccepted:true,requestedAt:new Date().toISOString()
+    };
+    _hq.accepting=duid;_hqRender();
+    return FB.updateDoc(FB.doc(FB.db,'bookings',bk.id),updates).then(function(){
+      FB.updateDoc(FB.doc(FB.db,'bookings',bk.id,'offers',duid),{status:'accepted'}).catch(function(){});
+      try{_broadcastNewJob(bk.id);}catch(e){}
+      var bk2=Object.assign({},bk,cur,updates,{id:bk.id});
+      _hq.bk=bk2;
+      toast('R'+price.toLocaleString()+' agreed. Waiting for '+(driver.name||'the driver')+' to confirm...');
+      _hq.listening=true;
+      _listenForChosenDriverResponse(bk2,driver,null,null);
+    });
+  }).catch(function(){_hq.accepting='';_hqRender();toast('Could not accept the quote. Please try again.');});
+};
+// Floating "view quotes" pill while a heavy request is open and the quotes screen is closed
+function _hqPill(){
+  var p=$('hq-pill');if(p)return p;
+  p=document.createElement('button');p.id='hq-pill';p.type='button';
+  p.onclick=function(){
+    var b=window._hqCandidate;if(!b)return;
+    var FB=window._FB;
+    FB.getDoc(FB.doc(FB.db,'bookings',b.id)).then(function(s){
+      var d=s.exists()?s.data():null;
+      if(!d||(d.ds!=='avail'&&d.ds!=='requested')){b.ds=d?d.ds:'cancelled';_hqPillTick();toast('That request is no longer open.');return;}
+      d.id=b.id;_hqOpen(d);
+    }).catch(function(){_hqOpen(b);});
+  };
+  document.body.appendChild(p);return p;
+}
+function _hqPillTick(){
+  try{
+    var p=_hqPill();
+    if(!currentUid||_hq.open){p.style.display='none';return;}
+    var b=(myBookings||[]).filter(function(x){return x&&x.heavy&&(x.ds==='avail'||x.ds==='requested');}).slice(-1)[0];
+    if(!b){p.style.display='none';window._hqCandidate=null;return;}
+    window._hqCandidate=b;
+    var n=Object.keys(_hq.offers||{}).length;
+    p.textContent=(b.ds==='requested')?'Heavy load: waiting for driver to confirm':(n?('View quotes ('+n+')'):'Heavy load: view quotes');
+    p.style.display='block';
+    var FB=window._FB;
+    if(FB&&Date.now()-_hq.lastCheck>20000){
+      _hq.lastCheck=Date.now();
+      FB.getDoc(FB.doc(FB.db,'bookings',b.id)).then(function(s){var d=s.exists()?s.data():null;if(!d||(d.ds!=='avail'&&d.ds!=='requested')){b.ds=d?d.ds:'cancelled';_hqPillTick();}}).catch(function(){});
+    }
+  }catch(e){}
+}
+setInterval(_hqPillTick,5000);
+/* Company accounts do not get individual-only features (Fragile Care) */
+setInterval(function(){
+  try{
+    var co=!!(cData&&cData.accountType==='company');
+    document.body.classList.toggle('tc-acct-company',co);
+    if(co&&_tcCourier&&(_tcCourier.on||_tcCourier.both)&&window._tcSetMode)window._tcSetMode(false);
+  }catch(e){}
+},1500);
+window._hqSubmit=_hqSubmit;
+
 window.hsGetPrices=function(){
+  if(_hqSize>0){_hqSubmit();return;}
   var fromVal=(document.getElementById('hs-from')||{}).value||'';
   var toVal=(document.getElementById('hs-to')||{}).value||'';
   var stopVal=(document.getElementById('hs-stop')||{}).value||'';
@@ -7063,7 +7483,8 @@ window.hsGetPrices=function(){
   }else{bookingData.both=false;}
 
   closeBookingSheet();
-  showMapAndFare(); // Go straight to route confirmation + payment (single screen)
+  var _goFare=function(){showMapAndFare();}; // Go straight to route confirmation + payment (single screen)
+  if(window._tcMatchTrips&&!_tcCourier.on&&!_tcCourier.both&&!bookingData.stop)window._tcMatchTrips(fromVal,toVal,hsFrCoords,hsToCoords,_goFare);else _goFare();
 };
 
 window.openFullBooking=function(){
@@ -7132,6 +7553,7 @@ window.cancelBooking=function(bookingId){
   yesBtn.onclick=function(){
     overlay.remove();
     var FB=window._FB;
+    var _cxDrv=''; try{var _cxB=(myBookings||[]).find(function(x){return x.id===bookingId;});_cxDrv=(_cxB&&_cxB.driverUid)||'';}catch(e){}
     if(FB){
       FB.updateDoc(FB.doc(FB.db,'bookings',bookingId),{
         ds:'cancelled',
@@ -7142,6 +7564,7 @@ window.cancelBooking=function(bookingId){
         cancelledBy:'customer',
         cancelReason:window._selCancelReason||'Not specified'
       }).then(function(){
+        _tcEvent('cancelled_by_customer',bookingId,{},{driverUid:_cxDrv});
         toast('Booking cancelled.');
         stopDriverTracking();
         clearInterval(_driverSearchTimer);
@@ -7312,6 +7735,16 @@ document.addEventListener('DOMContentLoaded',function(){
   // "Continue with Email" → verify email with a code first, then the full signup form
   var _tcSignupEmail='';
   var _tcSignupMethod='email'; // 'email' | 'phone' | 'google'
+  var _tcAcctType='individual'; // 'individual' | 'company'
+  function _tcSetAcct(t){
+    _tcAcctType=(t==='company')?'company':'individual';
+    var a=$('tc-at-ind'),b=$('tc-at-co'),f=$('tc-co-fields'),co=_tcAcctType==='company';
+    if(a){a.style.background=co?'transparent':'#111';a.style.color=co?'#111':'#fff';}
+    if(b){b.style.background=co?'#111':'transparent';b.style.color=co?'#fff':'#111';}
+    if(f)f.style.display=co?'block':'none';
+  }
+  on('tc-at-ind','click',function(){_tcSetAcct('individual');});
+  on('tc-at-co','click',function(){_tcSetAcct('company');});
   var _tcGoogle={email:null,photo:null};
   on('tc-phone-email','click',function(){
     _tcSignupMethod='email';
@@ -7401,6 +7834,13 @@ document.addEventListener('DOMContentLoaded',function(){
     var errEl=$('tc-final-err');if(errEl)errEl.textContent='';
     if(!fn){if(errEl)errEl.textContent='First name required.';return;}
     if(!ln){if(errEl)errEl.textContent='Surname required.';return;}
+    var _coName='',_coReg='',_coVat='';
+    if(_tcAcctType==='company'){
+      _coName=(val('tc-co-name')||'').trim();_coReg=(val('tc-co-reg')||'').trim();_coVat=(val('tc-co-vat')||'').replace(/\s+/g,'');
+      if(_coName.length<2){if(errEl)errEl.textContent='Company name required.';return;}
+      if(_coReg.length<5){if(errEl)errEl.textContent='Company registration number required.';return;}
+      if(_coVat&&!/^\d{10}$/.test(_coVat)){if(errEl)errEl.textContent='VAT number must be 10 digits, or leave it empty.';return;}
+    }
     if(_tcSignupMethod==='google'){
       var gp=(val('tc-final-phone')||'').trim();
       if(gp.replace(/\D/g,'').length<10){if(errEl)errEl.textContent='Enter a valid phone number.';return;}
@@ -7418,6 +7858,8 @@ document.addEventListener('DOMContentLoaded',function(){
       if(pw.length<6){if(errEl)errEl.textContent='Password must be at least 6 characters.';return;}
       cData={name:(fn+' '+ln).trim(),email:_tcSignupEmail,phone:p,password:pw};
     }
+    cData.accountType=_tcAcctType;
+    if(_tcAcctType==='company'){cData.companyName=_coName;cData.companyReg=_coReg;cData.vatNumber=_coVat||null;}
     _tcObShow('cust-photo-view');
     _tcRenderPhotoPreview();
   });
@@ -8136,7 +8578,7 @@ function sendChatMessage(){
     senderRole:'customer',
     ts:new Date(now).toISOString(),
     tsMs:now
-  }).catch(function(e){
+  }).then(function(){try{_tcEvent('chat_message',_chatBookingId,{msg:text});}catch(e){}}).catch(function(e){
     console.warn('Chat send err:',e);
     toast('Message not sent. Check your connection.');
     if(inp&&!inp.value){inp.value=text;TCChat.sendState('chat');}
@@ -8213,6 +8655,11 @@ window.submitReport=function(reason){
   if(!FB){toast('Could not submit report. Please try again.');return;}
   FB.addDoc(FB.collection(FB.db,'disputes'),{
     filedBy:'customer',
+    filerUid:currentUid,
+    filerName:(cData&&cData.name)||'',
+    category:reason,
+    details:'',
+    thread:[],
     bookingId:_reportBookingId,
     driverUid:_reportDriverUid||'',
     driverName:_reportDriverName||'',
@@ -8222,6 +8669,7 @@ window.submitReport=function(reason){
     status:'open',
     createdAt:new Date().toISOString()
   }).then(function(){
+    try{_tcEvent('dispute_opened','',{name:(cData&&cData.name)||'Customer',msg:reason});}catch(e){}
     // Mark booking as reported so button disappears
     FB.updateDoc(FB.doc(FB.db,'bookings',_reportBookingId),{customerReported:true}).catch(function(){});
     document.getElementById('report-overlay').classList.remove('show');
@@ -10279,7 +10727,7 @@ html.tc-bg *,html.tc-bg *::before,html.tc-bg *::after{animation-play-state:pause
     if(c.state==='ok'){
       var p=c.data,ref=p.reference||('TC-'+String(d.id).slice(-6).toUpperCase());
       h='<div class="ltp"><div class="ltp-h">Pay your driver by EFT</div><div class="ltp-s">Your load has arrived. Pay from your banking app, use the reference below, then tap I\'ve paid. Your driver keeps 100%.</div>'+
-        row('Amount',amt)+row('Bank',p.bank)+row('Account holder',p.accountHolder)+row('Account number',p.accountNumber,true)+row('Account type',p.accountType)+row('Branch code',p.branchCode,true)+row('Reference',ref,true)+
+        row('Amount',amt)+row('Bank',p.bank)+(p.isCompany&&p.companyName?row('Company',p.companyName)+(p.companyReg?row('Company reg. no.',p.companyReg):''):'')+row('Account holder',p.accountHolder)+row('Account number',p.accountNumber,true)+row('Account type',p.accountType)+row('Branch code',p.branchCode,true)+row('Reference',ref,true)+
         (st==='claimed'?'<button type="button" class="ltp-b" disabled>Waiting for your driver to confirm…</button>':'<button type="button" class="ltp-b" id="ltp-paid">I\'ve paid</button>')+
         '<button type="button" class="ltp-l" id="ltp-cash">Pay cash instead</button></div>';
     }else if(c.state==='loading'){
@@ -10295,7 +10743,7 @@ html.tc-bg *,html.tc-bg *::before,html.tc-bg *::after{animation-play-state:pause
     var paid=document.getElementById('ltp-paid');
     if(paid)paid.onclick=function(){paid.disabled=true;paid.textContent='Sending…';var FB=window._FB;
       FB.updateDoc(FB.doc(FB.db,'bookings',d.id),{paymentStatus:'claimed',paymentClaimedAt:new Date().toISOString()})
-        .then(function(){say('Sent. Your driver will confirm.');}).catch(function(){paid.disabled=false;paid.textContent='I\'ve paid';say('Could not send. Try again.');});};
+        .then(function(){try{_tcEvent('payment_claimed',d.id,{price:amt});}catch(e){}say('Sent. Your driver will confirm.');}).catch(function(){paid.disabled=false;paid.textContent='I\'ve paid';say('Could not send. Try again.');});};
     ['ltp-cash','ltp-cash2'].forEach(function(id){var b=document.getElementById(id);if(b)b.onclick=function(){
       var FB=window._FB;FB.updateDoc(FB.doc(FB.db,'bookings',d.id),{payMethod:'cash',paymentStatus:''}).then(function(){say('Switched to cash');}).catch(function(){say('Could not switch. Try again.');});};});
   };
@@ -10600,6 +11048,361 @@ function _tcToggleFragile(){_tcCourier.fragile=!_tcCourier.fragile;_tcApplyMode(
 function _tcToggleBoth(){_tcCourier.both=!_tcCourier.both;if(_tcCourier.both)_tcCourier.veh='bakkie';_tcApplyMode();}
 function _tcSaveCompanion(bk,id){if(!id||!window._FB)return;try{var FB=window._FB,km=parseFloat(bk.dist)||0,fare=_tcCourierFareNum('bakkie',km);var c=Object.assign({},bk,{id:id,truck:'Fragile Care - Closed bakkie',truckType:'Fragile Care - Closed bakkie',truckV:'courier-bakkie',courier:true,courierVehicle:'bakkie',courierSize:_tcCourier.size,fragile:!!_tcCourier.fragile,courierItems:_tcCourier.items,cargo:_tcCourier.items,pickupContact:_tcCourier.contact||'',price:'R'+fare,priceNum:fare,suggestedPriceNum:fare,offerPrice:null,withFragileBakkie:false,companionId:'',pairedWith:bk.id,pairId:bk.id});FB.setDoc(FB.doc(FB.db,'bookings',id),c).then(function(){_broadcastNewJob(id);toast('Closed bakkie requested too: R'+fare);}).catch(function(e){console.warn(e);toast('Truck booked, but the closed bakkie request failed. Please try again.');});}catch(e){console.warn(e);}}
 function _tcOpenCourier(){_tcCourier.on=true;openFullBooking();setTimeout(_tcApplyMode,60);}
+</script>
+<script id="tc-update-js">
+// Update checker: tells the person when a newer version of this app has been uploaded.
+(function(){
+  try{
+    var CUR=(document.querySelector('meta[name="tc-build"]')||{}).content||'';
+    if(!CUR)return;
+    var busy=false,shown=false,last=0;
+    function refresh(){
+      var go=function(){var u=location.pathname+'?tcv='+Date.now()+(location.hash||'');location.replace(u);};
+      try{
+        if(window.caches&&caches.keys){caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));}).then(go,go);}
+        else go();
+      }catch(e){go();}
+    }
+    function banner(){
+      if(shown)return;shown=true;
+      var b=document.createElement('div');
+      b.setAttribute('role','status');
+      b.style.cssText='position:fixed;left:12px;right:12px;top:max(12px,env(safe-area-inset-top));z-index:2147483000;background:#0B1730;color:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;font:500 13px/1.3 Roboto,system-ui,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.35);';
+      var t=document.createElement('div');t.style.cssText='flex:1;min-width:0;';t.textContent='A new version of TruckConnect is ready.';
+      var r=document.createElement('button');r.type='button';r.textContent='Refresh';
+      r.style.cssText='background:#1677F2;color:#fff;border:none;border-radius:999px;padding:9px 16px;font:700 13px Roboto,system-ui,sans-serif;cursor:pointer;';
+      r.onclick=refresh;
+      var x=document.createElement('button');x.type='button';x.textContent='Later';
+      x.style.cssText='background:transparent;color:#9fb0cc;border:none;padding:9px 6px;font:500 13px Roboto,system-ui,sans-serif;cursor:pointer;';
+      x.onclick=function(){b.remove();setTimeout(function(){shown=false;},30*60000);};
+      b.appendChild(t);b.appendChild(r);b.appendChild(x);document.body.appendChild(b);
+    }
+    function check(){
+      if(busy||shown||navigator.onLine===false)return;
+      if(Date.now()-last<60000)return;
+      last=Date.now();busy=true;
+      fetch(location.pathname+'?tcv='+Date.now(),{cache:'no-store'})
+        .then(function(r){return r.ok?r.text():'';})
+        .then(function(h){var m=h.match(/<meta name="tc-build" content="([^"]+)"/);if(m&&m[1]!==CUR)banner();})
+        .catch(function(){})
+        .then(function(){busy=false;});
+    }
+    setTimeout(check,8000);
+    setInterval(check,5*60000);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});
+  }catch(e){}
+})();
+</script>
+<script>
+/* TruckConnect: return trips (customer) */
+function tcSeg(a,b,p){var k=Math.cos(((a.lat+b.lat)/2)*Math.PI/180)*111.32,L=110.57;
+ var ax=a.lng*k,ay=a.lat*L,bx=b.lng*k,by=b.lat*L,px=p.lng*k,py=p.lat*L;var dx=bx-ax,dy=by-ay,den=dx*dx+dy*dy;
+ var t=den?((px-ax)*dx+(py-ay)*dy)/den:0;t=Math.max(0,Math.min(1,t));var qx=ax+t*dx,qy=ay+t*dy;return {d:Math.sqrt((px-qx)*(px-qx)+(py-qy)*(py-qy)),t:t};}
+function tcRouteFits(trip,pick,drop){var a=trip.from,b=trip.to;var sp=tcSeg(a,b,pick),sd=tcSeg(a,b,drop);return sp.d<=80&&sd.d<=80&&sd.t>sp.t+0.08;}
+function tcRand2(n){return Math.random().toString(36).slice(2,2+(n||5));}
+function tcEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function tcId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+
+(function(){
+if(window._tcRetInit)return;window._tcRetInit=1;
+var E=tcEsc;function FBx(){return window._FB;}function UID(){try{return (typeof currentUid!=='undefined'&&currentUid)||window.currentUid||null;}catch(e){return window.currentUid||null;}}
+var MAXR=4; // prices on the table: customer 1, driver 2, customer 3, driver 4 (final)
+function say(m){try{if(typeof toast==='function')toast(m,3500);else alert(m);}catch(e){}}
+function $s(id){return document.getElementById(id);}
+function money(n){return 'R '+Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+function fmtDate(iso){try{var d=new Date(iso);return d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'})+', '+d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}}
+function kmEst(a,b){var R=6371,r=Math.PI/180,dl=(b.lat-a.lat)*r,dg=(b.lng-a.lng)*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dg/2)*Math.sin(dg/2);return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))*1.25);}
+function roadKm(a,b){
+ try{if(typeof _tcFetchRoute==='function'){return _tcFetchRoute(a.lng+','+a.lat+';'+b.lng+','+b.lat,[[a.lng,a.lat],[b.lng,b.lat]]).then(function(d){var m=d&&d.routes&&d.routes[0]&&d.routes[0].distance;return m?Math.max(1,Math.round(m/1000)):kmEst(a,b);}).catch(function(){return kmEst(a,b);});}}catch(e){}
+ return Promise.resolve(kmEst(a,b));}
+/* Heavy trucks and companies agree their own price. The app only suggests a price for normal (individual) trucks. */
+function noAppPrice(t){if(t.pricing)return t.pricing==='none';var p=parseFloat(t.truck&&t.truck.payload);return !!t.company||p>10;}
+function appPrice(t,dist){try{if(noAppPrice(t)||typeof _calcFare!=='function'||typeof _tonBase!=='function')return null;
+ var tons=Math.min(10,Math.max(1,Math.round(parseFloat(t.truck.payload)||1)));var v=_calcFare(_tonBase(tons),_tonRate(tons),_tonRateLong(tons),dist);return v>0?Math.round(v):null;}catch(e){return null;}}
+var CSS='#tc-sh{position:fixed;inset:0;z-index:9000;background:var(--bg,#f5f7fb);color:var(--text,#0d1b2a);overflow:auto;-webkit-overflow-scrolling:touch;font-family:inherit}'+
+'#tc-sh .h{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card,#fff);border-bottom:1px solid var(--border,#e3e8f0)}#tc-sh .h b{font-size:18px}'+
+'#tc-sh .bk{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(127,127,127,.13);color:inherit;padding:0;line-height:1;cursor:pointer;flex-shrink:0;transition:background .15s,transform .1s}#tc-sh .bk:active{transform:scale(.88);background:rgba(127,127,127,.24)}#tc-sh .bk svg{width:24px;height:24px;display:block}#tc-sh .b{padding:16px 16px 40px}'+
+'#tc-sh .card{background:var(--card,#fff);border:1.5px solid var(--border,#e3e8f0);border-radius:16px;padding:14px;margin-bottom:12px}'+
+'#tc-sh .l{display:block;font-size:11px;font-weight:700;color:var(--muted,#6b7a90);text-transform:uppercase;letter-spacing:.7px;margin:12px 0 6px}'+
+'#tc-sh input,#tc-sh select{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:12px;border:1.5px solid var(--border,#e3e8f0);background:var(--card,#fff);color:inherit;font-size:15px}'+
+'#tc-sh .btn{display:block;width:100%;box-sizing:border-box;text-align:center;padding:15px;border-radius:14px;border:none;font-weight:700;font-size:15px;cursor:pointer;background:var(--tc-blue,#1677F2);color:#fff;margin-top:12px;text-decoration:none}#tc-sh .btn[disabled]{opacity:.55}'+
+'#tc-sh .btn.o{background:transparent;color:inherit;border:1.5px solid var(--border,#e3e8f0)}#tc-sh .btn.r{background:transparent;color:#d6422a;border:1.5px solid rgba(214,66,42,.4)}'+
+'#tc-sh .m{color:var(--muted,#6b7a90);font-size:13px;line-height:1.45}#tc-sh .p{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(22,119,242,.12)}'+
+'#tc-sh .row{display:flex;gap:10px}#tc-sh .row>*{flex:1}#tc-sh .err{color:#d6422a;font-size:12px;margin-top:4px;display:none}#tc-sh .tabs{display:flex;gap:8px;margin-bottom:14px}'+
+'#tc-sh .tab{flex:1;text-align:center;padding:11px;border-radius:12px;border:1.5px solid var(--border,#e3e8f0);font-weight:700;font-size:13px;cursor:pointer}#tc-sh .tab.on{background:var(--tc-blue,#1677F2);color:#fff;border-color:var(--tc-blue,#1677F2)}'+
+'#tc-sh .av{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#e9f0fd;color:#0d1b2a;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}#tc-sh .g{color:#16a34a;font-weight:700;font-size:11px;letter-spacing:.5px}'+
+'#tc-sh .ac{position:absolute;left:0;right:0;top:100%;z-index:6;background:var(--card,#fff);color:var(--text,#0d1b2a);border:1.5px solid var(--border,#e3e8f0);border-radius:12px;margin-top:4px;max-height:250px;overflow:auto;box-shadow:0 10px 28px rgba(0,0,0,.2)}'+
+'#tc-sh .ac div{padding:11px 14px;font-size:14px;border-bottom:1px solid var(--border,#e3e8f0);cursor:pointer}#tc-sh .ac div:last-child{border:0}#tc-sh .ac small{display:block;color:var(--muted,#6b7a90);font-size:12px;margin-top:2px}'+
+'#tc-sh .ok{color:#16a34a;font-size:12px;font-weight:700;margin-top:4px}#tc-sh .chip{display:inline-block;padding:8px 12px;border-radius:99px;border:1.5px solid var(--tc-blue,#1677F2);color:var(--tc-blue,#1677F2);font-size:13px;font-weight:700;cursor:pointer;margin:8px 8px 0 0}'+
+'#tc-sh .lad{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:12px}#tc-sh .lad span{padding:3px 9px;border-radius:99px;background:rgba(127,127,127,.15);font-weight:700}#tc-sh .lad span.c{background:rgba(22,119,242,.15)}';
+function sheet(title,html,onBack){var o=$s('tc-sh');if(o)o.remove();
+ if(!$s('tc-sh-css')){var s=document.createElement('style');s.id='tc-sh-css';s.textContent=CSS;document.head.appendChild(s);}
+ o=document.createElement('div');o.id='tc-sh';o.innerHTML='<div class="h"><button class="bk" id="tc-bk" aria-label="Back"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><b>'+E(title)+'</b></div><div class="b" id="tc-sb">'+html+'</div>';
+ document.body.appendChild(o);$s('tc-bk').onclick=function(){if(onBack)onBack();else o.remove();};return o;}
+function signedIn(){if(!UID()){say('Please sign in first');return false;}return true;}
+
+/* ---------- address search (same Google Places engine as the booking screens) ---------- */
+var PICK={a:null,b:null},last={d:''};
+function cityOf(f){var m=String(f.mainText||f.fullText||'').trim(),sec=String(f.secondaryText||'').split(',').map(function(x){return x.trim();}).filter(function(x){return x&&!/^south africa$/i.test(x);});return (/^\d/.test(m)&&sec.length)?sec[0]:m;}
+function shortLabel(s){var p=String(s||'').split(',').map(function(x){return x.trim();}).filter(Boolean);if(p.length&&/^south africa$/i.test(p[p.length-1]))p.pop();return p.slice(0,2).join(', ');}
+function addrBox(id,label,ph){return '<span class="l">'+label+'</span><div style="position:relative"><input id="'+id+'" autocomplete="off" placeholder="'+ph+'"><div class="ac" id="'+id+'-ac" style="display:none"></div></div><div class="ok" id="'+id+'-ok" style="display:none">✓ Address found</div>';}
+function wireAddr(id,key){
+ var inp=$s(id),box=$s(id+'-ac'),ok=$s(id+'-ok'),timer=null,seq=0;
+ if(PICK[key]){inp.value=PICK[key].address;ok.style.display='block';}
+ inp.addEventListener('input',function(){PICK[key]=null;ok.style.display='none';clearTimeout(timer);var q=inp.value.trim();
+  if(q.length<3){box.style.display='none';return;}
+  timer=setTimeout(function(){var my=++seq;
+   var lng=(typeof customerLng!=='undefined'&&customerLng)?customerLng:28.0473,lat=(typeof customerLat!=='undefined'&&customerLat)?customerLat:-26.2041;
+   if(typeof _mbSearch!=='function'){return;}
+   _mbSearch(q,lng,lat).then(function(list){if(my!==seq)return;
+    if(!list||!list.length){box.innerHTML='<div class="m">No match. Try the street and suburb, or the town name.</div>';box.style.display='block';return;}
+    box.innerHTML=list.map(function(f,i){return '<div data-i="'+i+'">'+E(f.mainText||f.fullText)+'<small>'+E(f.secondaryText||'')+'</small></div>';}).join('');box.style.display='block';
+    box.querySelectorAll('[data-i]').forEach(function(n){n.onclick=function(){var f=list[parseInt(n.getAttribute('data-i'),10)];
+     _mbPlaceCoords(f).then(function(c){if(!c){say('Could not read that place. Try another.');return;}
+      var full=f.fullText||f.mainText;PICK[key]={address:full,city:cityOf(f),lat:c[1],lng:c[0]};inp.value=full;box.style.display='none';ok.style.display='block';
+      try{if(typeof _tcAhSave==='function')_tcAhSave(full,c);}catch(e){}});};});
+   });},300);});
+ inp.addEventListener('blur',function(){setTimeout(function(){box.style.display='none';},300);});}
+
+/* ---------- find a truck ---------- */
+function openBoard(tab){if(!signedIn())return;
+ sheet('Your offers','<div id="tc-tb"></div>');mine();}
+var LM=null;
+function showMatches(M){LM=M;var out=M.out,a=M.a,b=M.b,dist=M.dist;
+ var h='<div class="card m">These drivers are already driving your way and are heading back empty. Make an offer to one of them, or carry on with a normal booking.</div>';
+ out.forEach(function(t,i){var sp={full:'Full truck',half:'Half a truck',part:'A few pallets'}[t.space]||'';var ph=t.fleetDriver&&t.fleetDriver.photo;var nm=(t.fleetDriver&&t.fleetDriver.name)||t.driverName;var ap=appPrice(t,dist);
+  h+='<div class="card"><div class="g">GOING '+E(String(t.from.city).toUpperCase())+' → '+E(String(t.to.city).toUpperCase())+'</div><div style="display:flex;gap:12px;align-items:center;margin:10px 0">'+(ph?'<img class="av" src="'+E(ph)+'" alt="">':'<div class="av">'+E((nm||'?').slice(0,2).toUpperCase())+'</div>')+'<div><b>'+E(nm)+'</b>'+(t.company?'<div class="m">'+E(t.company)+'</div>':'')+'<div class="m">'+E(t.truck.name||'')+' · '+E(t.truck.payload)+' t</div></div></div>'+
+   '<div class="m">Leaves '+fmtDate(t.departAt)+' · '+E(sp)+'</div>'+
+   (ap?'<div style="margin-top:8px;font-size:24px;font-weight:700">'+money(ap)+'</div><div class="m">App price for your trip. You can offer this, or less.</div>':'<div style="margin-top:8px;font-size:18px;font-weight:700">Price agreed with the driver</div><div class="m">You offer, he answers.</div>')+
+   '<button class="btn" data-rq="'+i+'">Make an offer</button></div>';});
+ h+='<button class="btn o" id="m-go">Continue with a normal booking</button>';
+ sheet('Drivers going your way',h,function(){var o=$s('tc-sh');if(o)o.remove();M.cont();});
+ document.querySelectorAll('#tc-sh [data-rq]').forEach(function(bn){bn.onclick=function(){var t=out[parseInt(bn.getAttribute('data-rq'),10)];reqForm(t,a,b,dist,appPrice(t,dist));};});
+ $s('m-go').onclick=function(){var o=$s('tc-sh');if(o)o.remove();M.cont();};}
+window._tcMatchTrips=function(fromVal,toVal,fc,tc,cont){var done=false;function go(){if(done)return;done=true;cont();}
+ try{var f=FBx();if(!f||!UID()||!fc||!tc){go();return;}
+  var a={address:fromVal,city:String(fromVal).split(',')[0],lat:fc[1],lng:fc[0]},b={address:toVal,city:String(toVal).split(',')[0],lat:tc[1],lng:tc[0]};
+  setTimeout(go,4000);
+  f.getDocs(f.query(f.collection(f.db,'returnTrips'),f.where('status','==','open'))).then(function(snap){if(done)return;var out=[],now=new Date();
+   snap.forEach(function(d){var t=d.data();if(new Date(t.departAt)<now)return;if(t.from&&t.to&&tcRouteFits(t,a,b))out.push(t);});
+   if(!out.length){go();return;}
+   out.sort(function(x,y){return String(x.departAt).localeCompare(String(y.departAt));});
+   roadKm(a,b).then(function(dist){if(done)return;done=true;showMatches({out:out,a:a,b:b,dist:dist,cont:cont});}).catch(go);
+  }).catch(go);
+ }catch(e){go();}};
+function reqForm(t,a,b,dist,ap){var nm=(t.fleetDriver&&t.fleetDriver.name)||t.driverName;
+ var dt=new Date(Math.max(Date.now(),new Date(t.departAt).getTime()-36e5));var min=new Date(dt-dt.getTimezoneOffset()*6e4).toISOString().slice(0,16);
+ sheet('Make an offer','<div class="m">'+E(nm)+' · '+E(t.truck.payload)+' t '+E(t.truck.body)+' · leaves '+E(t.from.city)+' '+fmtDate(t.departAt)+'</div>'+
+ '<div class="card m" style="margin-top:12px">Pick-up: <b>'+E(a.address)+'</b><br>Drop-off: <b>'+E(b.address)+'</b> (about '+dist+' km)</div>'+
+ '<span class="l">What are you moving?</span><input id="q-l" maxlength="120" placeholder="e.g. Pallets, 18 tonnes"><div class="err" id="e-l">Describe your load</div>'+
+ '<span class="l">Pick-up time</span><input id="q-t" type="datetime-local" min="'+min+'"><div class="err" id="e-t">Choose a pick-up time</div>'+
+ '<span class="l">Your offer (rand)</span><input id="q-o" type="number" inputmode="numeric" placeholder="'+(ap?'e.g. '+ap:'e.g. 13500')+'"'+(ap?' value="'+ap+'"':'')+'><div class="err" id="e-o">Enter your offer</div>'+
+ (ap?'<div><span class="chip" id="q-app">App price '+money(ap)+'</span></div>':'')+
+ '<div class="m" style="margin-top:8px">'+(ap?'The app suggests '+money(ap)+' for this trip. Change it if you like. ':'The app does not set a price for this truck. Offer what you think is fair. ')+'The driver can accept, or answer with his own price, and you can go back and forth until you agree. Your name and phone number are shared with the driver only when he accepts.</div>'+
+ '<button class="btn" id="q-go">Send offer</button><button class="btn o" id="q-no">Cancel</button>',function(){if(LM)showMatches(LM);});
+ if($s('q-app'))$s('q-app').onclick=function(){$s('q-o').value=ap;};
+ $s('q-no').onclick=function(){if(LM)showMatches(LM);};
+ $s('q-go').onclick=function(){var bad=false,ck=function(ok,id){$s(id).style.display=ok?'none':'block';if(!ok)bad=true;};var l=($s('q-l').value||'').trim(),tm=$s('q-t').value,o=parseInt($s('q-o').value,10);
+  ck(l.length>=3,'e-l');ck(!!tm,'e-t');ck(o>=100&&o<=3000000,'e-o');if(bad)return;
+  var c=window.cData||{};var id=tcId(),now=new Date().toISOString();
+  var data={id:id,tripId:t.id,driverUid:t.driverUid,customerUid:UID(),customerName:c.name||'Customer',customerPhone:c.phone||'',pickup:{city:a.city,address:a.address,lat:a.lat,lng:a.lng},dropoff:{city:b.city,address:b.address,lat:b.lat,lng:b.lng},pickupLabel:a.city,dropoffLabel:b.city,distKm:dist,load:l,pickupTime:fmtDate(new Date(tm).toISOString()),offer:o,suggested:ap||null,round:1,history:[{by:'customer',price:o,at:now}],truckName:(t.truck&&t.truck.name)||'',status:'pending',createdAt:now};
+  $s('q-go').disabled=true;var f=FBx();f.setDoc(f.doc(f.db,'returnRequests',id),data).then(function(){try{_tcEvent('return_request',id,{price:money(o),from:a.city,to:b.city});}catch(e){}say('Offer sent');openBoard('mine');}).catch(function(){$s('q-go').disabled=false;say('Could not send. Return trips may not be switched on yet. Contact support.');});};}
+
+/* ---------- my requests: offer / counter-offer ---------- */
+function ladder(r){var h=r.history&&r.history.length?r.history:[{by:'customer',price:r.offer}].concat(r.counter?[{by:'driver',price:r.counter}]:[]);
+ return '<div class="lad">'+h.map(function(x,i){return (i?'<b>→</b>':'')+'<span class="'+(x.by==='customer'?'c':'')+'">'+(x.by==='customer'?'You ':'Driver ')+money(x.price)+'</span>';}).join('')+'</div>';}
+function mine(){var f=FBx();$s('tc-tb').innerHTML='<div class="m">Loading…</div>';
+ f.getDocs(f.query(f.collection(f.db,'returnRequests'),f.where('customerUid','==',UID()))).then(function(snap){var a=[];snap.forEach(function(d){a.push(d.data());});a.sort(function(x,y){return String(y.createdAt||'').localeCompare(String(x.createdAt||''));});
+  var h='';a.forEach(function(r){var st=r.status,rnd=r.round||1,pill={pending:'Waiting for driver',countered:'Driver sent a price',accepted:'Accepted',booked:'Booked',declined:'Declined',cancelled:'Cancelled'}[st]||st;
+   var shown=st==='countered'?r.counter:(r.finalPrice||r.offer);
+   h+='<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+E(r.pickupLabel||r.pickup.city)+' → '+E(r.dropoffLabel||r.dropoff.city)+'</b><span class="p">'+E(pill)+'</span></div><div class="m" style="margin:6px 0">'+E(r.load)+' · pick-up '+E(r.pickupTime)+(r.distKm?' · about '+r.distKm+' km':'')+'</div>'+ladder(r)+
+   '<div style="font-size:22px;font-weight:700">'+money(shown)+'</div><div class="m">'+(st==='countered'?'Driver’s price':((st==='accepted'||st==='booked')?'Agreed price':'Your offer'))+(r.suggested?' · App price '+money(r.suggested):'')+'</div>';
+   if(st==='countered'){h+='<button class="btn" data-ok="'+E(r.id)+'">Accept '+money(r.counter)+'</button>';
+    if(rnd<MAXR)h+='<div class="row" style="margin-top:10px"><input type="number" inputmode="numeric" placeholder="Your new offer" id="c-'+E(r.id)+'"><button class="btn o" style="margin-top:0" data-co="'+E(r.id)+'">Send new offer</button></div>';
+    else h+='<div class="m" style="margin-top:8px">This is the driver’s final price. Accept it, or decline.</div>';
+    h+='<button class="btn r" data-no="'+E(r.id)+'">Decline</button>';}
+   if(st==='pending')h+=(rnd>=MAXR?'<div class="m">Final price sent. Waiting for the driver.</div>':'<div class="m">Waiting for the driver to answer.</div>')+'<button class="btn r" data-cx="'+E(r.id)+'">Cancel request</button>';
+   if(st==='accepted'||st==='booked')h+='<div class="m" style="margin-top:8px">Driver: <b>'+E(r.driverName||'')+'</b></div><a class="btn" href="tel:'+E((r.driverPhone||'').replace(/[^+\d]/g,''))+'">Call '+E(r.driverPhone||'driver')+'</a>';
+   h+='</div>';});
+  $s('tc-tb').innerHTML=h||'<div class="card m">You have not asked for a return truck yet.</div>';
+  var up=function(id,data,evt,vars){data.updatedAt=new Date().toISOString();return f.updateDoc(f.doc(f.db,'returnRequests',id),data).then(function(){if(evt){try{_tcEvent(evt,id,vars||{});}catch(e){}}mine();}).catch(function(){say('Could not update. Please try again.');});};
+  var find=function(id){return a.filter(function(x){return x.id===id;})[0];};
+  var hist=function(r,by,p){return (r.history&&r.history.length?r.history:[{by:'customer',price:r.offer}].concat(r.counter?[{by:'driver',price:r.counter}]:[])).concat([{by:by,price:p,at:new Date().toISOString()}]);};
+  document.querySelectorAll('#tc-tb [data-ok]').forEach(function(b){b.onclick=function(){var r=find(b.getAttribute('data-ok'));up(r.id,{status:'accepted',finalPrice:r.counter},'return_customer_accepted',{price:money(r.counter)});};});
+  document.querySelectorAll('#tc-tb [data-co]').forEach(function(b){b.onclick=function(){var r=find(b.getAttribute('data-co')),v=parseInt($s('c-'+r.id).value,10);if(!(v>=100&&v<=3000000)){say('Enter a price');return;}
+   up(r.id,{status:'pending',offer:v,round:(r.round||1)+1,history:hist(r,'customer',v)},'return_customer_counter',{price:money(v)});};});
+  document.querySelectorAll('#tc-tb [data-no]').forEach(function(b){b.onclick=function(){up(b.getAttribute('data-no'),{status:'declined'},'return_customer_declined',{});};});
+  document.querySelectorAll('#tc-tb [data-cx]').forEach(function(b){b.onclick=function(){up(b.getAttribute('data-cx'),{status:'cancelled'});};});
+ }).catch(function(){$s('tc-tb').innerHTML='<div class="card m">Could not load your requests. Try again.</div>';});}
+function addBtn(){var g=$s('hs-get-prices-btn');if(!g||$s('hs-return-btn')||!UID())return;var f=FBx();if(!f)return;
+ f.getDocs(f.query(f.collection(f.db,'returnRequests'),f.where('customerUid','==',UID()))).then(function(snap){var n=0;snap.forEach(function(d){var st=(d.data()||{}).status;if(st==='pending'||st==='countered'||st==='accepted')n++;});
+  if(!n||$s('hs-return-btn'))return;var b=document.createElement('button');b.id='hs-return-btn';b.type='button';
+  b.style.cssText='width:100%;margin-top:10px;padding:10px 14px 10px 10px;border-radius:18px;border:1.5px solid var(--border,#e3e8f0);background:transparent;color:inherit;font-family:Roboto,sans-serif;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left';
+  b.innerHTML='<span style="width:38px;height:38px;border-radius:50%;background:rgba(127,127,127,.13);display:inline-flex;align-items:center;justify-content:center;flex:none;pointer-events:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span><span style="flex:1;min-width:0;pointer-events:none"><span style="display:block;font-size:15px;font-weight:700">Your offers</span><span style="display:block;font-size:12px;opacity:.65;margin-top:1px">'+n+' waiting for a driver or your answer</span></span>';
+  b.onclick=function(){openBoard('mine');};g.parentNode.insertBefore(b,g.nextSibling);}).catch(function(){});}
+setTimeout(addBtn,5000);setTimeout(addBtn,20000);
+window._tcOpenBoard=openBoard;
+})();
+</script>
+<script>
+/* TruckConnect: disputes + my data (customer) */
+(function(){
+if(window._tcSupInit)return;window._tcSupInit=1;
+var ROLE='customer';
+var E=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+function FBx(){return window._FB;}
+function UID(){try{return (typeof currentUid!=='undefined'&&currentUid)||window.currentUid||null;}catch(e){return window.currentUid||null;}}
+function say(m){try{if(typeof toast==='function')toast(m,3500);else alert(m);}catch(e){}}
+function $s(id){return document.getElementById(id);}
+function when(v){try{var d=v&&typeof v.toDate==='function'?v.toDate():new Date(v);return isNaN(d)?'':d.toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'})+', '+d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+function ms(v){try{var d=v&&typeof v.toDate==='function'?v.toDate():new Date(v);return isNaN(d)?0:d.getTime();}catch(e){return 0;}}
+var CSS='#tc-sp{position:fixed;inset:0;z-index:9500;background:var(--bg,#f5f7fb);color:var(--text,#0d1b2a);overflow:auto;-webkit-overflow-scrolling:touch;font-family:inherit}'+
+'#tc-sp .h{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card,#fff);border-bottom:1px solid var(--border,#e3e8f0)}#tc-sp .h b{font-size:18px}'+
+'#tc-sp .bk{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(127,127,127,.13);color:inherit;padding:0;line-height:1;cursor:pointer;flex-shrink:0;transition:background .15s,transform .1s}#tc-sp .bk:active{transform:scale(.88);background:rgba(127,127,127,.24)}#tc-sp .bk svg{width:24px;height:24px;display:block}#tc-sp .b{padding:16px 16px 40px}'+
+'#tc-sp .card{background:var(--card,#fff);border:1.5px solid var(--border,#e3e8f0);border-radius:16px;padding:14px;margin-bottom:12px}'+
+'#tc-sp .l{display:block;font-size:11px;font-weight:700;color:var(--muted,#6b7a90);text-transform:uppercase;letter-spacing:.7px;margin:12px 0 6px}'+
+'#tc-sp input,#tc-sp select,#tc-sp textarea{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:12px;border:1.5px solid var(--border,#e3e8f0);background:rgba(127,127,127,.08);color:inherit;font-size:15px;font-family:inherit}#tc-sp textarea{resize:vertical;min-height:96px}'+
+'#tc-sp .btn{display:block;width:100%;box-sizing:border-box;text-align:center;padding:15px;border-radius:14px;border:none;font-weight:700;font-size:15px;cursor:pointer;background:#1677F2;color:#fff;margin-top:12px}#tc-sp .btn[disabled]{opacity:.55}'+
+'#tc-sp .btn.o{background:transparent;color:inherit;border:1.5px solid var(--border,#e3e8f0)}'+
+'#tc-sp .m{color:var(--muted,#6b7a90);font-size:13px;line-height:1.45}#tc-sp .p{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(127,127,127,.2)}'+
+'#tc-sp .tabs{display:flex;gap:8px;margin-bottom:14px}#tc-sp .tab{flex:1;text-align:center;padding:11px 4px;border-radius:12px;border:1.5px solid var(--border,#e3e8f0);font-weight:700;font-size:13px;cursor:pointer}#tc-sp .tab.on{background:#1677F2;color:#fff;border-color:#1677F2}'+
+'#tc-sp .err{color:#d6422a;font-size:12px;margin-top:4px;display:none}#tc-sp .msg{border-radius:12px;padding:9px 12px;margin-top:8px;font-size:14px;line-height:1.4;background:rgba(127,127,127,.12)}#tc-sp .msg.a{background:rgba(22,119,242,.14)}#tc-sp .msg small{display:block;opacity:.6;font-size:11px;margin-bottom:2px}';
+function sheet(title,html){var o=$s('tc-sp');if(o)o.remove();
+ if(!$s('tc-sp-css')){var s=document.createElement('style');s.id='tc-sp-css';s.textContent=CSS;document.head.appendChild(s);}
+ o=document.createElement('div');o.id='tc-sp';o.innerHTML='<div class="h"><button class="bk" id="tc-sp-bk" aria-label="Back"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><b>'+E(title)+'</b></div><div class="b" id="tc-sp-b">'+html+'</div>';
+ document.body.appendChild(o);$s('tc-sp-bk').onclick=function(){o.remove();};return o;}
+function draw(tab){tab=tab||'new';
+ sheet('Disputes & my data','<div class="tabs"><div class="tab'+(tab==='new'?' on':'')+'" id="sp-t1">New dispute</div><div class="tab'+(tab==='mine'?' on':'')+'" id="sp-t2">My disputes</div><div class="tab'+(tab==='data'?' on':'')+'" id="sp-t3">My data</div></div><div id="sp-tb"><div class="m">Loading…</div></div>');
+ $s('sp-t1').onclick=function(){draw('new');};$s('sp-t2').onclick=function(){draw('mine');};$s('sp-t3').onclick=function(){draw('data');};
+ if(tab==='new')return newForm();if(tab==='mine')return mine();return myData();}
+
+/* ---------- new dispute ---------- */
+var CATS=ROLE==='driver'
+ ?['The customer did not pay, or paid less than agreed','The customer was not there','Wrong load or address','The customer was rude or unsafe','Cancellation or waiting time','App problem','Something else']
+ :['The driver did not arrive','The driver was rude or unprofessional','My goods were damaged','I was charged more than agreed','Unsafe driving','App or payment problem','Something else'];
+function myBookingsList(){var f=FBx(),u=UID();if(!f||!u)return Promise.resolve([]);
+ var fields=ROLE==='driver'?['driverUid']:['customerUid','customerId'],seen={},out=[];
+ return Promise.all(fields.map(function(fl){return f.getDocs(f.query(f.collection(f.db,'bookings'),f.where(fl,'==',u))).then(function(s){s.forEach(function(d){if(seen[d.id])return;seen[d.id]=1;var x=d.data();x.id=d.id;out.push(x);});}).catch(function(){});}))
+ .then(function(){out.sort(function(a,b){return ms(b.createdAt||b.date)-ms(a.createdAt||a.date);});return out.slice(0,20);});}
+function lbl(b){var s=String(b.from||b.pickup||'?').split(',')[0]+' → '+String(b.to||b.dropoff||'?').split(',')[0];var d=when(b.createdAt||b.date);return s+(d?' · '+d.split(',')[0]:'');}
+function newForm(){
+ myBookingsList().then(function(bk){
+  window._tcSupBk=bk;
+  $s('sp-tb').innerHTML='<div class="card m">Tell us what went wrong. Our team reads every dispute, and you can follow the replies under <b>My disputes</b>.</div>'+
+  '<span class="l">Which trip?</span><select id="sp-bk"><option value="">No specific trip</option>'+bk.map(function(b,i){return '<option value="'+i+'">'+E(lbl(b))+'</option>';}).join('')+'</select>'+
+  '<span class="l">What happened?</span><select id="sp-cat">'+CATS.map(function(c){return '<option>'+E(c)+'</option>';}).join('')+'</select>'+
+  '<span class="l">Tell us more</span><textarea id="sp-tx" maxlength="1000" placeholder="What happened, and what would you like us to do?"></textarea><div class="err" id="sp-e">Please describe what happened (at least 10 characters)</div>'+
+  '<button class="btn" id="sp-go">Send dispute</button>';
+  $s('sp-go').onclick=submit;
+ });}
+function submit(){var f=FBx(),u=UID();if(!f||!u){say('Please sign in first');return;}
+ var tx=($s('sp-tx').value||'').trim();if(tx.length<10){$s('sp-e').style.display='block';return;}$s('sp-e').style.display='none';
+ var i=$s('sp-bk').value,b=i!==''?(window._tcSupBk||[])[parseInt(i,10)]:null,cat=$s('sp-cat').value,nm=(ROLE==='driver'?((window.dData&&dData.name)||''):((window.cData&&cData.name)||''));
+ var d={filedBy:ROLE,filerUid:u,filerName:nm,bookingId:b?b.id:'',category:cat,reason:cat,details:tx,status:'open',thread:[],createdAt:new Date().toISOString()};
+ if(b){d.driverUid=b.driverUid||b.driverId||'';d.driverName=b.driverName||'';d.customerUid=b.customerUid||b.customerId||'';d.customerName=b.customerName||'';}
+ else if(ROLE==='driver')d.driverUid=u;else d.customerUid=u;
+ $s('sp-go').disabled=true;
+ f.addDoc(f.collection(f.db,'disputes'),d).then(function(){try{_tcEvent('dispute_opened','',{name:nm||ROLE,msg:cat});}catch(e){}say('Dispute sent. We will reply here.');draw('mine');})
+ .catch(function(){$s('sp-go').disabled=false;say('Could not send. Please try again.');});}
+
+/* ---------- my disputes ---------- */
+function mine(){var f=FBx(),u=UID(),seen={},a=[];
+ var qs=[f.getDocs(f.query(f.collection(f.db,'disputes'),f.where('filerUid','==',u)))];
+ if(ROLE==='customer')qs.push(f.getDocs(f.query(f.collection(f.db,'disputes'),f.where('customerUid','==',u),f.where('filedBy','==','customer'))));
+ Promise.all(qs.map(function(p){return p.catch(function(){return null;});})).then(function(rs){
+  rs.forEach(function(s,k){if(!s)return;s.forEach(function(d){var x=d.data();x.id=d.id;if(k===1&&x.filedBy!=='customer')return;if(seen[x.id])return;seen[x.id]=1;a.push(x);});});
+  a.sort(function(x,y){return ms(y.createdAt)-ms(x.createdAt);});
+  var pill={open:'Received',investigating:'Being looked at',resolved:'Resolved'};
+  var h=a.map(function(x){var th=(x.thread||[]).map(function(m){return '<div class="msg'+(m.by==='admin'?' a':'')+'"><small>'+(m.by==='admin'?'TruckConnect':'You')+' · '+E(when(m.at))+'</small>'+E(m.text)+'</div>';}).join('');
+   return '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+E(x.category||x.reason||'Dispute')+'</b><span class="p">'+E(pill[x.status]||x.status||'')+'</span></div>'+
+   '<div class="m" style="margin:4px 0">'+E(when(x.createdAt))+'</div>'+(x.details?'<div style="font-size:14px;line-height:1.45">'+E(x.details)+'</div>':'')+th+
+   (x.status!=='resolved'?'<textarea id="sp-r-'+E(x.id)+'" maxlength="600" placeholder="Add a message" style="margin-top:10px;min-height:60px"></textarea><button class="btn o" data-rp="'+E(x.id)+'">Send message</button>':'<div class="m" style="margin-top:8px">This dispute is closed. Start a new one if the problem continues.</div>')+'</div>';}).join('');
+  $s('sp-tb').innerHTML=h||'<div class="card m">You have not sent any disputes.</div>';
+  document.querySelectorAll('#sp-tb [data-rp]').forEach(function(btn){btn.onclick=function(){var id=btn.getAttribute('data-rp'),t=($s('sp-r-'+id).value||'').trim();if(!t)return;
+   var cur=a.filter(function(x){return x.id===id;})[0];btn.disabled=true;
+   f.updateDoc(f.doc(f.db,'disputes',id),{thread:(cur.thread||[]).concat([{by:ROLE,text:t,at:new Date().toISOString()}]),userReplied:true,updatedAt:new Date().toISOString()})
+   .then(function(){say('Message sent');mine();}).catch(function(){btn.disabled=false;say('Could not send. Please try again.');});};});
+ });}
+
+/* ---------- my data ---------- */
+function myData(){var f=FBx(),u=UID();
+ f.getDocs(f.query(f.collection(f.db,'dataRequests'),f.where('uid','==',u))).then(function(s){var a=[];s.forEach(function(d){var x=d.data();x.id=d.id;a.push(x);});a.sort(function(x,y){return ms(y.createdAt)-ms(x.createdAt);});
+  var pend=a.filter(function(x){return x.status==='pending';})[0],ready=a.filter(function(x){return x.exportReady;})[0];
+  var h='<div class="card m">You can ask for a copy of everything we keep about you (POPIA). We prepare it and send it to you here, within 30 days.</div>';
+  if(ready)h+='<div class="card"><b>Your data is ready</b><div class="m" style="margin:4px 0">Prepared '+E(when(ready.exportedAt))+'</div><button class="btn" id="sp-dl">Download my data (JSON file)</button></div>';
+  if(pend)h+='<div class="card"><b>Request received</b><div class="m" style="margin-top:4px">Sent '+E(when(pend.createdAt))+'. We are preparing your data. It will appear here when it is ready.</div></div>';
+  else h+='<button class="btn'+(ready?' o':'')+'" id="sp-rq">'+(ready?'Request a fresh copy':'Request my data')+'</button>';
+  $s('sp-tb').innerHTML=h;
+  if($s('sp-dl'))$s('sp-dl').onclick=function(){download(ready);};
+  if($s('sp-rq'))$s('sp-rq').onclick=function(){var b=this;b.disabled=true;
+   var mk=function(ts){return f.addDoc(f.collection(f.db,'dataRequests'),{uid:u,role:ROLE,type:'data_access',status:'pending',createdAt:ts});};
+   (typeof _tcLoadFbx==='function'?_tcLoadFbx().then(function(x){return mk(x.fs.serverTimestamp());}):mk(new Date().toISOString()))
+   .then(function(){say('Data request sent');myData();}).catch(function(){b.disabled=false;say('Could not send your request. Please try again.');});};
+ }).catch(function(){$s('sp-tb').innerHTML='<div class="card m">Could not load. Check your connection and try again.</div>';});}
+function download(r){var f=FBx(),b=$s('sp-dl');if(b){b.disabled=true;b.textContent='Preparing…';}
+ f.getDocs(f.collection(f.db,'dataRequests',r.id,'chunks')).then(function(s){var p=[];s.forEach(function(d){p.push(d.data());});p.sort(function(x,y){return x.i-y.i;});
+  if(!p.length||(r.exportChunks&&p.length<r.exportChunks))throw new Error('incomplete');
+  var json=p.map(function(x){return x.data;}).join('');var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download='TruckConnect_my_data.json';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  if(b){b.disabled=false;b.textContent='Download my data (JSON file)';}say('Data downloaded');
+  try{f.updateDoc(f.doc(f.db,'dataRequests',r.id),{downloadedAt:new Date().toISOString()}).catch(function(){});}catch(e){}
+ }).catch(function(){if(b){b.disabled=false;b.textContent='Download my data (JSON file)';}say('Could not get your file. Please try again, or contact support.');});}
+
+/* ---------- entry points ---------- */
+function addEntries(){
+ try{
+ if(ROLE==='driver'){var nav=document.querySelector('#d-sidemenu .sidemenu-nav');
+  if(nav&&!$s('menu-disputes')){var sep=nav.querySelector('.sm-sep');var b=document.createElement('button');b.className='sidemenu-btn';b.id='menu-disputes';
+   b.innerHTML='<span class="sm-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 7h14M5 7l-2.5 6a3 3 0 0 0 5 0zM19 7l-2.5 6a3 3 0 0 0 5 0z"/></svg></span>Disputes & my data';
+   b.onclick=function(){try{$s('d-sidemenu').style.left='-290px';$s('d-menu-overlay').style.display='none';}catch(e){}draw('new');};
+   if(sep)nav.insertBefore(b,sep);else nav.appendChild(b);}}
+ else{var hs=document.querySelector('button[onclick*="s-support"]');
+  if(hs&&!$s('cx-disputes-btn')){var c=document.createElement('button');c.type='button';c.id='cx-disputes-btn';c.className='btn btn-outline';c.style.marginBottom='10px';c.textContent='Disputes & my data';c.onclick=function(){draw('new');};hs.parentNode.insertBefore(c,hs.nextSibling);}}
+ var rq=$s('tc-popia-req-btn');
+ if(rq&&!$s('tc-popia-dl-btn')){var d=document.createElement('button');d.type='button';d.id='tc-popia-dl-btn';d.className='btn btn-outline';d.style.marginTop='10px';d.textContent='Check my request / download my data';d.onclick=function(){draw('data');};rq.parentNode.insertBefore(d,rq.nextSibling);}
+ }catch(e){}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addEntries);else addEntries();
+setTimeout(addEntries,1500);setTimeout(addEntries,5000);
+window._tcOpenSupport=draw;
+})();
+</script>
+<script>
+/* TruckConnect: driver link status (customer) */
+(function(){
+if(window._tcLkInit)return;window._tcLkInit=1;
+var E=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+function FBx(){return window._FB;}
+function UID(){try{return (typeof currentUid!=='undefined'&&currentUid)||window.currentUid||null;}catch(e){return window.currentUid||null;}}
+var LABEL={assigned:'Driver assigned',loaded:'Loaded',on_way:'On the way',delivered:'Delivered'},ORDER=['assigned','loaded','on_way','delivered'];
+var links={},seen={},started=false,busy=false;
+function say(m){try{if(typeof toast==='function')toast(m,4000);}catch(e){}}
+function activeBk(){var a=window._tcMyBookings||[];return a.find(function(b){return b.ds==='accepted'||b.ds==='in_progress';})||null;}
+function paint(){var wrap=document.getElementById('active-bk-wrap');if(!wrap||busy)return;busy=true;
+ try{var old=document.getElementById('tc-lk');if(old)old.remove();
+  var b=activeBk();var l=b&&links[b.id];if(!l||wrap.style.display==='none'){return;}
+  var i=ORDER.indexOf(l.status);
+  var d=document.createElement('div');d.id='tc-lk';
+  d.style.cssText='margin-top:10px;background:#000;border:1.5px solid #222;border-radius:18px;padding:16px;color:#fff';
+  var upd=l.updatedAtMs?new Date(l.updatedAtMs).toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'}):'';
+  d.innerHTML='<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#60a5fa;text-transform:uppercase;margin-bottom:8px">Driver update</div>'+
+   '<div style="font-size:20px;font-weight:700">'+E(LABEL[l.status]||l.status)+'</div>'+
+   '<div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:2px">'+E(l.driverName||'')+(upd&&l.status!=='assigned'?' · updated '+E(upd):'')+'</div>'+
+   '<div style="display:flex;gap:6px;margin-top:12px">'+['Loaded','On the way','Delivered'].map(function(n,k){return '<div style="flex:1"><div style="height:6px;border-radius:3px;background:'+(i>=k+1?'#4ade80':'#2a2a2a')+'"></div><div style="font-size:11px;margin-top:5px;color:'+(i>=k+1?'#fff':'rgba(255,255,255,.4)')+'">'+n+'</div></div>';}).join('')+'</div>'+
+   (l.lat&&l.lng&&l.status==='on_way'?'<a href="https://www.google.com/maps?q='+l.lat+','+l.lng+'" target="_blank" rel="noopener" style="display:block;margin-top:12px;padding:12px;border-radius:12px;border:1.5px solid #333;color:#fff;text-align:center;font-weight:700;font-size:14px;text-decoration:none">See where the driver is</a>':'');
+  wrap.appendChild(d);
+ }finally{busy=false;}}
+function start(){if(started)return;var f=FBx(),u=UID();if(!f||!u||!f.onSnapshot)return;started=true;
+ try{f.onSnapshot(f.query(f.collection(f.db,'driverLinks'),f.where('customerUid','==',u)),function(snap){
+  snap.forEach(function(d){var l=d.data();var prev=seen[l.bookingId];
+   if(l.expiresAtMs&&l.expiresAtMs<=1)return;
+   links[l.bookingId]=l;
+   if(prev&&prev!==l.status)say(l.status==='delivered'?'Your goods were delivered.':('Your driver: '+(LABEL[l.status]||l.status)));
+   seen[l.bookingId]=l.status;});
+  paint();},function(){started=false;});}catch(e){started=false;}}
+var iv=setInterval(function(){start();if(started)clearInterval(iv);},2500);
+try{var w=document.getElementById('active-bk-wrap');if(w)new MutationObserver(function(){if(!busy&&!document.getElementById('tc-lk'))paint();}).observe(w,{childList:true});}catch(e){}
+document.addEventListener('DOMContentLoaded',function(){var w=document.getElementById('active-bk-wrap');if(w)new MutationObserver(function(){if(!busy&&!document.getElementById('tc-lk'))paint();}).observe(w,{childList:true});});
+})();
 </script>
 </body>
 </html>
