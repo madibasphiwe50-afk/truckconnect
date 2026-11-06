@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>TruckConnect job update</title>
+<style>
+/* Same colours as the TruckConnect driver app: black and white, flat, green for delivered. */
+:root{--bg:#F5F5F5;--card:#FFFFFF;--border:#EBEBEB;--text:#0D0D0D;--muted:#6F6F6F;--btn:#1c1c1e;--btntext:#FFFFFF;--green:#16a34a;--red:#E03131;--soft:#EFEFEF}
+@media (prefers-color-scheme:dark){:root{--bg:#070F14;--card:#171D20;--border:#222629;--text:#FFFFFF;--muted:#9A9A9A;--btn:#FFFFFF;--btntext:#0D0D0D;--soft:#1F262A}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Roboto,system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 16px calc(32px + env(safe-area-inset-bottom));min-height:100vh;-webkit-font-smoothing:antialiased}
+.wrap{max-width:480px;margin:0 auto;padding-top:20px}
+.brand{font-weight:700;font-size:13px;color:var(--muted);letter-spacing:1.5px}
+h1{font-size:24px;margin:8px 0 4px}
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:16px;margin-top:14px}
+.m{color:var(--muted);font-size:14px;line-height:1.5}
+.lbl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.addr{font-size:16px;font-weight:700;margin-top:2px;line-height:1.35}
+.maps{display:inline-block;margin-top:6px;font-size:13px;font-weight:700;color:var(--text);text-decoration:underline}
+.sep{height:1px;background:var(--border);margin:12px 0}
+.steps{display:flex;gap:6px;margin:16px 0 6px}
+.steps i{flex:1;height:6px;border-radius:3px;background:var(--border)}
+.steps i.on{background:var(--green)}
+.cur{font-size:13px;font-weight:700}
+button{font-family:inherit}
+.big{display:block;width:100%;min-height:62px;margin-top:12px;border:none;border-radius:18px;font-size:18px;font-weight:700;cursor:pointer;color:var(--btntext);background:var(--btn)}
+.big:disabled{opacity:.45;cursor:default}
+.big.g{background:var(--green);color:#fff}
+.big.l{background:transparent;color:var(--text);border:1.5px solid var(--border)}
+.ghost{display:block;width:100%;min-height:52px;margin-top:10px;border:1.5px solid var(--border);border-radius:16px;background:transparent;color:var(--text);font-size:15px;font-weight:700;cursor:pointer}
+input.fi{width:100%;min-height:52px;border:1.5px solid var(--border);border-radius:14px;background:var(--card);color:var(--text);font-size:16px;padding:0 14px;margin-top:6px;font-family:inherit}
+.err{color:var(--red);font-size:14px;margin-top:10px}
+.center{text-align:center;padding-top:60px}
+.thumb{display:flex;align-items:center;gap:12px;margin-top:10px}
+.thumb img{width:64px;height:64px;object-fit:cover;border-radius:12px;border:1.5px solid var(--border)}
+.thumb button{border:none;background:var(--soft);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer}
+.log{font-size:13px;color:var(--muted);margin-top:4px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="center m">Loading your job…</div></div>
+<input type="file" id="pf" accept="image/*" capture="environment" style="display:none">
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeFirestore, getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const cfg={apiKey:"AIzaSyD0dRuRqbsJr0-Kv29xcpQGjW-1DiYPNLo",authDomain:"truck-connect-c0c67.firebaseapp.com",projectId:"truck-connect-c0c67",storageBucket:"truck-connect-c0c67.firebasestorage.app",messagingSenderId:"313065662016",appId:"1:313065662016:web:a43aecfce5d7db205d61a5"};
+const app=initializeApp(cfg,'tc-driver-link');
+let db;try{db=initializeFirestore(app,{experimentalAutoDetectLongPolling:true,useFetchStreams:false});}catch(e){db=getFirestore(app);}
+const $=id=>document.getElementById(id);
+const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const token=(new URLSearchParams(location.search).get('t')||'').trim();
+// assigned > heading (on the way to pickup) > arrived (at pickup) > on_way (in transit) > delivered. 'loaded' is the old name for arrived.
+const ORDER=['assigned','heading','arrived','on_way','delivered'];
+const LABEL={assigned:'Not started',heading:'On the way to pickup',arrived:'Arrived at pickup',on_way:'In transit to delivery',delivered:'Delivered'};
+const BTN={heading:['On my way to pickup','l'],arrived:['Mark Arrived',''],on_way:['Start delivery trip','l'],delivered:['Mark Delivered','g']};
+let link=null,watch=null,lastLoc=0,photo='',busy=false;
+function norm(s){return s==='loaded'?'arrived':s;}
+function show(html){$('app').innerHTML='<div class="brand">TRUCKCONNECT</div>'+html;}
+function stop(){stopWatch();show('<div class="center"><h1>This link has stopped working</h1><p class="m">The job is finished or the link has expired. Ask the truck owner for a new one if you need it.</p></div>');}
+const mapUrl=a=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a);
+async function load(){
+  if(token.length<20){stop();return;}
+  try{
+    const s=await getDoc(doc(db,'driverLinks',token));
+    if(!s.exists()){stop();return;}
+    link=s.data();link.status=norm(link.status);
+    if(Date.now()>link.expiresAtMs){stop();return;}
+    draw();
+  }catch(e){show('<div class="center"><h1>No connection</h1><p class="m">Check your signal and open the link again.</p></div>');}
+}
+function draw(){
+  const i=ORDER.indexOf(link.status);
+  if(link.status==='delivered'){stopWatch();
+    const t=link.deliveredAtMs?new Date(link.deliveredAtMs).toLocaleString('en-ZA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    show('<div class="center"><h1>Delivered. Thank you.</h1><p class="m">'+(t?'Saved at '+E(t)+'. ':'')+'The customer and the owner can see that the job is done. This link closes in 2 hours. You can close this page.</p></div>');return;}
+  const next=ORDER[i+1],b=BTN[next];
+  const from=link.from||link.fromShort||'',to=link.to||link.toShort||'';
+  show('<h1>Your job</h1><div class="m">From '+E(link.ownerName||'the truck owner')+(link.pickupLabel?' · collect '+E(link.pickupLabel):'')+'</div>'+
+   '<div class="card"><div class="lbl">Pickup</div><div class="addr">'+E(from)+'</div><a class="maps" href="'+mapUrl(from)+'" target="_blank" rel="noopener">Open in Google Maps</a>'+
+   '<div class="sep"></div><div class="lbl">Drop-off</div><div class="addr">'+E(to)+'</div><a class="maps" href="'+mapUrl(to)+'" target="_blank" rel="noopener">Open in Google Maps</a>'+
+   (link.cargo?'<div class="sep"></div><div class="lbl">Load</div><div class="m" style="margin-top:2px">'+E(link.cargo)+'</div>':'')+
+   '<div class="steps">'+ORDER.slice(1).map((k,n)=>'<i class="'+(i>=n+1?'on':'')+'"></i>').join('')+'</div><div class="cur">'+E(LABEL[link.status])+'</div>'+
+   (link.arrivedAtMs?'<div class="log">Arrived '+E(new Date(link.arrivedAtMs).toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'}))+'</div>':'')+'</div>'+
+   (next==='delivered'?'<div class="card"><div class="lbl">Receiver\'s name</div><input class="fi" id="rcv" maxlength="60" autocomplete="off" placeholder="Who received the goods?" value="'+E(link._rcv||'')+'"></div>':'')+
+   '<button class="big '+b[1]+'" id="go">'+E(b[0])+'</button>'+
+   (next==='arrived'||next==='delivered'?'<div class="m" style="text-align:center;margin-top:8px">Your location and the time are saved when you tap.</div>':'')+
+   (next==='arrived'||next==='delivered'?'<button class="ghost" id="ph">'+(photo?'Change photo':'Add a photo (optional)')+'</button>'+(photo?'<div class="thumb"><img src="'+photo+'" alt="Photo"><button id="phx">Remove</button></div>':''):'')+
+   (link.status!=='assigned'?'<button class="ghost" id="loc">'+(watch!==null?'Sharing my location. Tap to stop':'Share my live location (optional)')+'</button><div class="m" style="margin-top:8px">The customer sees where you are only while this page stays open on your screen.</div>':'')+
+   '<div class="m" style="margin-top:18px">What you tap here is shown to the customer and the truck owner. Nothing else on your phone is shared.</div>'+
+   '<div class="err" id="err" style="display:none"></div>');
+  $('go').onclick=()=>setStatus(next);
+  if($('loc'))$('loc').onclick=toggleLoc;
+  if($('ph'))$('ph').onclick=()=>$('pf').click();
+  if($('phx'))$('phx').onclick=()=>{photo='';draw();};
+  if($('rcv'))$('rcv').oninput=e=>{link._rcv=e.target.value;};
+}
+function err(t){const er=$('err');if(er){er.style.display='block';er.textContent=t;}}
+function gps(){return new Promise(res=>{if(!navigator.geolocation){res(null);return;}
+  navigator.geolocation.getCurrentPosition(p=>res({lat:+p.coords.latitude.toFixed(5),lng:+p.coords.longitude.toFixed(5)}),()=>res(null),{enableHighAccuracy:true,timeout:9000,maximumAge:20000});});}
+async function setStatus(st){
+  if(busy)return;
+  const b=$('go');
+  let rcv='';
+  if(st==='delivered'){rcv=(($('rcv')||{}).value||'').trim();if(rcv.length<2){err('Enter the name of the person who received the goods.');return;}}
+  busy=true;b.disabled=true;const old=b.textContent;b.textContent='Saving…';
+  const now=Date.now(),upd={status:st,updatedAtMs:now};
+  if(st==='heading')upd.headingAtMs=now;
+  if(st==='on_way')upd.transitAtMs=now;
+  if(st==='arrived'||st==='delivered'){
+    const g=await gps(),k=st==='arrived'?'arrived':'delivered';
+    upd[k+'AtMs']=now;if(g){upd[k+'Lat']=g.lat;upd[k+'Lng']=g.lng;upd.lat=g.lat;upd.lng=g.lng;}
+    if(photo)upd[k==='arrived'?'arrivedPhoto':'podPhoto']=photo;
+    if(st==='delivered'){upd.receiverName=rcv;upd.expiresAtMs=now+2*3600*1000;}
+  }
+  try{
+    await updateDoc(doc(db,'driverLinks',token),upd);
+    Object.assign(link,upd);photo='';busy=false;draw();
+  }catch(e){busy=false;b.disabled=false;b.textContent=old;err('Could not send. Check your signal and tap again.');}
+}
+// Compress the photo so it fits in the job record (about 60 KB).
+$('pf').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{const im=new Image();im.onload=()=>{const M=900,s=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    let q=.65,d=c.toDataURL('image/jpeg',q);while(d.length>230000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q);}photo=d;draw();};im.src=r.result;};
+  r.readAsDataURL(f);e.target.value='';};
+function stopWatch(){if(watch!==null){try{navigator.geolocation.clearWatch(watch);}catch(e){}watch=null;}}
+function toggleLoc(){
+  if(watch!==null){stopWatch();draw();return;}
+  if(!navigator.geolocation){err('This phone cannot share location here.');return;}
+  watch=navigator.geolocation.watchPosition(async p=>{
+    const now=Date.now();if(now-lastLoc<60000)return;lastLoc=now;
+    try{await updateDoc(doc(db,'driverLinks',token),{lat:+p.coords.latitude.toFixed(5),lng:+p.coords.longitude.toFixed(5),status:link.status,updatedAtMs:now});}catch(e){}
+  },()=>{watch=null;err('Location is switched off for this page.');draw();},{enableHighAccuracy:true,maximumAge:30000});
+  draw();
+}
+load();
+</script>
+</body>
+</html>
