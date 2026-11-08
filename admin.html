@@ -1143,13 +1143,13 @@ window._FB={app:app,auth:getAuth(app),db:getFirestore(app),storage:getStorage(ap
         <div class="card-head"><div class="card-head-title">Platform Apps</div></div>
         <div style="padding:12px 15px;border-bottom:1px solid var(--border);">
           <div class="fl" style="margin-bottom:8px;">Customer App</div>
-          <a href="https://madibasphiwe50-afk.github.io/trucconnect/TruckConnect_Customer_v18-2-1.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:rgba(37,99,235,.1);color:#93c5fd;border:1px solid rgba(37,99,235,.2);border-radius:11px;padding:12px 15px;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(37,99,235,.18)'" onmouseout="this.style.background='rgba(37,99,235,.1)'">
+          <a href="https://madibasphiwe50-afk.github.io/truckconnect/truckconnect-c.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:rgba(37,99,235,.1);color:#93c5fd;border:1px solid rgba(37,99,235,.2);border-radius:11px;padding:12px 15px;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(37,99,235,.18)'" onmouseout="this.style.background='rgba(37,99,235,.1)'">
             <span>📦 Open Customer App</span><span>→</span>
           </a>
         </div>
         <div style="padding:12px 15px;">
           <div class="fl" style="margin-bottom:8px;">Driver App</div>
-          <a href="https://madibasphiwe50-afk.github.io/trucconnect/TruckConnect_Driver_v18-3-1.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.18);border-radius:11px;padding:12px 15px;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(34,197,94,.16)'" onmouseout="this.style.background='rgba(34,197,94,.08)'">
+          <a href="https://madibasphiwe50-afk.github.io/truckconnect/truckconnect-d.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.18);border-radius:11px;padding:12px 15px;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(34,197,94,.16)'" onmouseout="this.style.background='rgba(34,197,94,.08)'">
             <span>🚛 Open Driver App</span><span>→</span>
           </a>
         </div>
@@ -2191,7 +2191,7 @@ function approveDriver(uid_,force){
     var _iss=(_d&&!_d.foreign)?_tcApprovalIssues(_d):[];
     if(_iss.length){_tcApproveWarn(uid_,_d,_iss);return;}
   }
-  FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{status:'approved',approvedAt:new Date().toISOString()}).then(function(){
+  FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{status:'approved'}).then(function(){
     toast('✅ Driver approved');
     var d=allDrivers.find(function(x){return uid(x)===uid_;});
     if(d&&d.fcmToken)sendFCM(d.fcmToken,'🎉 Application Approved!','Welcome to TruckConnect. You can now start accepting loads.');
@@ -2205,10 +2205,18 @@ function rejectDriver(uid_){
     if(d&&d.fcmToken)sendFCM(d.fcmToken,'Application Update','Your application was unsuccessful. Please contact support.');
   }).catch(function(e){toast('Error: '+e.message);});
 }
+// a suspended or rejected driver's QR page must stop saying VERIFIED immediately
+function revokeQr(uid_){
+  var FB=window._FB;if(!FB||!uid_)return;
+  FB.getDocs(FB.query(FB.collection(FB.db,'verifications'),FB.where('ownerUid','==',uid_))).then(function(s){
+    s.forEach(function(d){FB.updateDoc(FB.doc(FB.db,'verifications',d.id),{approved:false,revokedAt:new Date().toISOString()}).catch(function(){});});
+  }).catch(function(){});
+}
 function suspendDriver(uid_){
   if(!confirm('Suspend this driver? They will lose access to new bookings.'))return;
   var FB=window._FB;if(!FB)return;
   FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{status:'suspended',suspendedAt:new Date().toISOString()}).then(function(){
+    revokeQr(uid_);
     toast('⏸ Driver suspended');
     var d=allDrivers.find(function(x){return uid(x)===uid_;});
     if(d&&d.fcmToken)sendFCM(d.fcmToken,'Account Suspended','Your account has been temporarily suspended. Contact support.');
@@ -2216,7 +2224,7 @@ function suspendDriver(uid_){
 }
 function reinstateDriver(uid_){
   var FB=window._FB;if(!FB)return;
-  FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{status:'approved',approvedAt:new Date().toISOString(),reinstatedAt:new Date().toISOString()}).then(function(){
+  FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{status:'approved',reinstatedAt:new Date().toISOString()}).then(function(){
     toast('▶ Driver reinstated ✅');
     var d=allDrivers.find(function(x){return uid(x)===uid_;});
     if(d&&d.fcmToken)sendFCM(d.fcmToken,'Account Reinstated','Your TruckConnect account is active again. Welcome back!');
@@ -3356,8 +3364,8 @@ var TC_APP_KEY='Truck Connect...2007';
 
 // Update these URLs once you publish to GitHub Pages
 var TC_APP_URLS={
-  customer:'https://madibasphiwe50-afk.github.io/trucconnect/TruckConnect_Customer_v18-2-1.html',
-  driver:'https://madibasphiwe50-afk.github.io/trucconnect/TruckConnect_Driver_v18-3-1.html'
+  customer:'https://madibasphiwe50-afk.github.io/truckconnect/truckconnect-c.html',
+  driver:'https://madibasphiwe50-afk.github.io/truckconnect/truckconnect-d.html'
 };
 
 window.tcLaunchApp=function(appType){
@@ -3782,7 +3790,7 @@ async function _aiExecuteTool(name, args){
       var d2=_aiFindDriver(args.driver_id);
       if(!d2)return {error:'Driver not found: '+args.driver_id};
       var FB=window._FB;
-      FB.updateDoc(FB.doc(FB.db,'drivers',d2.id),{status:'suspended',suspendedAt:new Date().toISOString(),suspendReason:args.reason||'Suspended via AI assistant'}).catch(function(){});
+      FB.updateDoc(FB.doc(FB.db,'drivers',d2.id),{status:'suspended',suspendedAt:new Date().toISOString(),suspendReason:args.reason||'Suspended via AI assistant'}).then(function(){revokeQr(d2.id);}).catch(function(){});
       return {ok:true, message:'Suspended driver: '+d2.name};
     }
     case 'resolve_dispute': {
