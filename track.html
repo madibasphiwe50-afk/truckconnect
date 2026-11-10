@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1677F2">
+<meta name="robots" content="noindex">
+<title>Follow your Truck Connect trip</title>
+<style>
+:root{--blue:#1677F2;--ink:#0B1730;--mut:#66758F;--bg:#fff;--card:#fff;--bd:#E3EAF6}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Roboto,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:#EAF1FB}
+#map{position:absolute;inset:0}
+.top{position:absolute;left:0;right:0;top:0;z-index:5;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;display:flex;align-items:center;gap:10px;background:linear-gradient(#fff,rgba(255,255,255,0))}
+.logo{width:40px;height:40px;border-radius:10px;display:block;object-fit:cover}
+.logo svg{width:24px;height:24px}
+.brand{font-weight:700;font-size:15px;letter-spacing:-.2px}
+.brand small{display:block;font-weight:500;font-size:11px;color:var(--mut);letter-spacing:0}
+.live{margin-left:auto;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--bd);border-radius:20px;padding:6px 11px;font-size:12px;font-weight:700}
+.live i{width:8px;height:8px;border-radius:50%;background:#22c55e}
+.live.off i{background:#9aa8bf;animation:none}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-radius:24px 24px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--bd)}
+.grab{width:40px;height:4px;border-radius:2px;background:#CBD6E8;margin:0 auto 12px}
+.eta{display:flex;align-items:baseline;gap:8px}
+.eta b{font-size:30px;letter-spacing:-1px}
+.eta span{font-size:14px;color:var(--mut)}
+.status{font-size:14px;font-weight:600;margin-top:2px}
+.row{display:flex;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--bd)}
+.cell{flex:1;min-width:0}
+.cell small{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.cell div{font-size:15px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plate{display:inline-block;border:1.5px solid var(--ink);border-radius:6px;padding:1px 8px;font-weight:700;letter-spacing:.04em}
+.fab{position:absolute;right:14px;z-index:6;width:46px;height:46px;border-radius:50%;background:#fff;border:1px solid var(--bd);display:grid;place-items:center;cursor:pointer;padding:0}
+.fab svg{width:22px;height:22px}
+#recentre{bottom:calc(var(--sh,230px) + 14px);display:none;width:auto;border-radius:23px;padding:0 16px;font:700 13px Roboto,system-ui,sans-serif;color:var(--blue);gap:6px;grid-auto-flow:column}
+#recentre.on{display:grid}
+#ovBtn{bottom:calc(var(--sh,230px) + 70px);font:700 11px Roboto,system-ui,sans-serif;color:var(--blue)}
+.msg{position:absolute;inset:0;z-index:9;display:none;place-items:center;text-align:center;padding:30px;background:#fff}
+.msg.on{display:grid}
+.msg h2{margin:14px 0 6px;font-size:20px}
+.msg p{margin:0;color:var(--mut);line-height:1.5;max-width:320px}
+.who{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)}
+.av{width:54px;height:54px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:20px;display:grid;place-items:center;overflow:hidden;flex:none;border:2px solid var(--bd)}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.wn{flex:1;min-width:0}.wn small{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.wn div{font-size:17px;font-weight:700;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.call{display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;text-decoration:none;font-weight:700;font-size:14px;border-radius:22px;padding:0 16px;height:42px}
+.call svg{width:16px;height:16px}
+.phn{font-size:13px;color:var(--mut);margin:6px 0 0 66px;font-weight:600;letter-spacing:.02em}
+.row{margin-top:10px;padding-top:10px}
+.foot{font-size:11px;color:var(--mut);text-align:center;margin-top:12px}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="top">
+  <img class="logo" alt="Truck Connect" width="40" height="40" src="data:image/png;base64,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">
+  <div class="brand">Truck Connect<small>Live trip tracking</small></div>
+  <div class="live" id="live"><i></i><span id="liveTxt">Live</span></div>
+</div>
+<div class="sheet" id="sheet" hidden>
+  <div class="grab"></div>
+  <div class="eta"><b id="etaBig">--</b><span id="etaSub"></span></div>
+  <div class="status" id="status">Connecting…</div>
+  <div class="who"><div class="av" id="dAv"></div><div class="wn"><small>Driver</small><div id="dFull">—</div></div><a class="call" id="dCall" href="#" hidden><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>Call</a></div>
+  <div class="phn" id="dPhone" hidden></div>
+  <div class="row">
+    <div class="cell" hidden><small>Driver</small><div id="dName">—</div></div>
+    <div class="cell"><small>Truck</small><div id="dTruck">—</div></div>
+    <div class="cell"><small>Plate</small><div id="dPlate">—</div></div>
+  </div>
+  <div class="foot">Check that the driver and the plate match before you hand over your goods.</div>
+</div>
+<button class="fab" id="ovBtn" aria-label="Show whole trip">Trip</button>
+<button class="fab" id="recentre"><svg viewBox="0 0 24 24" fill="none" stroke="#1677F2" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Follow truck</button>
+<div class="msg" id="msg"><div><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1677F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><h2 id="msgT"></h2><p id="msgP"></p></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+var MAPS_KEY = 'AIzaSyBQHtkvB94UPc-zfMsyAgFRk0crF3_QrcE';
+var cfg = {apiKey:"AIzaSyD0dRuRqbsJr0-Kv29xcpQGjW-1DiYPNLo",authDomain:"truck-connect-c0c67.firebaseapp.com",projectId:"truck-connect-c0c67",storageBucket:"truck-connect-c0c67.firebasestorage.app",messagingSenderId:"313065662016",appId:"1:313065662016:web:a43aecfce5d7db205d61a5"};
+var $ = function(i){return document.getElementById(i);};
+var token = (new URLSearchParams(location.search)).get('t') || '';
+
+function say(t, p){ $('msgT').textContent=t; $('msgP').textContent=p; $('msg').classList.add('on'); var lv=$('live'); if(lv){ lv.classList.add('off'); $('liveTxt').textContent='Ended'; } }
+
+if (!/^[a-f0-9]{20,}$/i.test(token)) { say('Link not valid', 'This tracking link is incomplete. Ask the sender to share it again.'); }
+else start();
+
+function start(){
+  var map=null, truck=null, pickPin=null, dropPin=null, line=null, glow=null, last=null, lastRoute={t:0,key:''}, data=null, haveMaps=false, queued=[];
+  var db = initializeFirestore(initializeApp(cfg,'tc-track'), {experimentalAutoDetectLongPolling:true});
+
+  // ---- Google Maps ----
+  var MAP_ID='DEMO_MAP_ID', camH=0;
+  window._tcMapsReady = function(){
+    haveMaps=true;
+    // vector map = 3D buildings + tilt + rotation. Replace MAP_ID with your own Map ID (vector, tilt and rotation on) from Google Cloud for the final look.
+    map = new google.maps.Map($('map'),{center:{lat:-26.2,lng:28.04},zoom:12,disableDefaultUI:true,gestureHandling:'greedy',clickableIcons:false,mapId:MAP_ID,renderingType:'VECTOR',tilt:0,heading:0});
+    queued.forEach(function(f){f();}); queued=[];
+  };
+  var s=document.createElement('script');
+  s.src='https://maps.googleapis.com/maps/api/js?key='+MAPS_KEY+'&callback=_tcMapsReady&loading=async';
+  s.async=true; s.onerror=function(){ $('status').textContent='The map could not load. The truck details below still update.'; };
+  document.head.appendChild(s);
+  function whenMap(f){ if(haveMaps) f(); else queued.push(f); }
+
+  // ---- the arrow that is the truck ----
+  // A blue circle with a white arrow. The arrow turns to face the way the truck is heading.
+  var ARROW='M0,-11 L8,9 L0,5 L-8,9 Z';
+  function truckIcon(h){ if(typeof h==='number'&&map&&map.getHeading) h=h-(map.getHeading()||0);
+    return { path: ARROW, scale: 1.15, rotation: (typeof h==='number'&&isFinite(h))?h:0, fillColor:'#1677F2', fillOpacity:1, strokeColor:'#fff', strokeWeight:2.5 };
+  }
+  function pinIcon(color){ return {path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:color,fillOpacity:1,strokeColor:'#fff',strokeWeight:3}; }
+
+  function bearing(a,b){
+    var r=Math.PI/180, y=Math.sin((b.lng-a.lng)*r)*Math.cos(b.lat*r),
+        x=Math.cos(a.lat*r)*Math.sin(b.lat*r)-Math.sin(a.lat*r)*Math.cos(b.lat*r)*Math.cos((b.lng-a.lng)*r);
+    return (Math.atan2(y,x)/r+360)%360;
+  }
+  function glide(m,to){ // smooth move
+    var from=m.getPosition(); if(!from){m.setPosition(to);return;}
+    var a={lat:from.lat(),lng:from.lng()}, t0=performance.now(), dur=1200;
+    (function step(t){ var k=Math.min(1,(t-t0)/dur); k=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+      m.setPosition({lat:a.lat+(to.lat-a.lat)*k,lng:a.lng+(to.lng-a.lng)*k}); if(k<1)requestAnimationFrame(step); })(t0);
+  }
+
+  // ---- road route (not a straight line) ----
+  function drawRoute(from,to,key){
+    var now=Date.now();
+    if(lastRoute.key===key && now-lastRoute.t<12000) return;
+    lastRoute={t:now,key:key};
+    fetch('https://router.project-osrm.org/route/v1/driving/'+from.lng+','+from.lat+';'+to.lng+','+to.lat+'?overview=full&geometries=geojson')
+      .then(function(r){return r.json();})
+      .then(function(j){
+        if(!j||!j.routes||!j.routes.length) throw 0;
+        var r0=j.routes[0], path=r0.geometry.coordinates.map(function(c){return {lat:c[1],lng:c[0]};});
+        whenMap(function(){
+          if(!line){
+            glow=new google.maps.Polyline({map:map,path:path,strokeColor:'#0B4FB3',strokeOpacity:1,strokeWeight:9,zIndex:1});
+            line=new google.maps.Polyline({map:map,path:path,strokeColor:'#1677F2',strokeOpacity:1,strokeWeight:5,zIndex:2});
+          } else { glow.setPath(path); line.setPath(path); }
+          if(!drawRoute.fitted){ drawRoute.fitted=true; if(!autoFollow) fit(); }
+        });
+        showEta(r0.duration/60, r0.distance/1000);
+      })
+      .catch(function(){ // road service unavailable: estimate and keep a thin straight guide so the page is never empty
+        var km=hav(from,to)*1.35; showEta(km/35*60, km);
+        whenMap(function(){ var p=[from,to];
+          if(!line){ line=new google.maps.Polyline({map:map,path:p,strokeColor:'#1677F2',strokeOpacity:.6,strokeWeight:4,zIndex:2}); } else line.setPath(p); });
+      });
+  }
+  function hav(a,b){var R=6371,r=Math.PI/180,dl=(b.lat-a.lat)*r,dn=(b.lng-a.lng)*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)*Math.sin(dn/2);return 2*R*Math.asin(Math.sqrt(x));}
+  function fmt(min){ min=Math.max(1,Math.round(min)); if(min<60) return min+' min'; var h=Math.floor(min/60), m=min%60; return h+' h'+(m?' '+m+' min':''); }
+  function showEta(min,km){ $('etaBig').textContent=fmt(min); $('etaSub').textContent=(km<10?km.toFixed(1):Math.round(km))+' km away'; }
+  function fit(){ if(!map) return; map.setTilt(0); map.setHeading(0); if(truck) truck.setIcon(truckIcon(lastH)); var b=new google.maps.LatLngBounds(), n=0;
+    [last, targetOf(data)].forEach(function(p){ if(p){ b.extend(p); n++; } });
+    if(n>1) map.fitBounds(b,{top:90,bottom:(($('sheet').offsetHeight||200)+40),left:40,right:40}); else if(n===1) { map.setCenter(last||targetOf(data)); map.setZoom(14); } }
+  function targetOf(d){ if(!d) return null; return d.phase==='dropoff' ? d.to : d.from; }
+
+  // ---- live data ----
+  var autoFollow=true, followedOnce=false, lastH=0;
+  function follow(loc,h){ if(!map||!autoFollow) return;
+    // look ahead of the truck so it sits low on the screen, like a navigation view
+    if(typeof h==='number'&&isFinite(h)) camH=h;
+    var r=Math.PI/180, ahead={lat:loc.lat+Math.cos(camH*r)*0.00030, lng:loc.lng+Math.sin(camH*r)*0.00030/Math.cos(loc.lat*r)};
+    if(!followedOnce){ followedOnce=true; map.setZoom(18); map.setCenter(ahead); map.setTilt(60); map.setHeading(camH); }
+    else { if(map.getZoom()<17) map.setZoom(18); if(map.getTilt()<45) map.setTilt(60); map.setHeading(camH); map.panTo(ahead); }
+    if(truck) truck.setIcon(truckIcon(0)); }
+  function setFollow(on){ autoFollow=on; $('recentre').classList.toggle('on',!on); if(on&&last){ followedOnce=false; follow(last); } }
+  $('recentre').onclick=function(){ setFollow(true); };
+  $('ovBtn').onclick=function(){ autoFollow=false; $('recentre').classList.add('on'); fit(); };
+  function sheetH(){ var s=$('sheet'); if(s&&!s.hidden) document.documentElement.style.setProperty('--sh',s.offsetHeight+'px'); }
+  window.addEventListener('resize',sheetH);
+  function ini(n){ var p=String(n||'').trim().split(/\s+/).filter(Boolean); return ((p[0]||'?')[0]+(p.length>1?p[p.length-1][0]:'')).toUpperCase(); }
+  function apply(d){
+    data=d;
+    var ended=d.status==='ended', cancelled=d.status==='cancelled';
+    if(ended||cancelled){
+      say(cancelled?'This trip was cancelled':'This trip has ended', cancelled?'The truck is no longer on its way.':'The truck has arrived. Thank you for using Truck Connect.');
+      $('live').classList.add('off'); $('liveTxt').textContent='Ended'; return;
+    }
+    // old links: stop showing a live truck when nothing has been heard for a long time
+    var age=d.ts?(Date.now()-Date.parse(d.ts)):0, born=d.createdAt?Date.parse(d.createdAt):0;
+    if((born&&Date.now()-born>36*3600*1000)||age>90*60*1000){
+      say('This trip is no longer live','The last update was a while ago, so the trip has probably finished. Ask for a new link if you need one.');
+      $('live').classList.add('off'); $('liveTxt').textContent='Ended'; return;
+    }
+    $('msg').classList.remove('on');
+    $('sheet').hidden=false; sheetH();
+    $('dName').textContent=d.driver||'Your driver';
+    var full=(d.driverFull||d.driver||'').trim(); $('dFull').textContent=full||'Your driver';
+    var av=$('dAv'); if(av.getAttribute('data-k')!==(d.driverPhoto||'')+full){ av.setAttribute('data-k',(d.driverPhoto||'')+full); av.textContent='';
+      if(d.driverPhoto&&/^(data:image\/(jpeg|png|webp);base64,|https:\/\/)/i.test(d.driverPhoto)){ var im=new Image(); im.alt=full; im.onerror=function(){av.textContent=ini(full);}; im.src=d.driverPhoto; av.appendChild(im); }
+      else av.textContent=ini(full); }
+    var ph=String(d.driverPhone||'').replace(/[^\d+]/g,''), cl=$('dCall'), pe=$('dPhone');
+    if(ph.replace(/\D/g,'').length>=7){ cl.href='tel:'+ph; cl.hidden=false; pe.textContent=ph; pe.hidden=false; } else { cl.hidden=true; pe.hidden=true; }
+    $('dTruck').textContent=d.truck||'—';
+    var pl=$('dPlate'); pl.textContent=''; if(d.plate){var sp=document.createElement('span');sp.className='plate';sp.textContent=d.plate;pl.appendChild(sp);} else pl.textContent='—';
+    var inTransit=d.phase==='dropoff';
+    $('status').textContent=inTransit?'On the way to the drop-off':'On the way to the pickup';
+    var loc=d.loc&&typeof d.loc.lat==='number'?{lat:d.loc.lat,lng:d.loc.lng}:null, tgt=targetOf(d);
+    whenMap(function(){
+      if(d.from){ if(!pickPin) pickPin=new google.maps.Marker({map:map,position:d.from,icon:pinIcon('#22c55e'),zIndex:3,title:'Pickup'}); else pickPin.setPosition(d.from); }
+      if(d.to){ if(!dropPin) dropPin=new google.maps.Marker({map:map,position:d.to,icon:pinIcon('#ef4444'),zIndex:3,title:'Drop-off'}); else dropPin.setPosition(d.to); }
+      if(loc){
+        var h=(typeof d.loc.heading==='number'&&isFinite(d.loc.heading))?d.loc.heading:(last?bearing(last,loc):null);
+        if(!truck) truck=new google.maps.Marker({map:map,position:loc,icon:truckIcon(h),zIndex:9,title:'Truck'});
+        else { glide(truck,loc); if(h!==null) truck.setIcon(truckIcon(h)); }
+        lastH=h; follow(loc,h);
+      }
+    });
+    if(loc){ last=loc; var stale=age>3*60*1000; $('liveTxt').textContent=stale?('Last seen '+Math.round(age/60000)+' min ago'):'Live'; $('live').classList.toggle('off',stale);
+      if(tgt) drawRoute(loc,tgt,(d.phase||'')+':'+Math.round(loc.lat*300)+':'+Math.round(loc.lng*300));
+    } else { $('liveTxt').textContent='Waiting for GPS'; $('live').classList.add('off'); $('etaBig').textContent='--'; $('etaSub').textContent='';
+      if(tgt) whenMap(function(){ if(!pickPin&&!dropPin) fit(); }); }
+    // reset the route when the trip moves from pickup to drop-off
+    if(apply.phase && apply.phase!==d.phase){ lastRoute={t:0,key:''}; drawRoute.fitted=false; if(line){line.setMap(null);glow.setMap(null);line=null;glow=null;} }
+    apply.phase=d.phase;
+  }
+  // map moves by the customer's hand stop auto-fitting
+  whenMap(function(){ map.addListener('dragstart',function(){ setFollow(false); }); });
+
+  setInterval(function(){ if(data) apply(data); },60000); // re-check how old the last update is
+  onSnapshot(doc(db,'shares',token),function(snap){
+    if(!snap.exists()){ say('Link not valid','This tracking link has expired or does not exist.'); return; }
+    apply(snap.data());
+  },function(){ say('Cannot load the trip','Check your internet connection and open the link again.'); });
+}
+</script>
+</body>
+</html>

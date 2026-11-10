@@ -2200,6 +2200,7 @@ function approveDriver(uid_,force){
 function rejectDriver(uid_){
   var FB=window._FB;if(!FB)return;
   FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{status:'rejected'}).then(function(){
+    revokeQr(uid_);
     toast('Driver rejected.');
     var d=allDrivers.find(function(x){return uid(x)===uid_;});
     if(d&&d.fcmToken)sendFCM(d.fcmToken,'Application Update','Your application was unsuccessful. Please contact support.');
