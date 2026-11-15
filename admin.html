@@ -722,7 +722,7 @@ window._FB={app:app,auth:getAuth(app),db:getFirestore(app),storage:getStorage(ap
             <textarea class="fi" id="notif-body" rows="3" placeholder="Write your message..." maxlength="200" style="resize:none;"></textarea>
           </div>
           <button class="btn-primary" onclick="sendBroadcast()">📤 Send Notification</button>
-          <p style="font-size:10px;color:var(--muted);margin-top:9px;text-align:center;">Add Admin API Secret in Settings to enable push · Always logged to Firestore</p>
+          <p style="font-size:10px;color:var(--muted);margin-top:9px;text-align:center;">Sent to phones as a push and also saved in the app · Always logged to Firestore</p>
         </div>
       </div>
 
@@ -929,13 +929,14 @@ window._FB={app:app,auth:getAuth(app),db:getFirestore(app),storage:getStorage(ap
       <div class="pg-sub">Standard prices are fixed. A special lowers every customer price for a while. The most you can give is 15%, and only on trips up to 50 km.</div>
 
       <div class="card" id="sp-card">
-        <div class="card-head"><div class="card-head-title">Specials pop-up (customer app)</div></div>
+        <div class="card-head"><div class="card-head-title">Specials pop-up</div></div>
+        <div style="display:flex;gap:8px;padding:12px 16px 0;"><button type="button" id="sp-t-c" class="btn-primary" style="margin:0;flex:1;">Customer app</button><button type="button" id="sp-t-d" class="btn-primary" style="margin:0;flex:1;background:transparent;border:1px solid var(--border2);color:var(--text);">Driver app</button></div>
         <div class="srow"><span class="skey">Status</span><span class="sval" id="sp-status" style="font-family:var(--mono);">Loading...</span></div>
         <div style="padding:6px 16px 16px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 4px;">
             <div>
-              <div style="font-size:14px;font-weight:700;">Show pop-up to customers</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4;">ON = customers see the pop-up when they open the app. OFF = they see nothing.</div>
+              <div id="sp-sw-t" style="font-size:14px;font-weight:700;">Show pop-up to customers</div>
+              <div id="sp-sw-d" style="font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4;">ON = customers see the pop-up when they open the app. OFF = they see nothing.</div>
             </div>
             <button type="button" id="sp-switch" role="switch" aria-checked="false" style="flex:0 0 auto;width:54px;height:30px;border-radius:99px;border:none;background:#6b7280;position:relative;cursor:pointer;transition:background .2s;padding:0;"><span id="sp-knob" style="position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;"></span></button>
           </div>
@@ -946,7 +947,9 @@ window._FB={app:app,auth:getAuth(app),db:getFirestore(app),storage:getStorage(ap
           <input type="file" id="sp-file" accept="image/*" multiple style="display:none;"/>
           <button type="button" class="btn-primary" id="sp-add" style="background:transparent;border:1px dashed var(--border2);color:var(--text);margin-top:0;">+ Add picture</button>
 
-          <div class="skey" style="margin:14px 0 6px;">Small tag on top (optional)</div>
+          <div class="skey" style="margin:14px 0 6px;">Layout</div>
+          <select class="fi" id="sp-mode"><option value="card">Card: picture(s) with heading and details</option><option value="poster">Big picture only: one full sales poster (no text)</option></select>
+          <div id="sp-mode-h" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4;display:none;">Design your poster in Canva (a tall picture works best, e.g. 1080 x 1350), add it above. The first picture is shown big and the text boxes below are ignored. Only the button text is used, if you fill it in.</div>
           <input class="fi" id="sp-badge" type="text" maxlength="30" placeholder="e.g. WEEKEND SPECIAL"/>
           <div class="skey" style="margin:12px 0 6px;">Big heading</div>
           <input class="fi" id="sp-title" type="text" maxlength="70" placeholder="e.g. 10% off all trips this weekend"/>
@@ -956,11 +959,18 @@ window._FB={app:app,auth:getAuth(app),db:getFirestore(app),storage:getStorage(ap
           <input class="fi" id="sp-cta" type="text" maxlength="24" placeholder="e.g. Book now"/>
           <div class="skey" style="margin:12px 0 6px;">When the customer taps the button</div>
           <select class="fi" id="sp-action"><option value="book">Open the booking screen</option><option value="close">Just close the pop-up</option></select>
+          <div class="skey" style="margin:12px 0 6px;">How many times each person sees it</div>
+          <select class="fi" id="sp-max"><option value="0">Every time they open the app</option><option value="1">1 time only</option><option value="2">2 times</option><option value="3">3 times</option><option value="5">5 times</option><option value="10">10 times</option></select>
+          <div class="skey" style="margin:12px 0 6px;">Limit per day</div>
+          <select class="fi" id="sp-day"><option value="0">No daily limit</option><option value="1">At most once a day</option></select>
+          <label style="display:flex;align-items:center;gap:8px;margin:14px 0 6px;font-size:13px;font-weight:700;"><input type="checkbox" id="sp-push" checked/> Also send a push notification when I switch it ON</label>
+          <input class="fi" id="sp-ptitle" placeholder="Push title (empty = use the heading)" maxlength="60"/>
+          <input class="fi" id="sp-pbody" placeholder="Push message (empty = use the details)" maxlength="120" style="margin-top:8px;"/>
           <div class="skey" style="margin:12px 0 6px;">Hide automatically after (optional)</div>
           <input class="fi" id="sp-until" type="date"/>
           <div id="sp-msg" style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;"></div>
           <button class="btn-primary" id="sp-save">Save pop-up</button>
-          <button class="btn-primary" id="sp-preview" style="background:transparent;border:1px solid var(--border2);color:var(--text);">Preview how customers see it</button>
+          <button class="btn-primary" id="sp-preview" style="background:transparent;border:1px solid var(--border2);color:var(--text);">Preview the pop-up</button>
         </div>
       </div>
 
@@ -1066,10 +1076,7 @@ window._FB={app:app,auth:getAuth(app),db:getFirestore(app),storage:getStorage(ap
           <div style="font-size:11px;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:8px;padding:10px;margin-bottom:12px;line-height:1.6;">
             Customer and Driver apps use <strong>Firebase Cloud Messaging</strong> for push notifications, sent via the TruckConnect FCM Worker.
           </div>
-          <label class="fl">Admin API Secret</label>
-          <input class="fi" id="os-rest-key" type="password" placeholder="Enter your admin API secret here…" autocomplete="off"/>
-          <button class="btn-secondary" style="margin-top:8px;" onclick="saveOsKey()">💾 Save API Key</button>
-          <p style="font-size:10px;color:var(--muted);margin-top:8px;">Stored in your browser only · Never uploaded anywhere · This must match the ADMIN_API_SECRET set on the Worker.</p>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5;">No secret or key needed. Push messages are sent with your admin login.</div>
         </div>
       </div>
 
@@ -1143,13 +1150,13 @@ window._FB={app:app,auth:getAuth(app),db:getFirestore(app),storage:getStorage(ap
         <div class="card-head"><div class="card-head-title">Platform Apps</div></div>
         <div style="padding:12px 15px;border-bottom:1px solid var(--border);">
           <div class="fl" style="margin-bottom:8px;">Customer App</div>
-          <a href="https://madibasphiwe50-afk.github.io/truckconnect/truckconnect-c.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:rgba(37,99,235,.1);color:#93c5fd;border:1px solid rgba(37,99,235,.2);border-radius:11px;padding:12px 15px;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(37,99,235,.18)'" onmouseout="this.style.background='rgba(37,99,235,.1)'">
+          <a href="https://madibasphiwe50-afk.github.io/trucconnect/TruckConnect_Customer_v18-2-1.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:rgba(37,99,235,.1);color:#93c5fd;border:1px solid rgba(37,99,235,.2);border-radius:11px;padding:12px 15px;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(37,99,235,.18)'" onmouseout="this.style.background='rgba(37,99,235,.1)'">
             <span>📦 Open Customer App</span><span>→</span>
           </a>
         </div>
         <div style="padding:12px 15px;">
           <div class="fl" style="margin-bottom:8px;">Driver App</div>
-          <a href="https://madibasphiwe50-afk.github.io/truckconnect/truckconnect-d.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.18);border-radius:11px;padding:12px 15px;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(34,197,94,.16)'" onmouseout="this.style.background='rgba(34,197,94,.08)'">
+          <a href="https://madibasphiwe50-afk.github.io/trucconnect/TruckConnect_Driver_v18-3-1.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.18);border-radius:11px;padding:12px 15px;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(34,197,94,.16)'" onmouseout="this.style.background='rgba(34,197,94,.08)'">
             <span>🚛 Open Driver App</span><span>→</span>
           </a>
         </div>
@@ -1268,7 +1275,7 @@ window.goTab=function(tab,btn){
   if(tab==='tracking')renderTracking();
   if(tab==='chat')renderChatList();
   if(tab==='notifications')loadNotifHistory();
-  if(tab==='settings'){var inp=$('os-rest-key');if(inp&&ADMIN_API_SECRET)inp.value=ADMIN_API_SECRET;}
+  
   if(tab==='roles')loadInvitedAdmins();
 };
 
@@ -1307,13 +1314,7 @@ function renderSos(){
    Admin app, in case anyone else finds the Worker's URL.
 ────────────────────────────────────────────────────────────────────────────── */
 
-window.saveOsKey = function(){
-  var key = (($('os-rest-key')||{}).value||'').trim();
-  if(!key){ toast('⚠️ Enter your admin API secret first'); return; }
-  ADMIN_API_SECRET = key;
-  localStorage.setItem('tc_admin_api_secret', key);
-  toast('✅ Saved — notifications ready!');
-};
+window.saveOsKey = function(){};
 
 // Load saved key into input on settings tab open
 (function(){
@@ -1325,16 +1326,21 @@ window.saveOsKey = function(){
 // looks up matching users in Firestore itself (by role/status), so all we
 // send is which group we mean.
 // target: 'all' | 'drivers' | 'customers' | 'approved'
-async function _fcmBroadcast(title, body, target){
-  if(!ADMIN_API_SECRET){ return {ok:false,reason:'no_key'}; }
+async function _adminBearer(){
+  var FB=window._FB,u=FB&&FB.auth&&FB.auth.currentUser;
+  if(!u) throw new Error('Sign in to the Admin app first.');
+  return await u.getIdToken();
+}
+async function _fcmBroadcast(title, body, target, special){
   try {
+    var _tk=await _adminBearer();
     var res = await fetch(TC_FCM_WORKER_URL+'/broadcast', {
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'Authorization':'Bearer '+ADMIN_API_SECRET
+        'Authorization':'Bearer '+_tk
       },
-      body: JSON.stringify({target:target||'all', title:title, body:body})
+      body: JSON.stringify({target:target||'all', title:title, body:body, special:!!special})
     });
     var d = await res.json();
     if(d.ok===false){ console.warn('[FCM]',d.reason); return {ok:false,reason:d.reason}; }
@@ -1349,13 +1355,13 @@ async function _fcmBroadcast(title, body, target){
 // route — used by the "message this driver/customer" feature.
 // role: 'driver' | 'customer'
 async function _fcmSendToUser(title, body, uid_, role, data){
-  if(!ADMIN_API_SECRET){ return {ok:false,reason:'no_key'}; }
   try {
+    var _tk=await _adminBearer();
     var res = await fetch(TC_FCM_WORKER_URL+'/notify', {
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'Authorization':'Bearer '+ADMIN_API_SECRET
+        'Authorization':'Bearer '+_tk
       },
       body: JSON.stringify({toUid:uid_, role:role, title:title, body:body, data:data||{}})
     });
@@ -1472,6 +1478,13 @@ function tcspBuild(d,onCta,onClose){
   ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(5,12,28,.68);display:flex;align-items:center;justify-content:center;padding:18px;animation:tcspFade .25s ease;font-family:Roboto,system-ui,-apple-system,sans-serif;';
   var h='<div id="tcsp-card" role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:360px;max-height:92vh;overflow-y:auto;background:#fff;color:#0B1730;border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,.45);animation:tcspUp .32s cubic-bezier(.2,.8,.2,1);">';
   h+='<button id="tcsp-x" aria-label="Close" style="position:absolute;top:10px;right:10px;z-index:3;width:34px;height:34px;border-radius:50%;border:none;background:rgba(11,23,48,.62);color:#fff;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>';
+  var poster=d.mode==='poster'&&imgs.length>0;
+  if(poster){
+    h=h.replace('background:#fff;color:#0B1730;border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,.45);','background:transparent;color:#fff;border-radius:24px;overflow:visible;');
+    h+='<img src="'+imgs[0]+'" alt="" style="display:block;width:100%;max-height:80vh;object-fit:contain;border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.45);background:#fff;">';
+    if(d.cta)h+='<button id="tcsp-cta" style="width:100%;margin-top:12px;background:#1677F2;color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">'+tcspEsc(d.cta)+'</button>';
+    h+='<span id="tcsp-no" style="display:none"></span></div>';
+  }else{
   if(imgs.length){
     h+='<div class="tcsp-imgs" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:24px 24px 0 0;background:#EAF3FF;">';
     imgs.forEach(function(s){h+='<img src="'+s+'" alt="" style="flex:0 0 100%;width:100%;max-height:300px;object-fit:cover;scroll-snap-align:center;display:block;">';});
@@ -1489,6 +1502,7 @@ function tcspBuild(d,onCta,onClose){
   if(d.cta)h+='<button id="tcsp-cta" style="width:100%;background:#1677F2;color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">'+tcspEsc(d.cta)+'</button>';
   h+='<button id="tcsp-no" style="width:100%;background:none;border:none;color:#66758F;font-size:13px;font-weight:600;padding:'+(d.cta?'12px':'6px')+' 0 0;cursor:pointer;">'+(d.cta?'Not now':'Close')+'</button>';
   h+='</div></div>';
+  }
   ov.innerHTML=h;
   function close(){if(ov.parentNode)ov.parentNode.removeChild(ov);if(onClose)try{onClose();}catch(e){}}
   ov.addEventListener('click',function(e){if(e.target===ov)close();});
@@ -1505,9 +1519,9 @@ function tcspBuild(d,onCta,onClose){
 }
 
 /* ── SPECIALS POP-UP (admin) ── stored in config/pricing → field "popup" */
-var _spUnsub=null,_spData={},_spImgs=[],_spDirty=false,_spBusy=false;
+var _spKey='popup',_spAll={},_spUnsub=null,_spData={},_spImgs=[],_spDirty=false,_spBusy=false;
 var SP_MAX_CHARS=780000;
-function _spFields(){return {badge:$('sp-badge'),title:$('sp-title'),body:$('sp-body'),cta:$('sp-cta'),action:$('sp-action'),until:$('sp-until')};}
+function _spFields(){return {push:$('sp-push'),ptitle:$('sp-ptitle'),pbody:$('sp-pbody'),max:$('sp-max'),day:$('sp-day'),mode:$('sp-mode'),badge:$('sp-badge'),title:$('sp-title'),body:$('sp-body'),cta:$('sp-cta'),action:$('sp-action'),until:$('sp-until')};}
 function _spUntilLive(d){var u=d.until?Date.parse(d.until+'T23:59:59'):0;return !u||Date.now()<=u;}
 function _spHasContent(d){return !!((d.title||'').trim()||(d.body||'').trim()||(d.images||[]).length);}
 function _spRenderSwitch(on){
@@ -1516,13 +1530,25 @@ function _spRenderSwitch(on){
   s.style.background=on?'#16a34a':'#6b7280';
   k.style.transform=on?'translateX(24px)':'none';
 }
+function _spWho(){return _spKey==='popupDriver'?'drivers':'customers';}
+function _spTabs(){
+  var c=$('sp-t-c'),d=$('sp-t-d'),dr=_spKey==='popupDriver';
+  [[c,!dr],[d,dr]].forEach(function(p){p[0].style.background=p[1]?'':'transparent';p[0].style.color=p[1]?'':'var(--text)';p[0].style.border=p[1]?'':'1px solid var(--border2)';});
+  var w=dr?'drivers':'customers',t1=$('sp-sw-t'),t2=$('sp-sw-d');if(t1)t1.textContent='Show pop-up to '+w;if(t2)t2.textContent='ON = '+w+' see the pop-up when they open the app. OFF = they see nothing.';
+  var ac=$('sp-action');if(ac){ac.innerHTML=dr?'<option value="close">Just close the pop-up</option>':'<option value="book">Open the booking screen</option><option value="close">Just close the pop-up</option>';}
+}
+function _spSwitch(k){
+  if(k===_spKey)return;
+  if(_spDirty&&!confirm('You have unsaved changes. Switch anyway?'))return;
+  _spKey=k;_spDirty=false;_spData=_spAll[k]||{};_spTabs();_spFill(_spData);_spRenderStatus();
+}
 function _spRenderStatus(){
   var st=$('sp-status');if(!st)return;
   var on=_spData.active===true,live=on&&_spUntilLive(_spData);
   _spRenderSwitch(on);
-  if(live)st.textContent='ON: customers see the pop-up';
+  if(live)st.textContent='ON: '+_spWho()+' see the pop-up';
   else if(on)st.textContent='Ended (past the date you set)';
-  else st.textContent='OFF: customers see nothing';
+  else st.textContent='OFF: '+_spWho()+' see nothing';
   st.style.color=live?'var(--green,#22c55e)':'var(--muted)';
 }
 function _spRenderImgs(){
@@ -1540,14 +1566,15 @@ function _spRenderImgs(){
 }
 function _spFill(d){
   var f=_spFields();
-  f.badge.value=d.badge||'';f.title.value=d.title||'';f.body.value=d.body||'';f.cta.value=d.cta||'';
+  f.mode.value=d.mode==='poster'?'poster':'card';f.max.value=String(d.maxShows||0);f.push.checked=d.pushOn!==false;f.ptitle.value=d.pushTitle||'';f.pbody.value=d.pushBody||'';f.day.value=d.oncePerDay?'1':'0';_spModeUi();f.badge.value=d.badge||'';f.title.value=d.title||'';f.body.value=d.body||'';f.cta.value=d.cta||'';
   f.action.value=d.ctaAction==='close'?'close':'book';f.until.value=d.until||'';
   _spImgs=(d.images||[]).slice(0,3);_spRenderImgs();
 }
 function _spCollect(){
   var f=_spFields();
-  return {badge:f.badge.value.trim(),title:f.title.value.trim(),body:f.body.value.trim(),cta:f.cta.value.trim(),ctaAction:f.action.value==='close'?'close':'book',until:f.until.value||'',images:_spImgs.slice()};
+  return {pushOn:!!f.push.checked,pushTitle:f.ptitle.value.trim(),pushBody:f.pbody.value.trim(),maxShows:Number(f.max.value)||0,oncePerDay:f.day.value==='1',mode:f.mode.value==='poster'?'poster':'card',badge:f.badge.value.trim(),title:f.title.value.trim(),body:f.body.value.trim(),cta:f.cta.value.trim(),ctaAction:f.action.value==='close'?'close':'book',until:f.until.value||'',images:_spImgs.slice()};
 }
+function _spModeUi(){var m=$('sp-mode'),h=$('sp-mode-h');if(h&&m)h.style.display=m.value==='poster'?'block':'none';}
 function _spEncode(im,max,q){
   var s=Math.min(1,max/Math.max(im.width,im.height));
   var c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*s));c.height=Math.max(1,Math.round(im.height*s));
@@ -1562,9 +1589,10 @@ function _spReadImg(file){
       var im=new Image();
       im.onerror=function(){rej(new Error('img'));};
       im.onload=function(){
-        var out=_spEncode(im,900,0.78);
-        if(out.length>260000)out=_spEncode(im,760,0.62);
-        if(out.length>260000)out=_spEncode(im,640,0.5);
+        var big=($('sp-mode')&&$('sp-mode').value==='poster'),lim=big?600000:260000;
+        var out=_spEncode(im,big?1350:900,big?0.85:0.78);
+        if(out.length>lim)out=_spEncode(im,big?1100:760,big?0.72:0.62);
+        if(out.length>lim)out=_spEncode(im,big?900:640,big?0.6:0.5);
         res(out);
       };
       im.src=fr.result;
@@ -1588,13 +1616,15 @@ function _spWrite(patch,okMsg){
   _spBusy=true;
   var u=FB.auth.currentUser;
   patch.updatedAt=new Date().toISOString();patch.updatedBy=(u&&u.email)||'admin';
-  return FB.setDoc(FB.doc(FB.db,'config','pricing'),{popup:patch},{merge:true})
+  var _o={};_o[_spKey]=patch;
+  return FB.setDoc(FB.doc(FB.db,'config','pricing'),_o,{merge:true})
     .then(function(){_spBusy=false;if(okMsg)toast(okMsg);})
     .catch(function(e){_spBusy=false;_spRenderStatus();toast('Could not save: '+(e&&e.message?e.message:e));});
 }
 function _spSave(){
   var d=_spCollect();
   if(!d.title&&!d.body&&!d.images.length){toast('Add a picture, a heading or details first.');return;}
+  if(d.mode==='poster'&&!d.images.length){toast('Add your poster picture first.');return;}
   var total=d.images.reduce(function(a,s){return a+s.length;},0);
   if(total>SP_MAX_CHARS){toast('Pictures are too big together. Remove one or use simpler pictures.');return;}
   d.version=Date.now();
@@ -1608,7 +1638,15 @@ function _spToggle(){
     if(!_spUntilLive(_spData)){toast('The end date has passed. Change or clear the date and save first.');return;}
   }
   _spRenderSwitch(next);
-  _spWrite({active:next,version:Date.now()},next?'Specials pop-up is ON. Customers will see it.':'Specials pop-up is OFF.');
+  var _sd=_spData;
+  _spWrite({active:next,version:Date.now()},next?'Specials pop-up is ON. '+_spWho()+' will see it.':'Specials pop-up is OFF.').then(function(){
+    if(!next||_sd.pushOn===false)return;
+    var t=_sd.pushTitle||_sd.title||'New special on TruckConnect';
+    var b=_sd.pushBody||(_sd.body||'Open the app to see it.').slice(0,120);
+    return _fcmBroadcast(t,b,_spKey==='popupDriver'?'drivers':'customers',true).then(function(r){
+      toast(r&&r.ok?'Push sent to '+r.recipients+' '+_spWho()+'.':'Pop-up is ON. Push was not sent ('+((r&&r.reason)||'error')+').',5000);
+    });
+  });
 }
 function _spPreview(){
   var old=document.getElementById('tcsp-overlay');if(old)old.remove();
@@ -1622,17 +1660,20 @@ function initSpecialsPopup(){
   if(sw&&!sw._b){
     sw._b=1;
     sw.addEventListener('click',_spToggle);
+    $('sp-mode').addEventListener('change',_spModeUi);
     $('sp-add').addEventListener('click',function(){$('sp-file').click();});
     $('sp-file').addEventListener('change',function(e){_spAddFiles(e.target.files);e.target.value='';});
     $('sp-save').addEventListener('click',_spSave);
     $('sp-preview').addEventListener('click',_spPreview);
-    ['sp-badge','sp-title','sp-body','sp-cta','sp-action','sp-until'].forEach(function(id){
+    $('sp-t-c').addEventListener('click',function(){_spSwitch('popup');});
+    $('sp-t-d').addEventListener('click',function(){_spSwitch('popupDriver');});
+    ['sp-push','sp-ptitle','sp-pbody','sp-max','sp-day','sp-mode','sp-badge','sp-title','sp-body','sp-cta','sp-action','sp-until'].forEach(function(id){
       var el=$(id);el.addEventListener('input',function(){_spDirty=true;});el.addEventListener('change',function(){_spDirty=true;});
     });
   }
   if(!_spUnsub){
     _spUnsub=FB.onSnapshot(FB.doc(FB.db,'config','pricing'),function(snap){
-      _spData=(snap.exists()&&snap.data().popup)||{};
+      _spAll=snap.exists()?snap.data():{};_spData=_spAll[_spKey]||{};
       if(!_spDirty)_spFill(_spData);
       _spRenderStatus();
     },function(e){var st=$('sp-status');if(st)st.textContent='Could not load: '+(e&&e.message?e.message:e);});
@@ -1782,7 +1823,8 @@ function _tcTagLine(x){
 function _tcNewDriverRows(d){
   var r=[];
   r.push(['Country',_tcCtryName(d.country||'ZA')+(d.foreign?' · NOT verified by TruckConnect':'')]);
-  r.push(['Account',d.entityType==='company'?'Company / fleet owner':'Individual driver']);
+  r.push(['Account',d.entityType==='company'?'Company / fleet owner':(d.ownerLinked?'Drives for a truck owner':'Individual driver')]);
+  if(d.ownerLinked){r.push(['Truck owner',d.ownerName||d.ownerUid||'—']);r.push(['Who gets paid',d.payTo==='driver'?'The driver':'The owner']);r.push(['Truck papers','Checked through the owner. Only the driver\'s own papers are needed.']);}
   if(d.entityType==='company'){r.push(['Company',d.companyName||'—']);r.push(['Company reg no.',d.companyReg||'—']);r.push(['Company status',d.companyStatus||'pending']);}
   if(d.idType==='Passport + SA permit'){r.push(['Nationality',d.passportCountry||'—']);r.push(['SA permit no.',d.permitNumber||'—']);r.push(['Permit expiry',d.permitExpiry||'—']);}
   if(d.ownership)r.push(['Truck ownership',d.ownership==='owner'?'Owns the truck':'Drives for a company or owner']);
@@ -2123,8 +2165,6 @@ window.sendBroadcast = async function(){
     toast('Could not save the in-app message: '+((inApp&&inApp.reason)||'unknown error')+(result.ok?' (the push was sent).':''),6000);
   } else if(result.ok){
     toast('Push sent to '+result.recipients+' subscriber'+(result.recipients!==1?'s':'')+' and the in-app message was saved.',5000);
-  } else if(result.reason==='no_key'){
-    toast('In-app message sent. Add the Admin API Secret in Settings to also send push.',5000);
   } else {
     toast('Push error: '+result.reason+'. The in-app message was still sent.',6000);
   }
@@ -2158,12 +2198,12 @@ function _tcApprovalIssues(d){
   var out=[],t=_tcTodayISO();
   if(!d.licensePhoto)out.push("Driver's licence photo missing");
   if(d.needsPrdp!==false&&!d.prdpPhoto)out.push('PrDP photo missing');
-  if(d.needsPrdp===true&&!d.operatorCardPhoto)out.push('Operator card missing');
-  if(!d.discPhoto)out.push('Licence disc photo missing');
+  if(d.needsPrdp===true&&!d.ownerLinked&&!d.operatorCardPhoto)out.push('Operator card missing');
+  if(!d.ownerLinked&&!d.discPhoto)out.push('Licence disc photo missing');
   if(!d.selfiePhoto)out.push('Selfie missing');
-  if(!d.truckPhoto)out.push('Truck photo missing');
+  if(!d.ownerLinked&&!d.truckPhoto)out.push('Truck photo missing');
   if(d.prdpExpiry&&String(d.prdpExpiry)<t)out.push('PrDP expired ('+d.prdpExpiry+')');
-  if(d.discExpiry&&String(d.discExpiry)<t)out.push('Licence disc expired ('+d.discExpiry+')');
+  if(!d.ownerLinked&&d.discExpiry&&String(d.discExpiry)<t)out.push('Licence disc expired ('+d.discExpiry+')');
   var sc=d.docScans||{};
   ['licence','prdp','disc'].forEach(function(k){
     var r=sc[k];if(!r)return;
@@ -2200,6 +2240,7 @@ function approveDriver(uid_,force){
 function rejectDriver(uid_){
   var FB=window._FB;if(!FB)return;
   FB.updateDoc(FB.doc(FB.db,'drivers',uid_),{status:'rejected'}).then(function(){
+    revokeQr(uid_);
     toast('Driver rejected.');
     var d=allDrivers.find(function(x){return uid(x)===uid_;});
     if(d&&d.fcmToken)sendFCM(d.fcmToken,'Application Update','Your application was unsuccessful. Please contact support.');
@@ -2922,7 +2963,6 @@ function openMessageCustomerForm(uid_,name){
 }
 
 function _openMessageForm(uid_,name,role,roleLabel){
-  if(!ADMIN_API_SECRET){ toast('⚠️ Add your Admin API Secret in Settings first'); return; }
   openModal(function(m){
     m.innerHTML+='<div class="modal-title">Message '+safe(name||roleLabel)+'</div><div class="modal-sub">Sent as a push notification to this '+roleLabel.toLowerCase()+' only</div>';
     m.innerHTML+='<label class="fl" style="margin-bottom:5px;">Title</label>';
@@ -3364,8 +3404,8 @@ var TC_APP_KEY='Truck Connect...2007';
 
 // Update these URLs once you publish to GitHub Pages
 var TC_APP_URLS={
-  customer:'https://madibasphiwe50-afk.github.io/truckconnect/truckconnect-c.html',
-  driver:'https://madibasphiwe50-afk.github.io/truckconnect/truckconnect-d.html'
+  customer:'https://madibasphiwe50-afk.github.io/trucconnect/TruckConnect_Customer_v18-2-1.html',
+  driver:'https://madibasphiwe50-afk.github.io/trucconnect/TruckConnect_Driver_v18-3-1.html'
 };
 
 window.tcLaunchApp=function(appType){

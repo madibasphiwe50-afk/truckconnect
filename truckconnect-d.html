@@ -226,7 +226,7 @@
 <meta name="theme-color" content="#070F14"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="TruckConnect D"/>
+<meta name="apple-mobile-web-app-title" content="TruckConnect Driver"/>
 <link rel="apple-touch-icon" href="driver-icon-192.png"/>
 <link rel="icon" type="image/png" href="driver-icon-192.png"/>
 <script>
@@ -236,7 +236,7 @@
   var u=location.href.split('#')[0].split('?')[0];
   var base=u.slice(0,u.lastIndexOf('/')+1);
   var ic='driver-icon';
-  var m={name:'TruckConnect D',short_name:'TruckConnect D',id:'truckconnect-driver',start_url:u,scope:u,
+  var m={name:'TruckConnect Driver',short_name:'TruckConnect Driver',id:'truckconnect-driver',start_url:u,scope:u,
     display:'standalone',orientation:'portrait',background_color:'#0a1628',theme_color:'#0a1628',lang:'en-ZA',
     icons:[
       {src:base+ic+'-192.png',sizes:'192x192',type:'image/png',purpose:'any'},
@@ -250,7 +250,7 @@
 }catch(e){}})();
 </script>
 
-<title>TruckConnect D</title>
+<title>TruckConnect Driver</title>
     <link rel="preconnect" href="https://gstatic.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -260,7 +260,7 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="TruckConnect D"/>
+<meta name="apple-mobile-web-app-title" content="TruckConnect Driver"/>
 <link rel="preconnect" href="https://maps.googleapis.com" crossorigin>
 <script>
 /* Google Maps loads after the first screen is drawn, so the app opens without waiting for it. Map code already waits and retries. */
@@ -2806,7 +2806,7 @@ body.dark-mode #s-driver-chat{--cm-mine-bg:#F0F0F0;--cm-mine-fg:#161C20;}
     <div class="section-sub" style="max-width:300px;text-align:center;margin:0 auto 24px;">Your driver profile has been submitted. Our team reviews applications within 24&ndash;48 hours.</div>
     <div class="pending-card">
       <div class="pending-row"><span class="tcx-k"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16c.6-1.4 1.7-2 3-2s2.4.6 3 2"/></svg> ID verification</span><span class="tcx-chip"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Submitted</span></div>
-      <div style="padding:14px 0 6px;border-bottom:1px solid var(--border);">
+      <div id="pend-vehdocs" style="padding:14px 0 6px;border-bottom:1px solid var(--border);">
         <div class="tcx-k" style="margin-bottom:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg> Vehicle documents</div>
         <div class="doc-upload-row">
           <div>
@@ -2839,7 +2839,7 @@ body.dark-mode #s-driver-chat{--cm-mine-bg:#F0F0F0;--cm-mine-fg:#161C20;}
           </button>
         </div>
       </div>
-      <div class="pending-row"><span class="tcx-k"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg> Banking details</span><span class="tcx-chip"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Saved</span></div>
+      <div class="pending-row" id="pend-bankrow"><span class="tcx-k"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg> Banking details</span><span class="tcx-chip"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Saved</span></div>
       <div class="pending-row"><span class="tcx-k"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg> Subscription</span><span style="font-weight:700;" id="pend-sub-val">&mdash;</span></div>
     </div>
     <button class="btn btn-dark" style="max-width:360px;width:100%;" id="check-status-btn">Continue</button>
@@ -4500,6 +4500,7 @@ var TC_SUB_PRICE = 300;
 var TC_PRICE_STD = 300, TC_PRICE_HEAVY = 400;
 window._tcBill = function(d){
   d = d || {};var lines = [];
+  if (d.ownerLinked) return {lines:[], total:0, heavy:0, std:0};
   var pl = parseFloat(d.payloadCapacity) || 0, pc = pl > 10 ? 'heavy' : 'standard';
   lines.push({n:(d.truck || 'Your truck') + (d.plate ? ' · ' + d.plate : ''), cls:pc, price:pc === 'heavy' ? TC_PRICE_HEAVY : TC_PRICE_STD});
   (d.fleet || []).forEach(function(t){
@@ -5015,7 +5016,7 @@ var _jobsUnsub=null; // holds the Firestore snapshot unsubscribe function
 function $(id){return document.getElementById(id);}
 function txt(id,t){var el=$(id);if(el)el.textContent=String(t);}
 function on(id,ev,fn){var el=$(id);if(el)el.addEventListener(ev,fn);}
-function goTo(id){_tcNavTrack(id);dismissSplashScreen();document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var s=$(id);if(s){s.classList.add('active');s.scrollTop=0;}if(id==='s-notifications'&&typeof currentUid!=='undefined'&&currentUid)markDriverNotifsRead(currentUid);}
+function goTo(id){_tcNavTrack(id);dismissSplashScreen();document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var s=$(id);if(s){s.classList.add('active');s.scrollTop=0;}if(id==='s-notifications'&&typeof currentUid!=='undefined'&&currentUid)markDriverNotifsRead(currentUid);if(id==='s-pending'){try{_dPendingUI();}catch(e){}}}
 function val(id){return $(id)?$(id).value:'';}
 
 // ── Expose private IIFE functions to window so HTML onclick= attributes work ──
@@ -5087,6 +5088,96 @@ function toast(msg,dur){var t=$('toast');if(!t)return;t.textContent=msg;t.classL
 window._dHandleTcNotificationRoute=_dHandleTcNotificationRoute;
 window.toast=toast; // exported so other script blocks (e.g. the online/offline listener) can call it — without this, a bare `toast` reference outside this closure resolves to the <div id="toast"> element instead of the function, and calling it throws "toast is not a function"
 
+
+/* ---------- DRIVER WHO DRIVES FOR A TRUCK OWNER ---------- */
+function _dLinked(){return !!(dData&&dData.ownerLinked);}
+function _dSteps(){return _dLinked()?[0,1,3,4].concat(dData.payTo==='driver'?[5]:[]).concat([6]):[0,1,2,3,4,5,6];}
+function _dNx(cur){var a=_dSteps(),i=a.indexOf(cur);return (i>-1&&i<a.length-1)?a[i+1]:Math.min(cur+1,6);}
+function _dPv(cur){var a=_dSteps(),i=a.indexOf(cur);return i>0?a[i-1]:Math.max(cur-1,0);}
+function _dInvCode(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function _dLast9(v){var d=String(v||'').replace(/\D/g,'');return d.slice(-9);}
+/* Looks up the invite while the driver is still signing up. Calls back with {ok,inv} or {ok:false,msg}. */
+function _dCheckInvite(raw,phone,cb){
+  var FB=window._FB,code=_dInvCode(raw);
+  if(code.length<8){cb({ok:false,msg:'Enter the invite code the owner sent you.'});return;}
+  if(!FB){cb({ok:false,msg:'Not connected. Check your internet and try again.'});return;}
+  FB.getDoc(FB.doc(FB.db,'fleetInvites',code)).then(function(sn){
+    if(!sn.exists()){cb({ok:false,msg:'This code was not found. Check it with the owner.'});return;}
+    var iv=sn.data();
+    if(iv.status==='cancelled'){cb({ok:false,msg:'The owner cancelled this invite. Ask for a new one.'});return;}
+    if(iv.status==='used'){cb({ok:false,msg:'This code has already been used. Ask the owner for a new one.'});return;}
+    if(iv.expiresAtMs&&iv.expiresAtMs<Date.now()){cb({ok:false,msg:'This code has expired. Ask the owner for a new one.'});return;}
+    if(iv.phone&&_dLast9(iv.phone)!==_dLast9(phone)){cb({ok:false,msg:'This invite was made for a different phone number. Use the number the owner has for you.'});return;}
+    cb({ok:true,code:code,inv:iv});
+  }).catch(function(){cb({ok:false,msg:'Could not check the code. Check your internet and try again.'});});
+}
+function _dApplyInvite(code,iv){
+  var t=iv.truck||{};
+  dData.ownerLinked=true;dData.ownerUid=iv.ownerUid;dData.ownerName=iv.ownerName||'';dData.inviteCode=code;dData.payTo=iv.payTo==='driver'?'driver':'owner';dData.linkedTruckId=iv.truckId||'';
+  dData.plate=t.plate||'';dData.truck=t.name||'';dData.payloadCapacity=String(t.payload||'');dData.bodyType=t.body||'';dData.vin=t.vin||'';dData.engineNumber=t.engine||'';
+  dData.discExpiry=t.discExpiry||null;dData.gvm=dData.gvm||null;dData.needsPrdp=true;dData.ownership='owner';
+  dData.truckType=(dData.payloadCapacity?dData.payloadCapacity+'-Ton':'')+(dData.bodyType?((dData.payloadCapacity?', ':'')+dData.bodyType.charAt(0).toUpperCase()+dData.bodyType.slice(1)):'');
+  dData._inviteOk=code;
+}
+function _dLinkedUI(){
+  if(!_dLinked())return;
+  var g=function(i){return document.getElementById(i);},hide=function(i){var e=g(i);if(e)e.style.display='none';};
+  var sub=document.querySelector('#d-step-body .section-sub');
+  if(dStep===3){
+    ['disc-box','operator-box','bankproof-box'].forEach(hide);
+    var p=g('prdp-box');if(p){p.style.display='';
+      if(!g('d-prdpexp-l')){var w=document.createElement('div');w.className='fg';w.style.marginTop='10px';
+        w.innerHTML='<span class="fl">PrDP expiry date</span><input class="fi" type="date" id="d-prdpexp-l" value="'+(dData.prdpExpiry||'')+'"/>';p.parentNode.insertBefore(w,p.nextSibling);}}
+    if(sub)sub.textContent='Add your own driver licence and your PrDP (Professional Driving Permit). You must have both. The truck papers are already with the owner.';
+    var er=g('d-edocs');if(er)er.textContent='Please add your driver licence, your PrDP photo and the PrDP expiry date. A PrDP that has expired is not accepted.';
+  }
+  if(dStep===4){
+    hide('truckphoto-box');
+    if(sub)sub.textContent='A quick photo of you. Customers see it on the tracking page, so they know the right person is arriving.';
+    var e2=g('d-ecaps');if(e2)e2.textContent='Please add your selfie to continue.';
+  }
+}
+function _dPendingUI(){
+  var lk=_dLinked(),a=document.getElementById('pend-vehdocs'),b=document.getElementById('pend-bankrow');
+  if(a)a.style.display=lk?'none':'';
+  if(b)b.style.display=(lk&&dData.payTo!=='driver')?'none':'';
+}
+function _dAfterReg(){
+  if(_dLinked()){goTo('s-pending');try{txt('pend-sub-val','Covered by your truck owner');}catch(e){}}
+  else goTo('s-subscription');
+}
+function _dClearInvite(){['ownerLinked','ownerUid','ownerName','inviteCode','payTo','linkedTruckId','_inviteOk'].forEach(function(k){delete dData[k];});}
+/* After the account exists: mark the invite as used and save the link. Safe to run twice. */
+function _dClaim(uid){
+  var FB=window._FB,code=dData.inviteCode,ref=FB.doc(FB.db,'fleetInvites',code);
+  return FB.getDoc(ref).then(function(sn){
+    if(!sn.exists())throw new Error('This invite code is no longer valid.');
+    var iv=sn.data();
+    if(iv.status==='used'&&iv.usedBy===uid)return;
+    if(iv.status!=='open'||(iv.expiresAtMs&&iv.expiresAtMs<Date.now()))throw new Error('This invite code was already used or has expired. Ask the owner for a new one.');
+    return FB.updateDoc(ref,{status:'used',usedBy:uid,usedByName:dData.name||'',usedByPhone:dData.phone||'',usedAt:new Date().toISOString()});
+  }).then(function(){
+    if(dData.payTo!=='owner')return null;
+    return FB.getDoc(FB.doc(FB.db,'fleetInvites',code,'payout','bank')).then(function(p){return p.exists()?p.data():null;}).catch(function(){return null;});
+  }).then(function(po){
+    var l={uid:uid,ownerUid:dData.ownerUid,truckId:dData.linkedTruckId||'',code:code,payTo:dData.payTo,active:true,updatedAt:new Date().toISOString()};
+    if(po&&po.bank)l.payout={bank:po.bank,accountHolder:po.accountHolder||'',accountNumber:po.accountNumber||'',accountType:po.accountType||'',branchCode:po.branchCode||''};
+    return FB.setDoc(FB.doc(FB.db,'fleetLinks',uid),l);
+  });
+}
+var _tcLinkOn=false;
+function _tcWatchLink(){
+  try{
+    if(_tcLinkOn||!dData||!dData.ownerLinked||!currentUid||!window._FB)return;_tcLinkOn=true;
+    var FB=window._FB;
+    FB.onSnapshot(FB.doc(FB.db,'fleetLinks',currentUid),function(sn){
+      var d=sn.exists()?sn.data():null;window._tcLinkData=d;
+      window._tcLinkActive=!!(d&&d.active!==false);
+      if(!window._tcLinkActive&&isOnline){try{toggleOnline();toast('Your truck owner removed you from this truck.');}catch(e){}}
+    },function(){});
+  }catch(e){}
+}
+
 function stepBar(steps,cur){
   var el=$('d-stepbar');if(!el)return;
   el.innerHTML=steps.map(function(s,i){
@@ -5096,10 +5187,12 @@ function stepBar(steps,cur){
 }
 
 function renderStep(){
+  setTimeout(function(){try{_dLinkedUI();}catch(e){}},40);
   setTimeout(function(){try{window._tcInjectIdScan&&window._tcInjectIdScan();}catch(e){}},30);
   var badge=document.getElementById('auth-step-badge');
-  if(badge)badge.textContent='STEP '+(dStep+1)+'/7';
-  stepBar(['Info','License','Vehicle','Docs','Selfie','Bank','T&C'],dStep);
+  var _nm=['Info','License','Vehicle','Docs','Selfie','Bank','T&C'],_sa=_dSteps();
+  if(badge)badge.textContent='STEP '+(Math.max(_sa.indexOf(dStep),0)+1)+'/'+_sa.length;
+  stepBar(_sa.map(function(i){return _nm[i];}),Math.max(_sa.indexOf(dStep),0));
   var body=$('d-step-body');if(!body)return;
   var bankOpts=BANKS.map(function(b){return'<option value="'+b+'">'+b+'</option>';}).join('');
   var provOpts=PROVS.map(function(p){return'<option value="'+p+'">'+p+'</option>';}).join('');
@@ -5108,7 +5201,8 @@ function renderStep(){
     body.innerHTML='<div class="section-title">Driver Info</div><div class="section-sub">Details must match your official documents.</div>'+
       '<div class="sec-badge">🔒 Your details are stored securely and only used to verify you</div>'+
       (TC_COUNTRIES.length<2?'<div style="display:none">':'<div class="fg">')+'<span class="fl">Country</span><select class="fs" id="d-country" onchange="window._dAcctUI&&window._dAcctUI()">'+TC_COUNTRIES.map(function(c){return '<option value="'+c[0]+'"'+((dData.country||'ZA')===c[0]?' selected':'')+'>'+c[1]+'</option>';}).join('')+'</select><div id="d-country-note" style="display:none;font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.45;">Drivers outside South Africa are not checked by TruckConnect. You enter your details yourself and the customer sees that they are not verified.</div></div>'+
-      '<div class="fg"><span class="fl">Account type</span><select class="fs" id="d-accttype" onchange="window._dAcctUI&&window._dAcctUI()"><option value="individual"'+((dData.entityType||'individual')==='individual'?' selected':'')+'>Individual driver</option><option value="company"'+(dData.entityType==='company'?' selected':'')+'>Company / fleet owner</option></select></div>'+
+      '<div class="fg"><span class="fl">Account type</span><select class="fs" id="d-accttype" onchange="window._dAcctUI&&window._dAcctUI()"><option value="individual"'+((dData.entityType||'individual')==='individual'?' selected':'')+'>Individual driver</option><option value="company"'+(dData.entityType==='company'?' selected':'')+'>Company / fleet owner</option><option value="owner_driver"'+(dData.ownerLinked?' selected':'')+'>I drive for a truck owner</option></select></div>'+
+      '<div id="d-inv-wrap" style="display:none;"><div class="fg"><span class="fl">Invite code from the owner</span><input class="fi" id="d-invite" maxlength="14" autocapitalize="characters" placeholder="e.g. 7K4P2-9XQ5M" value="'+(dData.inviteCode||'')+'"/><div class="err-msg" id="d-einv"></div><div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45;">The truck owner makes this code in their app and sends it to you on WhatsApp. Use the same phone number they have for you.</div></div></div>'+
       '<div id="d-co-wrap" style="display:none;"><div class="fg"><span class="fl">Company Name</span><input class="fi" id="d-coname" maxlength="80" placeholder="Registered company name" value="'+(dData.companyName||'')+'"/><div class="err-msg" id="d-econame"></div></div>'+
       '<div class="fg"><span class="fl">Company Registration Number</span><input class="fi" id="d-coreg" maxlength="30" placeholder="e.g. 2015/123456/07" value="'+(dData.companyReg||'')+'"/><div class="err-msg" id="d-ecoreg"></div></div></div>'+
       '<div class="fg"><span class="fl">Full Name</span><input class="fi" id="d-name" placeholder="As on your ID" value="'+(dData.name||'')+'"/><div class="err-msg" id="d-en"></div></div>'+
@@ -5131,6 +5225,7 @@ function renderStep(){
       var c=document.getElementById('d-country'),a=document.getElementById('d-accttype');
       var w=document.getElementById('d-co-wrap'),n=document.getElementById('d-country-note');
       if(w)w.style.display=(a&&a.value==='company')?'block':'none';
+      var iw=document.getElementById('d-inv-wrap');if(iw)iw.style.display=(a&&a.value==='owner_driver')?'block':'none';
       if(n)n.style.display=(c&&c.value!=='ZA')?'block':'none';
     };
     window._dAcctUI();
@@ -5142,7 +5237,7 @@ function renderStep(){
       '<div class="fg"><span class="fl">Licence Class / Code (optional)</span><input class="fi" id="d-lic-text" maxlength="30" placeholder="As on your driver\'s licence" value="'+((dData.licenseCode&&dData.licenseCode!=='FOREIGN')?dData.licenseCode:'')+'"/></div>'+
       '<label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:14px;background:rgba(255,255,255,.06);border:1.5px solid var(--border);border-radius:12px;margin-bottom:16px;"><input type="checkbox" id="d-age18" style="width:18px;height:18px;accent-color:var(--dark);flex-shrink:0;margin-top:2px;"'+(dData.age18?' checked':'')+'/><span style="font-size:13px;color:#e6edf3;line-height:1.5;">I am 18 years or older and hold a valid driver\'s licence for this vehicle.</span></label><div class="err-msg" id="d-eage"></div>'+
       '<button class="btn btn-dark" id="d-next-btn">Continue →</button><button class="btn btn-outline" id="d-back-btn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>';
-    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=0;renderStep();});
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=_dPv(dStep);renderStep();});
   } else if(dStep===1){
     body.innerHTML='<div class="section-title">Your License Details</div><div class="section-sub">We use this to confirm you\'re legally allowed to drive for TruckConnect.</div>'+
       '<div class="fg"><span class="fl">Full Name</span><input class="fi" id="d-lic-name" placeholder="As it appears on your ID" value="'+(dData.name||'')+'"/><div class="err-msg" id="d-elname"></div></div>'+
@@ -5175,7 +5270,7 @@ function renderStep(){
         st.innerHTML='<span style="color:var(--red);">❌ Invalid SA ID number — please check</span>';
       }
     };
-    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=0;renderStep();});
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=_dPv(dStep);renderStep();});
   } else if(dStep===2){
     body.innerHTML='<div class="section-title">Your Vehicle</div><div class="section-sub">This helps us match you with loads your truck can actually carry.</div>'+
       '<div class="fg"><span class="fl">Registration Number</span><input class="fi" id="d-plate" placeholder="e.g. GP 123-456" value="'+(dData.plate||'')+'"/><div class="err-msg" id="d-epl"></div></div>'+
@@ -5202,13 +5297,13 @@ function renderStep(){
         if(lb&&!/optional/i.test(lb.textContent))lb.textContent=lb.textContent.replace('PrDP (Goods) Expiry Date','PrDP / permit expiry date')+' (optional)';
       });
     }
-    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=1;renderStep();});
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=_dPv(dStep);renderStep();});
   } else if(dStep===3&&_tcIsForeign()){
     body.innerHTML='<div class="section-title">Your Documents</div><div class="section-sub">Drivers outside South Africa do not upload documents in the app.</div>'+
       '<div style="background:#fff6e0;border:1px solid #f1d28a;color:#7a5200;border-radius:14px;padding:14px;font-size:13.5px;line-height:1.55;margin-bottom:16px;"><b>What happens next</b><br/>TruckConnect connects you with customers but does not check your licence, permits or truck papers. Keep them with you, and have your driver\'s licence, truck papers and any cross-border permit ready to show the customer. We may also contact you on WhatsApp or email to confirm your details.</div>'+
       '<div class="err-msg" id="d-edocs" style="display:none;"></div>'+
       '<button class="btn btn-dark" id="d-next-btn">Continue →</button><button class="btn btn-outline" id="d-back-btn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>';
-    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=2;renderStep();});
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=_dPv(dStep);renderStep();});
   } else if(dStep===3){
     body.innerHTML='<div class="section-title">Upload Your Documents</div><div class="section-sub">Tap each card to add a photo. Make sure text is clear and readable.</div>'+
       '<div class="err-msg" id="d-edocs" style="margin-bottom:8px;">Please upload all the documents to continue.</div>'+
@@ -5218,7 +5313,7 @@ function renderStep(){
       '<div class="upload-box" id="operator-box" style="border-color:'+(dData.operatorCardPhoto?'#4ade80':'')+'"><div style="font-size:28px;margin-bottom:8px;" id="operator-icon">'+(dData.operatorCardPhoto?'✅':'🪪')+'</div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Operator Card</div><div style="font-size:11px;color:var(--muted);" id="operator-status">'+(dData.operatorCardPhoto?'<span style="color:#166534;">Uploaded ✓</span>':(dData.needsPrdp?'Required for vehicles over 3,500 kg':'Add it if your truck is over 3,500 kg'))+'</div><input type="file" id="operator-file" accept="image/*,application/pdf,.pdf,.jpg,.jpeg,.png"/></div>'+
       '<div class="upload-box" id="bankproof-box" style="display:none;border-color:'+(dData.bankProofPhoto?'#4ade80':'')+'"><div style="font-size:28px;margin-bottom:8px;" id="bankproof-icon">'+(dData.bankProofPhoto?'✅':'🏦')+'</div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Proof of Bank Account</div><div style="font-size:11px;color:var(--muted);" id="bankproof-status">'+(dData.bankProofPhoto?'<span style="color:#166534;">Uploaded ✓</span>':'Tap to add a photo')+'</div><input type="file" id="bankproof-file" accept="image/*,application/pdf,.pdf,.jpg,.jpeg,.png"/></div>'+
       '<button class="btn btn-dark" id="d-next-btn">Continue →</button><button class="btn btn-outline" id="d-back-btn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>';
-    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=2;renderStep();});
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=_dPv(dStep);renderStep();});
     setTimeout(function(){
       function wireDoc(key,fileId,iconId,boxId,statusId,flagKey){
         var f=document.getElementById(fileId);
@@ -5249,7 +5344,7 @@ function renderStep(){
       '<div class="upload-box" id="selfiecap-box" style="border-color:'+(dData.selfiePhoto?'#4ade80':'')+'"><div id="selfie-preview" style="display:'+(dData.selfiePhoto?'block':'none')+';margin-bottom:8px;"><img id="selfie-img" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--dark);" src="'+(dData.selfiePhoto||'')+'"/></div><div style="font-size:28px;margin-bottom:8px;" id="selfiecap-icon">'+(dData.selfiePhoto?'✅':'🤳')+'</div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Live Selfie</div><div style="font-size:11px;color:var(--muted);" id="selfiecap-status">'+(dData.selfiePhoto?'<span style="color:#166534;">Uploaded ✓</span>':'Tap to open camera')+'</div><button type="button" id="selfie-uas-btn" style="display:inline-block;background:var(--dark);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;border:none;">📷 '+(dData.selfiePhoto?'Retake':'Take')+' Selfie</button></div>'+
       '<div class="upload-box" id="truckphoto-box" style="border-color:'+(dData.truckPhoto?'#4ade80':'')+'"><div style="font-size:28px;margin-bottom:8px;" id="truckphoto-icon">'+(dData.truckPhoto?'✅':'🚛')+'</div><div style="font-size:13px;font-weight:500;margin-bottom:4px;">Your truck</div><div style="font-size:11px;color:var(--muted);" id="truckphoto-status">'+(dData.truckPhoto?'<span style="color:#166534;">Photo uploaded ✓</span>':'Photo of your truck. Number plate visible')+'</div>'+(dData.truckPhoto?'<img src="'+dData.truckPhoto+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:10px;" alt="Truck">':'')+'<input type="file" id="truckphoto-file" accept="image/*"/></div>'+
       '<button class="btn btn-dark" id="d-next-btn">Continue →</button><button class="btn btn-outline" id="d-back-btn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>';
-    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=3;renderStep();});
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=_dPv(dStep);renderStep();});
     setTimeout(function(){
       var selfieBtn=document.getElementById('selfie-uas-btn');
       if(selfieBtn){selfieBtn.addEventListener('click',function(){
@@ -5287,7 +5382,7 @@ function renderStep(){
       '<div class="err-msg" id="wb-err" style="margin-bottom:8px;"></div>'+
       '<button class="btn btn-dark" id="d-next-btn">Continue →</button><button class="btn btn-outline" id="d-skip-btn">Skip for now (cash only)</button><button class="btn btn-outline" id="d-back-btn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>';
     window._tcBankWire('wb-');
-    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=4;renderStep();});
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=_dPv(dStep);renderStep();});
     on('d-skip-btn','click',function(){dStep=6;_saveOBState();renderStep();});
   } else if(dStep===6){
     body.innerHTML='<div class="section-title">Terms & Conditions</div><div class="section-sub">Please read and accept before completing registration.</div>'+
@@ -5308,7 +5403,7 @@ function renderStep(){
       '<span style="font-size:13px;color:var(--text);line-height:1.5;">I have read and agree to the TruckConnect Driver Terms &amp; Conditions and the <a href="privacy.html" target="_blank" rel="noopener" style="color:#1677F2;">Privacy Policy</a>. <a href="terms.html#drivers" target="_blank" rel="noopener" style="color:#1677F2;">Read the full terms</a></span></label>'+
       '<div class="err-msg" id="d-tc-err" style="margin-bottom:8px;"></div>'+
       '<button class="btn btn-dark" id="d-next-btn">Complete Registration →</button><button class="btn btn-outline" id="d-back-btn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>';
-    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=5;renderStep();});
+    on('d-next-btn','click',dNext);on('d-back-btn','click',function(){dStep=_dPv(dStep);renderStep();});
   }
 }
 
@@ -5327,12 +5422,25 @@ function dNext(){
       if(_coR.length<5){showErr('d-ecoreg','Company registration number required');ok=false;}else hideErr('d-ecoreg');
     }
     var isFake = /temp|trash|mailinator|disposable|fake/i.test(e);
+    if(_acct==='owner_driver'&&!_dInvCode(val('d-invite'))){showErr('d-einv','Enter the invite code the owner sent you.');ok=false;}else hideErr('d-einv');
     if(!e.includes('@')){ showErr('d-ee','Valid email required'); ok=false; }
     else if(isFake){ showErr('d-ee','Please use a permanent email address'); ok=false; }
     else { hideErr('d-ee'); }
     if(w.length<6){showErr('d-ew','Minimum 6 characters');ok=false;}else hideErr('d-ew');
+    if(ok&&_acct==='owner_driver'){
+      var _ic=_dInvCode(val('d-invite'));
+      if(dData._inviteOk!==_ic){
+        var _nb=$('d-next-btn');if(_nb){_nb.disabled=true;_nb.textContent='Checking code…';}
+        _dCheckInvite(_ic,p,function(r){
+          if(_nb){_nb.disabled=false;_nb.textContent='Continue →';}
+          if(!r.ok){showErr('d-einv',r.msg);return;}
+          hideErr('d-einv');_dApplyInvite(r.code,r.inv);dNext();
+        });
+        return;
+      }
+    } else if(ok){_dClearInvite();}
     if(!ok)return; // strict outside dev mode — Firebase Auth genuinely needs a real email+password; in dev mode steps pass so every screen can be screenshotted
-    dData.name=n;dData.phone=p;dData.email=e;dData.password=w;dData.country=_ctry;dData.entityType=_acct;dData.companyName=(_acct==='company')?_coN:'';dData.companyReg=(_acct==='company')?_coR:'';dStep=1;_saveOBState();renderStep();
+    dData.name=n;dData.phone=p;dData.email=e;dData.password=w;dData.country=_ctry;dData.entityType=(_acct==='owner_driver'?'individual':_acct);dData.companyName=(_acct==='company')?_coN:'';dData.companyReg=(_acct==='company')?_coR:'';dStep=_dNx(dStep);_saveOBState();renderStep();
   } else if(dStep===1&&_tcIsForeign()){
     var fname=val('d-lic-name').trim(),fid=(val('d-idnum')||'').trim(),flic=(val('d-lic-text')||'').trim();
     var fok=true;
@@ -5342,7 +5450,7 @@ function dNext(){
     if(!fok)return;
     var _cn=''; TC_COUNTRIES.forEach(function(c){if(c[0]===dData.country)_cn=c[1];});
     dData.name=fname;dData.idNumber=fid;dData.idType='Foreign ID / Passport';dData.passportCountry=_cn||dData.country;dData.licenseCode=flic||'FOREIGN';dData.age18=true;
-    dStep=2;_saveOBState();renderStep();
+    dStep=_dNx(dStep);_saveOBState();renderStep();
   } else if(dStep===1){
     var lname=val('d-lic-name').trim();
     var _permit=(val('d-idtype')==='permit');
@@ -5360,7 +5468,7 @@ function dNext(){
       if(!lic){showErr('d-elic','Please select your license code');ok=false;}else hideErr('d-elic');
       if(!ok)return;
       dData.name=lname;dData.idNumber=ppn;dData.idType='Passport + SA permit';dData.passportCountry=nat;dData.permitNumber=pmn;dData.permitExpiry=pmx;dData.licenseCode=lic;dData.age18=true;
-      dStep=2;_saveOBState();renderStep();return;
+      dStep=_dNx(dStep);_saveOBState();renderStep();return;
     }
     dData.permitNumber='';dData.permitExpiry='';
     if(!validateSAID(id)){showErr('d-eid','Invalid SA ID number. Please check and try again.');ok=false;}
@@ -5369,7 +5477,7 @@ function dNext(){
     if(!lic){showErr('d-elic','Please select your license code');ok=false;}else hideErr('d-elic');
     if(!ok)return;
     dData.name=lname;dData.idNumber=id;dData.idType='SA ID';dData.licenseCode=lic;
-    dStep=2;_saveOBState();renderStep();
+    dStep=_dNx(dStep);_saveOBState();renderStep();
   } else if(dStep===2){
     var pl=val('d-plate').trim(),t=val('d-truck').trim(),vin=val('d-vin').trim().toUpperCase(),eng=val('d-engine').trim().toUpperCase(),payload=val('d-payload'),body_=val('d-bodytype'),discexp=val('d-discexp');
     var ok=true,_fx=_tcIsForeign();
@@ -5390,19 +5498,20 @@ function dNext(){
     if(!ok)return;
     dData.plate=pl;dData.truck=t;dData.vin=vin;dData.engineNumber=eng;dData.payloadCapacity=payload;dData.gvm=gvm;dData.needsPrdp=heavy;dData.prdpExpiry=heavy?pexp:((_fx&&pexp)?pexp:null);dData.bodyType=body_;dData.discExpiry=discexp||null;dData.ownership=val('d-owner')||null;dData.xPermit=_fx?((val('d-xperm')||'').trim()||null):null;dData.courierVehicle=($('d-courierveh')||{}).value||'';try{var _pt=parseFloat(payload);if(_pt>(window.TC_RETURN_MAX_T||10))dData.courierVehicle='';}catch(e){}
     dData.truckType=(payload?payload+'-Ton':'')+(body_?((payload?', ':'')+body_.charAt(0).toUpperCase()+body_.slice(1)):''); // kept for backward-compat with admin app display
-    dStep=3;_saveOBState();renderStep();
+    dStep=_dNx(dStep);_saveOBState();renderStep();
   } else if(dStep===3){
-    if(!_tcIsForeign()&&!_tcIsTest()&&(!dData.licensePhoto||!dData.discPhoto||(dData.needsPrdp&&(!dData.prdpPhoto||!dData.operatorCardPhoto)))){
+    if(_dLinked()){var _pe=val('d-prdpexp-l');if(_pe&&_pe>=_tcTodayStr())dData.prdpExpiry=_pe;else dData.prdpExpiry=null;}
+    if(!_tcIsForeign()&&!_tcIsTest()&&(_dLinked()?(!dData.licensePhoto||!dData.prdpPhoto||!dData.prdpExpiry):(!dData.licensePhoto||!dData.discPhoto||(dData.needsPrdp&&(!dData.prdpPhoto||!dData.operatorCardPhoto))))){
       var e=document.getElementById('d-edocs');if(e)e.style.display='block';
       return;
     }
-    dStep=4;_saveOBState();renderStep();
+    dStep=_dNx(dStep);_saveOBState();renderStep();
   } else if(dStep===4){
-    if(!_tcIsTest()&&(!dData.selfiePhoto||!dData.truckPhoto)){
+    if(!_tcIsTest()&&(!dData.selfiePhoto||(!_dLinked()&&!dData.truckPhoto))){
       var e2=document.getElementById('d-ecaps');if(e2)e2.style.display='block';
       return;
     }
-    dStep=5;_saveOBState();renderStep();
+    dStep=_dNx(dStep);_saveOBState();renderStep();
   } else if(dStep===5){
     // Bank details are optional: all empty = skip (cash only); if anything is filled, it must be complete.
     var _bk=window._tcBankRead('wb-');
@@ -5410,7 +5519,7 @@ function dNext(){
     if(_any&&_bk.err){showErr('wb-err',_bk.err);return;}
     hideErr('wb-err');
     ['bank','accountHolder','accountNumber','accountType','branchCode'].forEach(function(k){if(_any)dData[k]=_bk.data[k];else delete dData[k];});
-    dStep=6;_saveOBState();renderStep();
+    dStep=_dNx(dStep);_saveOBState();renderStep();
   } else if(dStep===6){
     if((!$('d-tc-agree')||!$('d-tc-agree').checked)){showErr('d-tc-err','You must accept the Terms & Conditions to continue');return;}
     // Dev/screenshot mode with no real credentials entered: go straight to the next screen (no Firebase account is created)
@@ -5458,7 +5567,7 @@ function handleGoogleAuth(mode){
             saveSession();
   // Request notification permission after login — saves/refreshes the
   // FCM token on this driver's Firestore doc
-  if(window.requestNotifPermission) window.requestNotifPermission();
+  if(window.Notification&&Notification.permission==='granted'&&window.requestNotifPermission) window.requestNotifPermission();
             if(dData.status==='approved')goToDriverHome();
             else{goTo('s-pending');txt('pend-sub-val', dData.trialStartDate ? '✅ Free Trial Active (' + trialDaysLeft() + ' days left)' : '—');}
           } else {
@@ -5518,6 +5627,11 @@ function createAccount(){
 
   function saveDriverDoc(uid){
     if(!uid){return Promise.reject(new Error('Missing user ID — please try again.'));}
+    if(dData.ownerLinked&&!dData._claimedFor){return _dClaim(uid).then(function(){dData._claimedFor=uid;return saveDriverDocCore(uid);});}
+    return saveDriverDocCore(uid);
+  }
+  function saveDriverDocCore(uid){
+    if(!uid){return Promise.reject(new Error('Missing user ID — please try again.'));}
     // Upload the licence disc photo to Firebase Storage now that we have a real uid
     // (during the upload step earlier we only had the file in memory — no account existed yet).
     window._tcUploadFails=[];window._tcUploadFailedNow=[];
@@ -5555,6 +5669,7 @@ function createAccount(){
       docData.entityType=dData.entityType==='company'?'company':'individual';
       if(docData.entityType==='company'){docData.companyName=dData.companyName||'';docData.companyReg=dData.companyReg||'';docData.companyStatus='pending';}
       docData.ownership=dData.ownership||null;
+      if(dData.ownerLinked){docData.ownerLinked=true;docData.ownerUid=dData.ownerUid||'';docData.ownerName=dData.ownerName||'';docData.inviteCode=dData.inviteCode||'';docData.payTo=dData.payTo||'owner';docData.linkedTruckId=dData.linkedTruckId||'';docData.ownership='owner';}
       if(docData.country!=='ZA'){docData.foreign=true;docData.docsVerified=false;docData.crossBorderPermit=dData.xPermit||null;if(dData.prdpExpiry)docData.prdpExpiry=dData.prdpExpiry;}
       if(_tcIsTest())docData.testAccount=true;
       docData.licenceExpiry=(dData.licenceScan&&dData.licenceScan.expiry_date)||null;
@@ -5630,7 +5745,7 @@ function createAccount(){
       _isRegistering=false;
       Object.assign(dData,doc);dData._authExists=false;delete dData.password;saveSession();
       if(btn){btn.disabled=false;btn.textContent='Complete Registration →';}
-      goTo('s-subscription');
+      _dAfterReg();
     })
     .catch(function(err){
       _isRegistering=false;
@@ -5647,7 +5762,7 @@ function createAccount(){
       _isRegistering=false;
       Object.assign(dData,doc);delete dData.password;saveSession();_clearOBState();
       if(btn){btn.disabled=false;btn.textContent='Complete Registration →';}
-      goTo('s-subscription');
+      _dAfterReg();
     })
     .catch(function(err){
       if(err.code==='auth/email-already-in-use'){
@@ -5671,7 +5786,7 @@ function createAccount(){
             saveDriverDoc(currentUid).then(function(doc){
               _isRegistering=false;
               Object.assign(dData,doc);delete dData.password;saveSession();
-              goTo('s-subscription');
+              _dAfterReg();
             }).catch(function(e2){
               _isRegistering=false;
               showErr('d-tc-err','Could not save account: '+(e2.message||e2.code));
@@ -5725,6 +5840,7 @@ function goToDriverHome(){
   // Refresh/save this device's push token every time the driver reaches home (no prompt if already allowed)
   try{if(window.Notification&&Notification.permission==='granted'&&window.requestNotifPermission)window.requestNotifPermission();}catch(e){}
   try { _tcWatchSubscription(); } catch (e) {}
+  try { _tcWatchLink(); } catch (e) {}
   // Trial check — block expired drivers before showing the home screen
   if (dData && dData.trialStartDate) {
     var status = checkTrialStatus();
@@ -5989,6 +6105,7 @@ function _tcTodayStr(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMo
 function _tcWorkBlockReason(){
   if(!currentUid||!dData)return '';
   if(dData.status!=='approved')return 'Your account is not approved yet.';
+  if(dData.ownerLinked&&window._tcLinkActive===false)return 'Your truck owner removed you from this truck.';
   var t=_tcTodayStr();
   if(dData.licenceExpiry&&String(dData.licenceExpiry)<t)return 'Your driver\'s licence has expired. Renew it to go online.';
   if(dData.prdpExpiry&&String(dData.prdpExpiry)<t)return 'Your PrDP has expired. Upload a valid one to go online.';
@@ -8876,8 +8993,22 @@ var _podPhotoData = null;
 
 window._submitPOD = function() {
   if (window._podBusy) return;
+  // EFT: ask the database, not this phone's old copy, whether the money was already confirmed
   try { var _pj = acceptedJobs.find(function(j){return j.id === _podJobId;});
-    if (_pj && _pj.payMethod === 'eft' && _pj.paymentStatus !== 'received' && !confirm('This customer is paying by EFT and you have not confirmed the money yet. Complete delivery anyway?')) return; } catch(e) {}
+    if (_pj && _pj.payMethod === 'eft' && _pj.paymentStatus !== 'received') {
+      var _FBq = window._FB, _askMsg = 'This customer is paying by EFT and you have not confirmed the money yet. Complete delivery anyway?';
+      if (_FBq) { _FBq.getDoc(_FBq.doc(_FBq.db, 'bookings', _podJobId)).then(function(s){
+          var fresh = s.exists() && s.data().paymentStatus === 'received';
+          if (fresh) _pj.paymentStatus = 'received';
+          if (fresh || confirm(_askMsg)) _submitPODgo();
+        }).catch(function(){ if (confirm(_askMsg)) _submitPODgo(); });
+        return; }
+      if (!confirm(_askMsg)) return;
+    } } catch(e) {}
+  _submitPODgo();
+};
+function _submitPODgo() {
+  if (window._podBusy) return;
   var note = ($('pod-note') || {}).value || '';
   var FB = window._FB;
   var btn = $('pod-submit-btn');
@@ -11341,14 +11472,22 @@ try{TCCall.init('driver',function(bid){var j=(typeof acceptedJobs!=='undefined'?
     else if(o.branchCode.length!==6)err='Branch code must be 6 digits';
     return {data:o,err:err};
   };
-  async function loadBank(){
+  async function loadBank(forPayout){
     var FB=window._FB;if(!FB||!currentUid)return {};
+    if(forPayout){
+      /* A driver who drives for a truck owner shows the owner's account when the owner is the one who gets paid */
+      try{
+        var _ls=await FB.getDoc(FB.doc(FB.db,'fleetLinks',currentUid));
+        if(_ls.exists()){var _l=_ls.data();if(_l.payTo==='owner'&&_l.payout&&_l.payout.bank)return {bank:_l.payout.bank,accountHolder:_l.payout.accountHolder||'',accountNumber:_l.payout.accountNumber||'',accountType:_l.payout.accountType||'',branchCode:_l.payout.branchCode||''};}
+      }catch(e){}
+    }
     var s=await FB.getDoc(FB.doc(FB.db,'driverPrivate',currentUid));
     var d=s.exists()?s.data():{},out={};
     for(var i=0;i<FIELDS.length;i++){var k=FIELDS[i];out[k]=d[k]?(d._encrypted===false?d[k]:await window._tcDecryptField(currentUid,d[k])):'';}
     return out;
   }
 
+  window._tcLoadBank=function(){return loadBank(false);};
   window.tcOpenBankSheet=async function(opts){
     opts=opts||{};
     var old=el('tc-bank-ov');if(old)old.remove();
@@ -11386,7 +11525,7 @@ try{TCCall.init('driver',function(bid){var j=(typeof acceptedJobs!=='undefined'?
     try{
       if(!job||!job.id||job.payMethod!=='eft')return;
       var FB=window._FB;if(!FB||!currentUid)return;
-      var b=await loadBank();
+      var b=await loadBank(true);
       if(!b.bank||!b.accountNumber||!b.accountHolder){ if(!(o&&o.silent))window.tcOpenBankSheet({job:job}); return; }
       var _co={};try{var _ds=await FB.getDoc(FB.doc(FB.db,'drivers',currentUid));var _dd=_ds.exists()?_ds.data():{};if(_dd.entityType==='company')_co={isCompany:true,companyName:String(_dd.companyName||''),companyReg:String(_dd.companyReg||'')};}catch(e){}
       await FB.setDoc(FB.doc(FB.db,'bookings',job.id,'payout','bank'),Object.assign({
@@ -11731,6 +11870,70 @@ function compressImg(file){return new Promise(function(res,rej){var u=URL.create
  im.onerror=function(){URL.revokeObjectURL(u);rej(new Error('img'));};im.src=u;});}
 function upDoc(file,tid,key){var f=FBx();return compressImg(file).then(function(b){var p='driver-docs/'+UID()+'/truck-'+tid+'-'+key+'-'+Date.now()+'.jpg';
  return f.uploadBytes(f.storageRef(f.storage,p),b,{contentType:'image/jpeg'}).then(function(){return p;});});}
+
+/* ---------- INVITE A DRIVER WHO HAS THE APP ---------- */
+function newInvCode(){var A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',o='',r=new Uint32Array(10);(window.crypto||window.msCrypto).getRandomValues(r);for(var i=0;i<10;i++)o+=A[r[i]%A.length];return o;}
+function fmtInv(c){c=String(c||'');return c.length===10?c.slice(0,5)+'-'+c.slice(5):c;}
+function waNum(p){var d=String(p||'').replace(/\D/g,'');if(d.charAt(0)==='0')d='27'+d.slice(1);return d;}
+/* Creates the invite (or refreshes an open one, or updates who gets paid when already linked). Returns the code to show, or '' when nothing to show. */
+window._tcOwnerInvite=async function(item){
+ var f=FBx(),db=f.db,uid=UID();
+ try{
+  var bank=null;if(item.payTo==='owner'){bank=await window._tcLoadBank();}
+  var code=item.inviteCode||'',cur=null;
+  if(code){var sn=await f.getDoc(f.doc(db,'fleetInvites',code));if(sn.exists())cur=sn.data();}
+  var payout=(bank&&bank.bank)?{bank:bank.bank,accountHolder:bank.accountHolder||'',accountNumber:bank.accountNumber||'',accountType:bank.accountType||'',branchCode:bank.branchCode||''}:null;
+  if(cur&&cur.status==='used'){
+   /* already linked: only the money choice can change */
+   var lk={payTo:item.payTo,updatedAt:new Date().toISOString()};if(item.payTo==='owner'&&payout)lk.payout=payout;
+   await f.updateDoc(f.doc(db,'fleetLinks',cur.usedBy),lk);
+   await f.updateDoc(f.doc(db,'fleetInvites',code),{payTo:item.payTo});
+   return '';
+  }
+  var truck={name:item.name||'',plate:item.plate||'',payload:item.payload||'',body:String(item.body||'').toLowerCase(),vin:item.vin||'',engine:item.engine||'',discExpiry:item.discExpiry||null,kind:item.kind||'rigid'};
+  var base={ownerUid:uid,ownerName:(me.companyName||me.name||''),truckId:item.id,truck:truck,driverName:item.dname||'',phone:item.dphone||'',payTo:item.payTo};
+  if(cur&&cur.status==='open'&&cur.expiresAtMs>Date.now()){
+   await f.updateDoc(f.doc(db,'fleetInvites',code),base);
+  }else{
+   code=newInvCode();
+   await f.setDoc(f.doc(db,'fleetInvites',code),Object.assign({status:'open',createdAt:new Date().toISOString(),expiresAtMs:Date.now()+7*86400000},base));
+  }
+  await f.setDoc(f.doc(db,'fleetInvites',code,'payout','bank'),payout?payout:{none:true});
+  if(item.inviteCode!==code){item.inviteCode=code;var n=(me.fleet||[]).map(function(x){return x.id===item.id?item:x;});await saveFleet(n);}
+  return code;
+ }catch(e){try{console.warn('invite failed',e);}catch(_){}say('Could not create the invite. Check your internet and try again.');return '';}
+};
+function showInvite(item,code){
+ var link=tcPublicPage('truckconnect-d.html');
+ var msg='Hi '+(item.dname||'')+', I added you as the driver of my truck '+(item.plate||'')+' on TruckConnect. Download the TruckConnect Driver app, choose "I drive for a truck owner" when you sign up, and enter this code: '+fmtInv(code)+'\n'+link;
+ var h='<div class="m" style="margin-bottom:12px">Send this code to '+E(item.dname||'your driver')+'. It works once, with the phone number '+E(item.dphone||'')+', and expires in 7 days.</div>'+
+  '<div class="card" style="text-align:center"><div style="font:700 28px ui-monospace,Menlo,monospace;letter-spacing:.08em;padding:10px 0">'+E(fmtInv(code))+'</div></div>'+
+  '<a class="btn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/'+waNum(item.dphone)+'?text='+encodeURIComponent(msg)+'">Send on WhatsApp</a>'+
+  '<button class="btn o" id="iv-copy">Copy message</button><button class="btn o" id="iv-done">Done</button>';
+ sheet('Invite '+(item.dname||'driver'),h,renderFleet);
+ $s('iv-copy').onclick=function(){try{navigator.clipboard.writeText(msg).then(function(){say('Copied');},function(){say('Could not copy. Use WhatsApp instead.');});}catch(e){say('Could not copy. Use WhatsApp instead.');}};
+ $s('iv-done').onclick=renderFleet;
+}
+function fillInvites(){
+ var f=FBx();if(!f||!document.querySelector('[data-inv]'))return;
+ f.getDocs(f.query(f.collection(f.db,'fleetInvites'),f.where('ownerUid','==',UID()))).then(function(qs){
+  var m={};qs.forEach(function(d){m[d.id]=d.data();});
+  document.querySelectorAll('[data-inv]').forEach(function(el){
+   var code=el.getAttribute('data-inv'),iv=m[code],i=el.getAttribute('data-i');
+   if(!iv){el.innerHTML='No invite yet. Tap Edit to create one.';return;}
+   if(iv.status==='used'){el.innerHTML='<b style="color:#16a34a">Linked</b> · '+E(iv.usedByName||'driver')+'<div class="m">Pays: '+(iv.payTo==='driver'?'the driver':'you, the owner')+'</div><button class="btn r" data-unlink="'+E(code)+'" data-uid="'+E(iv.usedBy)+'" style="margin-top:8px">Unlink driver</button>';return;}
+   if(iv.status==='cancelled'){el.innerHTML='Invite cancelled. Tap Edit to make a new one.';return;}
+   if(iv.expiresAtMs<Date.now()){el.innerHTML='Invite expired. Tap Edit, then Save, to make a new one.';return;}
+   el.innerHTML='<b style="color:#92400E">Waiting for driver</b> · code '+E(fmtInv(code))+'<div style="display:flex;gap:8px;margin-top:8px"><button class="btn o" data-showinv="'+i+'" style="margin:0">Show code</button><button class="btn r" data-cancelinv="'+E(code)+'" style="margin:0">Cancel invite</button></div>';
+  });
+  document.querySelectorAll('[data-showinv]').forEach(function(b){b.onclick=function(){var it=(me.fleet||[])[parseInt(b.getAttribute('data-showinv'),10)];if(it)showInvite(it,it.inviteCode);};});
+  document.querySelectorAll('[data-cancelinv]').forEach(function(b){b.onclick=function(){if(!confirm('Cancel this invite? The code will stop working.'))return;f.updateDoc(f.doc(f.db,'fleetInvites',b.getAttribute('data-cancelinv')),{status:'cancelled'}).then(function(){say('Invite cancelled');fillInvites();});};});
+  document.querySelectorAll('[data-unlink]').forEach(function(b){b.onclick=function(){if(!confirm('Unlink this driver? They can no longer take jobs on this truck.'))return;
+   var code=b.getAttribute('data-unlink'),du=b.getAttribute('data-uid');
+   Promise.all([f.updateDoc(f.doc(f.db,'fleetInvites',code),{status:'cancelled'}),f.updateDoc(f.doc(f.db,'fleetLinks',du),{active:false,endedAt:new Date().toISOString()})]).then(function(){
+     var n=(me.fleet||[]).map(function(x){if(x.inviteCode===code){x.inviteCode='';}return x;});return saveFleet(n);}).then(function(){say('Driver unlinked');renderFleet();}).catch(function(){say('Could not unlink. Try again.');});};});
+ }).catch(function(){document.querySelectorAll('[data-inv]').forEach(function(el){el.innerHTML='Could not load the invite status.';});});
+}
 function renderFleet(){var fl=me.fleet||[];var B=window._tcBill?window._tcBill(me):{total:0,lines:[]};
  var h='<div class="m" style="margin-bottom:14px">Add every truck you own. Your ID is already saved, so you only add the truck and its papers. '+B.lines.length+' billed now: <b>'+money2(B.total)+' a month</b>.</div>';
  if(me.truck||me.plate){var pc=(parseFloat(me.payloadCapacity)||0)>10?'Heavy · R 400':'Standard · R 300';
@@ -11739,7 +11942,7 @@ function renderFleet(){var fl=me.fleet||[];var B=window._tcBill?window._tcBill(m
   h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>'+E(t.name)+(t.plate?' · '+E(t.plate):'')+'</b>'+badge(t)+'</div>'+
   '<div class="m" style="margin:4px 0 10px">'+(t.kind==='horse'?'Horse + trailer ('+E(t.payload)+' t)':'Rigid · '+E(t.payload)+' t')+' · '+(clsOf(t)==='heavy'?'Heavy':'Standard')+' · '+money2(priceOf(t))+'</div>'+
   '<div style="display:flex;gap:12px;align-items:center;border-top:1px solid var(--border,#222629);padding-top:12px">'+(t.dphoto?'<img class="av" src="'+E(t.dphoto)+'" alt="">':'<div class="av">'+E((t.dname||'?').slice(0,2).toUpperCase())+'</div>')+
-  '<div style="flex:1"><div class="m">Driver</div><b>'+(t.driverMode==='me'?'You':E(t.dname))+'</b><div class="m">'+(t.driverMode==='me'?'':'Code '+E(t.dcode)+' · '+E(t.dphone))+'</div></div></div>'+
+  '<div style="flex:1"><div class="m">Driver</div><b>'+(t.driverMode==='me'?'You':E(t.dname))+'</b><div class="m">'+(t.driverMode==='me'?'':(t.driverMode==='app'?E(t.dphone):'Code '+E(t.dcode)+' · '+E(t.dphone)))+'</div></div></div>'+(t.driverMode==='app'?'<div class="m" data-inv="'+E(t.inviteCode||'')+'" data-i="'+i+'" style="margin-top:10px">Checking invite…</div>':'')+
   (m.length?'<div class="m" style="margin-top:10px;color:#92400E">Still needed: '+E(m.join(', '))+'</div>':'')+
   ((window._tcTruckStatus(t)==='rejected'&&(window._tcTruckRec(t)||{}).reason)?'<div class="m" style="margin-top:10px;color:#e03131">'+E(window._tcTruckRec(t).reason)+'</div>':'')+
   '<div class="row"><button class="btn o" data-ed="'+i+'">'+(m.length?'Add papers':'Edit')+'</button><button class="btn r" data-rm="'+i+'">Remove</button></div></div>';});
@@ -11749,10 +11952,11 @@ function renderFleet(){var fl=me.fleet||[];var B=window._tcBill?window._tcBill(m
  if(fl.some(function(t){return clsOf(t)==='heavy';})||(parseFloat(me.payloadCapacity)||0)>10)setTimeout(function(){lkTip(false);},700);
  $s('tc-addt').onclick=function(){fleetForm(-1,'rigid');};$s('tc-addh').onclick=function(){fleetForm(-1,'horse');};
  document.querySelectorAll('#tc-sh [data-ed]').forEach(function(b){b.onclick=function(){var i=parseInt(b.getAttribute('data-ed'),10);fleetForm(i,(me.fleet[i]||{}).kind||'rigid');};});
- document.querySelectorAll('#tc-sh [data-rm]').forEach(function(b){b.onclick=function(){if(!confirm('Remove this truck?'))return;var n=(me.fleet||[]).slice();n.splice(parseInt(b.getAttribute('data-rm'),10),1);saveFleet(n).then(renderFleet).catch(function(){say('Could not remove it.');});};});}
+ document.querySelectorAll('#tc-sh [data-rm]').forEach(function(b){b.onclick=function(){if(!confirm('Remove this truck?'))return;var n=(me.fleet||[]).slice();n.splice(parseInt(b.getAttribute('data-rm'),10),1);saveFleet(n).then(renderFleet).catch(function(){say('Could not remove it.');});};});
+ fillInvites();}
 function fleetForm(i,kind){var t=(i>=0&&me.fleet&&me.fleet[i])||{};kind=t.kind||kind||'rigid';var horse=kind==='horse';var docs=Object.assign({},t.docs||{});var files={};
  var body=['Closed','Open','Flat deck','Tautliner','Curtain-side','Dropside','Tipper','Side tipper','Fridge'];
- var mode=t.driverMode||'me';
+ var mode=t.driverMode||'me';var payTo=t.payTo==='driver'?'driver':'owner';
  var up=function(id,label,hint){return '<div class="card" style="margin:8px 0;padding:12px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:14px">'+label+'</b><span class="m" id="s-'+id+'">'+(docs[id]?'Uploaded':'Not added')+'</span></div>'+(hint?'<div class="m">'+hint+'</div>':'')+'<input id="u-'+id+'" type="file" accept="image/*" style="margin-top:8px"></div>';};
  var h='<div class="m" style="margin-bottom:6px">'+(horse?'The horse has no tonnage of its own. Customers see the trailer payload. Horse and trailer count as one truck.':'Rigid truck: one vehicle with the body on the chassis.')+'</div>'+
  '<span class="l">'+(horse?'Horse make and model':'Truck make and model')+'</span><input id="f-n" maxlength="40" placeholder="'+(horse?'e.g. Scania R500':'e.g. Hino 500')+'" value="'+E(t.name||'')+'"><div class="err" id="e-n">Enter the truck name</div>'+
@@ -11762,7 +11966,7 @@ function fleetForm(i,kind){var t=(i>=0&&me.fleet&&me.fleet[i])||{};kind=t.kind||
  '<span class="l">Body type</span><select id="f-b">'+body.map(function(b){return '<option'+(t.body===b?' selected':'')+'>'+b+'</option>';}).join('')+'</select>'+
  '<div class="row"><div><span class="l">VIN</span><input id="f-vin" maxlength="20" value="'+E(t.vin||'')+'"></div><div><span class="l">Engine no.</span><input id="f-eng" maxlength="20" value="'+E(t.engine||'')+'"></div></div>'+
  '<span class="l">Licence disc expiry</span><input id="f-de" type="date" value="'+E(t.discExpiry||'')+'">'+
- '<div style="height:10px"></div><b>Who drives it</b><div class="tabs" style="margin-top:8px"><div class="tab'+(mode==='me'?' on':'')+'" id="m-me">Me</div><div class="tab'+(mode==='other'?' on':'')+'" id="m-ot">Someone else</div></div><div id="f-drv"></div>'+
+ '<div style="height:10px"></div><b>Who drives it</b><div class="tabs" style="margin-top:8px"><div class="tab'+(mode==='me'?' on':'')+'" id="m-me">Me</div><div class="tab'+(mode==='other'?' on':'')+'" id="m-ot">Someone else</div>'+(horse?'':'<div class="tab'+(mode==='app'?' on':'')+'" id="m-ap">Driver with app</div>')+'</div><div id="f-drv"></div>'+
  '<div style="height:6px"></div><b>Papers</b><div class="m">You can add them now or later. The truck is checked once they are all in.</div>'+
  up('disc','Licence disc')+up('photo','Truck photo','Number plate visible')+(horse?up('trailer','Trailer licence disc'):'')+
  '<div id="f-heavy"></div>'+
@@ -11770,36 +11974,46 @@ function fleetForm(i,kind){var t=(i>=0&&me.fleet&&me.fleet[i])||{};kind=t.kind||
  '<button class="btn" id="f-save">Save truck</button><button class="btn o" id="f-cancel">Cancel</button>';
  sheet(i>=0?(t.name||'Edit truck'):(horse?'Add a horse and trailer':'Add a truck'),h,renderFleet);
  function drv(){var d=$s('f-drv');if(mode==='me'){d.innerHTML='<div class="m">You drive this truck. Your licence and ID are already checked.</div>';}
+  else if(mode==='app'){d.innerHTML='<div class="m" style="margin-bottom:6px">This driver gets the TruckConnect Driver app and their own account. You send them an invite code on WhatsApp. They add only their own ID, licence and selfie. For trucks from 1 to 10 tonnes.</div>'+
+   '<span class="l">Driver full name</span><input id="f-dn" maxlength="50" value="'+E(t.dname||'')+'"><div class="err" id="e-dn">Enter the driver name</div>'+
+   '<span class="l">Driver phone (the code only works with this number)</span><input id="f-dp" type="tel" maxlength="16" placeholder="082 000 0000" value="'+E(t.dphone||'')+'"><div class="err" id="e-dp">Enter a valid phone number</div>'+
+   '<div style="height:8px"></div><b>Who gets the money for this truck</b>'+
+   '<div class="card" id="pt-o" style="margin:8px 0;padding:12px;border:1.5px solid '+(payTo==='owner'?'var(--text,#fff)':'transparent')+'"><b style="font-size:14px">Me, the owner</b><div class="m">Payouts and EFT payments go to my bank account. The driver will see my account name and number in the app.</div></div>'+
+   '<div class="card" id="pt-d" style="margin:8px 0;padding:12px;border:1.5px solid '+(payTo==='driver'?'var(--text,#fff)':'transparent')+'"><b style="font-size:14px">The driver</b><div class="m">Payouts and EFT payments go to the driver\'s own bank account. The driver adds it when signing up.</div></div>'+
+   '<div class="m">You can change this later. The monthly truck fee is always yours.</div>';
+   var po=$s('pt-o'),pd=$s('pt-d');if(po)po.onclick=function(){payTo='owner';drv();};if(pd)pd.onclick=function(){payTo='driver';drv();};}
   else{d.innerHTML='<span class="l">Driver full name</span><input id="f-dn" maxlength="50" value="'+E(t.dname||'')+'"><div class="err" id="e-dn">Enter the driver name</div>'+
    '<span class="l">Driver phone</span><input id="f-dp" type="tel" maxlength="16" placeholder="082 000 0000" value="'+E(t.dphone||'')+'"><div class="err" id="e-dp">Enter a valid phone number</div>'+
    '<span class="l">Licence code</span><select id="f-dc">'+['8','10','14'].map(function(c){return '<option'+(t.dcode===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select>'+
    '<div class="m" style="margin-top:8px">The driver agrees that customers can see their name and phone number for jobs on this truck. The driver does not need the app. You upload their papers here.</div>'+
    up('dlic','Driver licence','Front of the licence')+(((horse||(parseFloat(($s('f-t')||{}).value)||0)>10))?up('dprdp','Driver PrDP (goods)'):'');hook();}
-  $s('m-me').className='tab'+(mode==='me'?' on':'');$s('m-ot').className='tab'+(mode==='other'?' on':'');}
+  $s('m-me').className='tab'+(mode==='me'?' on':'');$s('m-ot').className='tab'+(mode==='other'?' on':'');if($s('m-ap'))$s('m-ap').className='tab'+(mode==='app'?' on':'');}
  function heavyUI(){var pay=parseFloat(($s('f-t')||{}).value)||0,hv=horse||pay>10;var el=$s('f-heavy');
   el.innerHTML=(hv?up('insurance','Insurance certificate'):'')+((hv||pay>=2)?up('operator','Operator card','Photo of the card. Needed for trucks over 3,500 kg')+'<span class="l">Operator card expiry</span><input id="f-oe" type="date" value="'+E(t.operatorExpiry||'')+'">':'');
   hook();$s('f-price').innerHTML=(hv?'Heavy truck: <b>R 400 a month</b>':'Standard truck: <b>R 300 a month</b>')+'. It shares your account\'s free trial.';}
  function hook(){document.querySelectorAll('#tc-sh input[type=file]').forEach(function(inp){var k=inp.id.slice(2);inp.onchange=function(){var f=inp.files&&inp.files[0];if(f){files[k]=f;$s('s-'+k).textContent='Ready to upload';}};});}
- drv();heavyUI();$s('f-t').oninput=function(){heavyUI();if(mode==='other'){var a=$s('f-dn')?$s('f-dn').value:'',b=$s('f-dp')?$s('f-dp').value:'';t.dname=a||t.dname;t.dphone=b||t.dphone;drv();}};
- $s('m-me').onclick=function(){mode='me';drv();};$s('m-ot').onclick=function(){mode='other';drv();};
+ drv();heavyUI();$s('f-t').oninput=function(){heavyUI();if(mode==='other'||mode==='app'){var a=$s('f-dn')?$s('f-dn').value:'',b=$s('f-dp')?$s('f-dp').value:'';t.dname=a||t.dname;t.dphone=b||t.dphone;drv();}};
+ $s('m-me').onclick=function(){mode='me';drv();};$s('m-ot').onclick=function(){mode='other';drv();};if($s('m-ap'))$s('m-ap').onclick=function(){mode='app';drv();};
  $s('f-cancel').onclick=renderFleet;
  $s('f-save').onclick=function(){var v=function(id){return (($s(id)||{}).value||'').trim();},bad=false;
   var chk=function(ok,id){var e=$s(id);if(e)e.style.display=ok?'none':'block';if(!ok)bad=true;};
   var pay=parseFloat(v('f-t'));chk(v('f-n').length>=2,'e-n');chk(v('f-p').length>=3,'e-p');chk(pay>=1&&pay<=60,'e-t');
   if(horse)chk(v('f-tp').length>=3,'e-tp');
-  if(mode==='other'){chk(v('f-dn').length>=3,'e-dn');chk(v('f-dp').replace(/\D/g,'').length>=10,'e-dp');}
+  if(mode==='other'||mode==='app'){chk(v('f-dn').length>=3,'e-dn');chk(v('f-dp').replace(/\D/g,'').length>=10,'e-dp');}
+  if(mode==='app'&&!(pay>=1&&pay<=10)){say('A driver with the app is for trucks from 1 to 10 tonnes. Use the driver link for heavier trucks.');bad=true;}
   if(bad)return;
   var tid=t.id||tcId();var btn=$s('f-save');btn.disabled=true;btn.textContent='Saving…';
   var keys=Object.keys(files);
-  Promise.all(keys.map(function(k){return upDoc(files[k],tid,k).then(function(p){docs[k]=p;});})).catch(function(){say('Some photos could not upload. Add them again later.');}).then(function(){
+  var pre=(mode==='app'&&payTo==='owner')?window._tcLoadBank().then(function(b){if(!(b&&b.bank&&b.accountNumber&&b.accountHolder))throw 'nobank';}):Promise.resolve();
+  pre.then(function(){return Promise.all(keys.map(function(k){return upDoc(files[k],tid,k).then(function(p){docs[k]=p;});}));}).catch(function(e){if(e==='nobank')throw e;say('Some photos could not upload. Add them again later.');}).then(function(){
    var item={id:tid,kind:kind,name:v('f-n'),plate:v('f-p').toUpperCase(),payload:pay,body:$s('f-b').value,vin:v('f-vin'),engine:v('f-eng'),discExpiry:v('f-de')||null,
-    driverMode:mode,dname:mode==='me'?(me.name||''):v('f-dn'),dphone:mode==='me'?(me.phone||''):v('f-dp'),dcode:mode==='me'?(me.licenseCode||''):$s('f-dc').value,dphoto:t.dphoto||'',
+    driverMode:mode,dname:mode==='me'?(me.name||''):v('f-dn'),dphone:mode==='me'?(me.phone||''):v('f-dp'),dcode:mode==='me'?(me.licenseCode||''):(($s('f-dc')||{}).value||''),payTo:payTo,inviteCode:t.inviteCode||'',dphoto:t.dphoto||'',
     docs:docs,operatorExpiry:v('f-oe')||t.operatorExpiry||null,status:'pending',addedAt:t.addedAt||new Date().toISOString()};
    if(horse){item.trailerPlate=v('f-tp').toUpperCase();item.trailerType=v('f-tt');}
    item.cls=clsOf(item);
    var n=(me.fleet||[]).slice();if(i>=0)n[i]=item;else n.push(item);
-   return saveFleet(n).then(function(){say('Truck saved');renderFleet();});
-  }).catch(function(){btn.disabled=false;btn.textContent='Save truck';say('Could not save. If this keeps happening, contact support.');});};}
+   return saveFleet(n).then(function(){say('Truck saved');if(mode==='app'){return window._tcOwnerInvite(item).then(function(code){if(code)showInvite(item,code);else renderFleet();});}renderFleet();});
+  }).catch(function(e){btn.disabled=false;btn.textContent='Save truck';if(e==='nobank'){say('Add your bank details first, then save again.');try{window.tcOpenBankSheet();}catch(_){}return;}say('Could not save. If this keeps happening, contact support.');});};}
 
 /* ---------- RETURN TRIPS ---------- */
 function openReturn(tab){closeMenu();sheet('Return trips','<div class="m">Loading…</div>');
@@ -12007,6 +12221,20 @@ function lkShow(job,l){var url=TC_LINK_PAGE+'?t='+l.token;var f=FBx();
    try{f.updateDoc(f.doc(f.db,'bookings',l.bookingId),u).catch(function(){});}catch(e){}}
   });}catch(e){}}
 window._tcOpenLinkSheet=openLinkSheet;
+/* The proof from a company driver's job link is copied onto the booking here, always, not only while the Driver link sheet is open. */
+var LKW=null,LKDONE={};
+function lkProofUpdate(d){var u={fleetDriverName:d.driverName||''};
+ if(d.arrivedAtMs){u.arrivedPickup=true;u.arrivedPickupAt=new Date(d.arrivedAtMs).toISOString();if(d.arrivedLat){u.arrivedPickupLat=d.arrivedLat;u.arrivedPickupLng=d.arrivedLng;}}
+ if(d.transitAtMs)u.startedAt=new Date(d.transitAtMs).toISOString();
+ if(d.deliveredAtMs){u.deliveredAtMs=d.deliveredAtMs;if(d.deliveredLat){u.deliveredLat=d.deliveredLat;u.deliveredLng=d.deliveredLng;}if(d.receiverName)u.receiverName=d.receiverName;if(d.podPhoto)u.proofOfDelivery=d.podPhoto;}
+ return u;}
+function startLinkWatch(){var f=null,uid=null;try{f=FBx();uid=UID();}catch(e){}
+ if(!f||!uid){setTimeout(startLinkWatch,4000);return;}if(LKW)return;
+ try{LKW=f.onSnapshot(f.query(f.collection(f.db,'driverLinks'),f.where('ownerUid','==',uid)),function(s){s.forEach(function(x){var d=x.data();if(!d||!d.bookingId)return;
+   if(['arrived','on_way','delivered'].indexOf(d.status)<0&&d.status!=='loaded')return;
+   var k=x.id+':'+d.status;if(LKDONE[k])return;LKDONE[k]=1;
+   f.updateDoc(f.doc(f.db,'bookings',d.bookingId),lkProofUpdate(d)).catch(function(){LKDONE[k]=0;});});},function(){});}catch(e){}}
+setTimeout(startLinkWatch,6000);
 
 /* ---------- VERIFICATION QR, EXPIRY WARNINGS, LOGBOOK, FLEET OVERVIEW, JOB PREFERENCES ---------- */
 var VF_PAGE=tcPublicPage('verify.html');
@@ -12373,6 +12601,394 @@ function addEntries(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addEntries);else addEntries();
 setTimeout(addEntries,1500);setTimeout(addEntries,5000);
 window._tcOpenSupport=draw;
+})();
+</script>
+<script>
+/* First-time notification prompt: our own "Allow / Not now" screen, then the phone's real permission pop-up. */
+(function(){
+  var ROLE='driver', KEY='tc_np_'+ROLE, shown=false;
+  var BODY='Get new load alerts, trip updates and messages, even when the app is closed.';
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+  function supported(){return ('Notification' in window)||(window._tcIsNative&&window._tcIsNative());}
+  function perm(){return ('Notification' in window)?Notification.permission:'default';}
+  function splashUp(){var s=document.getElementById('splash-screen');return !!(s&&s.offsetParent!==null&&getComputedStyle(s).display!=='none'&&getComputedStyle(s).visibility!=='hidden'&&getComputedStyle(s).opacity!=='0');}
+  function close(){var e=document.getElementById('tc-np');if(e)e.remove();}
+  function say(m){try{if(typeof toast==='function')toast(m);}catch(e){}}
+  function icon(){return '<div style="width:56px;height:56px;border-radius:50%;background:#1677F2;display:grid;place-items:center;margin:0 auto 14px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>';}
+  function draw(inner){var e=document.getElementById('tc-np');if(!e){e=document.createElement('div');e.id='tc-np';e.setAttribute('role','dialog');e.setAttribute('aria-modal','true');e.style.cssText='position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;font-family:Roboto,system-ui,-apple-system,sans-serif';document.body.appendChild(e);}
+    e.innerHTML='<div style="width:100%;max-width:520px;background:var(--card,#fff);color:var(--text,#0B1730);border-radius:22px 22px 0 0;padding:26px 22px calc(22px + env(safe-area-inset-bottom,0px));text-align:center">'+inner+'</div>';}
+  function btn(id,t,primary){return '<button type="button" id="'+id+'" style="width:100%;height:50px;border-radius:14px;font:700 16px Roboto,system-ui,sans-serif;margin-top:10px;cursor:pointer;'+(primary?'background:#1677F2;color:#fff;border:0':'background:transparent;color:var(--text,#0B1730);border:1.5px solid rgba(127,127,127,.4)')+'">'+t+'</button>';}
+  function ask(){
+    draw(icon()+'<div style="font-size:20px;font-weight:700;line-height:1.25">Allow TruckConnect to send you notifications?</div><div style="font-size:14px;line-height:1.5;opacity:.75;margin-top:8px">'+BODY+'</div>'+btn('tc-np-ok','Allow',true)+btn('tc-np-no','Not now',false));
+    document.getElementById('tc-np-no').onclick=function(){ls(KEY,String(Date.now()));close();};
+    document.getElementById('tc-np-ok').onclick=go;
+  }
+  async function go(){
+    var b=document.getElementById('tc-np-ok');if(b){b.disabled=true;b.textContent='Waiting for your phone…';}
+    try{if(window.requestNotifPermission)await window.requestNotifPermission();}catch(e){}
+    var p=perm();
+    if(p==='granted'||(window._tcIsNative&&window._tcIsNative()&&window._fcmToken)){
+      ls(KEY,'done');close();say('🔔 Notifications are on');
+      try{var title='Notifications are on',opts={body:'You will now get TruckConnect alerts, even when the app is closed.',icon:'driver-icon-192.png',tag:'tc-welcome'};
+        if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){var r=await navigator.serviceWorker.getRegistration();if(r&&r.showNotification){await r.showNotification(title,opts);return;}}
+        new Notification(title,opts);}catch(e){}
+    }else if(p==='denied'){
+      ls(KEY,String(Date.now()));
+      draw(icon()+'<div style="font-size:19px;font-weight:700">Notifications are blocked</div><div style="font-size:14px;line-height:1.5;opacity:.75;margin-top:8px">To turn them on, tap the lock icon next to the address bar, choose Notifications, then Allow. On the Android app, open Settings, Apps, TruckConnect, Notifications.</div>'+btn('tc-np-x','OK',true));
+      document.getElementById('tc-np-x').onclick=close;
+    }else{ls(KEY,String(Date.now()));close();say('No problem. You can turn notifications on later in your profile.');}
+  }
+  function check(){
+    if(shown||!supported())return true;
+    if(!window.currentUid||splashUp())return false;
+    var p=perm();
+    if(p==='granted'){shown=true;try{if(window.requestNotifPermission)window.requestNotifPermission();}catch(e){}return true;}
+    if(p==='denied'){shown=true;return true;}
+    var last=ls(KEY);if(last==='done'){shown=true;return true;}
+    if(last&&Date.now()-Number(last)<2*86400000){shown=true;return true;}   // asked "Not now": ask again after 2 days
+    shown=true;ask();return true;
+  }
+  var n=0,iv=setInterval(function(){n++;if(check()||n>120)clearInterval(iv);},2500);
+  window._tcAskNotif=function(){shown=false;check();};
+})();
+</script>
+<script>
+/* ── SPECIALS POP-UP (driver) ── admin controls it: config/pricing -> "popupDriver" */
+function tcspEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function tcspSafeImg(u){u=String(u||'');return (/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(u)||/^https:\/\//.test(u))?u:'';}
+function tcspBuild(d,onCta,onClose){
+  if(!document.getElementById('tcsp-style')){
+    var st=document.createElement('style');st.id='tcsp-style';
+    st.textContent='@keyframes tcspFade{from{opacity:0}to{opacity:1}}@keyframes tcspUp{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}#tcsp-overlay .tcsp-imgs::-webkit-scrollbar{display:none}#tcsp-overlay button{font-family:inherit}';
+    document.head.appendChild(st);
+  }
+  var imgs=(d.images||[]).map(tcspSafeImg).filter(Boolean);
+  var ov=document.createElement('div');
+  ov.id='tcsp-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(5,12,28,.68);display:flex;align-items:center;justify-content:center;padding:18px;animation:tcspFade .25s ease;font-family:Roboto,system-ui,-apple-system,sans-serif;';
+  var h='<div id="tcsp-card" role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:360px;max-height:92vh;overflow-y:auto;background:#fff;color:#0B1730;border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,.45);animation:tcspUp .32s cubic-bezier(.2,.8,.2,1);">';
+  h+='<button id="tcsp-x" aria-label="Close" style="position:absolute;top:10px;right:10px;z-index:3;width:34px;height:34px;border-radius:50%;border:none;background:rgba(11,23,48,.62);color:#fff;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>';
+  var poster=d.mode==='poster'&&imgs.length>0;
+  if(poster){
+    h=h.replace('background:#fff;color:#0B1730;border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,.45);','background:transparent;color:#fff;border-radius:24px;overflow:visible;');
+    h+='<img src="'+imgs[0]+'" alt="" style="display:block;width:100%;max-height:80vh;object-fit:contain;border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.45);background:#fff;">';
+    if(d.cta)h+='<button id="tcsp-cta" style="width:100%;margin-top:12px;background:#1677F2;color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">'+tcspEsc(d.cta)+'</button>';
+    h+='<span id="tcsp-no" style="display:none"></span></div>';
+  }else{
+  if(imgs.length){
+    h+='<div class="tcsp-imgs" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:24px 24px 0 0;background:#EAF3FF;">';
+    imgs.forEach(function(s){h+='<img src="'+s+'" alt="" style="flex:0 0 100%;width:100%;max-height:300px;object-fit:cover;scroll-snap-align:center;display:block;">';});
+    h+='</div>';
+    if(imgs.length>1){
+      h+='<div id="tcsp-dots" style="display:flex;justify-content:center;gap:6px;padding:10px 0 0;">';
+      imgs.forEach(function(_,i){h+='<span style="width:7px;height:7px;border-radius:50%;background:'+(i?'#C9D6E8':'#1677F2')+';transition:background .2s;"></span>';});
+      h+='</div>';
+    }
+  }
+  h+='<div style="padding:'+(imgs.length?'14px':'48px')+' 20px 20px;text-align:center;">';
+  if(d.badge)h+='<div style="display:inline-block;background:#EAF3FF;color:#1677F2;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:99px;margin-bottom:10px;">'+tcspEsc(d.badge)+'</div>';
+  if(d.title)h+='<div style="font-size:22px;font-weight:800;line-height:1.2;margin-bottom:8px;">'+tcspEsc(d.title)+'</div>';
+  if(d.body)h+='<div style="font-size:14px;line-height:1.55;color:#4A5B75;white-space:pre-wrap;margin-bottom:16px;">'+tcspEsc(d.body)+'</div>';
+  if(d.cta)h+='<button id="tcsp-cta" style="width:100%;background:#1677F2;color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">'+tcspEsc(d.cta)+'</button>';
+  h+='<button id="tcsp-no" style="width:100%;background:none;border:none;color:#66758F;font-size:13px;font-weight:600;padding:'+(d.cta?'12px':'6px')+' 0 0;cursor:pointer;">'+(d.cta?'Not now':'Close')+'</button>';
+  h+='</div></div>';
+  }
+  ov.innerHTML=h;
+  function close(){if(ov.parentNode)ov.parentNode.removeChild(ov);if(onClose)try{onClose();}catch(e){}}
+  ov.addEventListener('click',function(e){if(e.target===ov)close();});
+  ov.querySelector('#tcsp-x').onclick=close;
+  ov.querySelector('#tcsp-no').onclick=close;
+  var cta=ov.querySelector('#tcsp-cta');
+  if(cta)cta.onclick=function(){close();if(onCta)try{onCta();}catch(e){}};
+  var sc=ov.querySelector('.tcsp-imgs');
+  if(sc&&imgs.length>1)sc.addEventListener('scroll',function(){
+    var i=Math.round(sc.scrollLeft/sc.clientWidth),ds=ov.querySelectorAll('#tcsp-dots span');
+    for(var k=0;k<ds.length;k++)ds[k].style.background=k===i?'#1677F2':'#C9D6E8';
+  });
+  return ov;
+}
+
+
+(function(){
+  var shownVer=null,pending=null,unsub=null,started=false;
+  function live(d){
+    if(!d||d.active!==true)return false;
+    if(!((d.title||'').trim()||(d.body||'').trim()||(d.images||[]).length))return false;
+    var u=d.until?Date.parse(d.until+'T23:59:59'):0;
+    return !u||Date.now()<=u;
+  }
+  function removeOverlay(){var o=document.getElementById('tcsp-overlay');if(o)o.remove();}
+  function allow(d){try{var r=JSON.parse(localStorage.getItem('tc_sp_d_'+(d.version||1))||'{}'),mx=Number(d.maxShows)||0,t=new Date().toISOString().slice(0,10);if(mx&&(r.n||0)>=mx)return false;if(d.oncePerDay&&r.day===t)return false;return true;}catch(e){return true;}}
+  function mark(d){try{var k='tc_sp_d_'+(d.version||1),r=JSON.parse(localStorage.getItem(k)||'{}');r.n=(r.n||0)+1;r.day=new Date().toISOString().slice(0,10);localStorage.setItem(k,JSON.stringify(r));}catch(e){}}
+  function tryShow(){
+    if(!pending||document.getElementById('tcsp-overlay'))return;
+    var home=document.getElementById('s-driver-home');
+    if(!home||!home.classList.contains('active'))return;
+    var d=pending;pending=null;shownVer=d.version||1;
+    if(!allow(d))return;mark(d);
+    document.body.appendChild(tcspBuild(d,null,null));
+  }
+  function watch(){
+    var FB=window._FB;if(!FB||unsub)return;
+    try{
+      unsub=FB.onSnapshot(FB.doc(FB.db,'config','pricing'),function(snap){
+        var d=snap.exists()?snap.data().popupDriver:null;
+        if(!live(d)){pending=null;removeOverlay();return;}
+        if((d.version||1)!==shownVer){pending=d;removeOverlay();tryShow();}
+      },function(){});
+    }catch(e){}
+  }
+  function stop(){if(unsub){try{unsub();}catch(e){}unsub=null;}pending=null;shownVer=null;removeOverlay();}
+  function boot(){
+    var FB=window._FB;
+    if(!FB||!FB.onAuthStateChanged){setTimeout(boot,300);return;}
+    if(started)return;started=true;
+    FB.onAuthStateChanged(FB.auth,function(user){if(user)watch();else stop();});
+  }
+  setInterval(tryShow,1500);
+  boot();
+})();
+</script>
+<!-- ===== TruckConnect guided tour (additive; safe to remove) ===== -->
+<script>
+(function(){
+'use strict';
+if(window._tcTour)return;
+var CH=['Welcome','Create your account','Waiting for approval','Your home screen','Getting a load','On the trip','Delivery','Getting paid','Heavy jobs & driver link','Fleet & invites','Safety, QR & logbook'];
+var READY=4; /* chapters built so far */
+function uid(){try{return (window.currentUid)||(window.firebase&&0)||'guest';}catch(e){return 'guest';}}
+function key(){return 'tc_tour_v1_'+(uid()||'guest');}
+function load(){try{return JSON.parse(localStorage.getItem(key())||'{}')||{};}catch(e){return {};}}
+function save(o){try{localStorage.setItem(key(),JSON.stringify(o));}catch(e){}}
+function gdone(){try{return JSON.parse(localStorage.getItem('tc_tour_v1_guest')||'{}');}catch(e){return {};}}
+function seen(k){var a=load(),g=gdone();return !!(a[k]||(k.indexOf('c')===0&&g[k]));}
+function mark(k){var a=load();a[k]=1;save(a);if(uid()!=='guest'&&false){}}
+function markGuestToo(k){mark(k);try{var g=gdone();g[k]=1;localStorage.setItem('tc_tour_v1_guest',JSON.stringify(g));}catch(e){}}
+function $(s){return document.querySelector(s);}
+function vis(el){if(!el)return false;var r=el.getBoundingClientRect();return r.width>4&&r.height>4&&getComputedStyle(el).visibility!=='hidden'&&r.bottom>0&&r.top<innerHeight;}
+function activeScreen(){var s=$('.screen.active');return s?s.id:'';}
+
+var css='#tct-ov{position:fixed;inset:0;z-index:2147483000;font-family:Roboto,system-ui,sans-serif}'+
+'#tct-hole{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.78);border:2px solid #fff;pointer-events:none;transition:all .25s}'+
+'#tct-bg{position:fixed;inset:0;background:rgba(0,0,0,.78)}'+
+'.tct-card{position:fixed;left:16px;right:16px;max-width:360px;margin:0 auto;background:#1b1f22;color:#fff;border:1px solid #2b3135;border-radius:18px;padding:16px 16px 14px;box-sizing:border-box}'+
+'.tct-chap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9aa4aa;font-weight:700;margin-bottom:6px}'+
+'.tct-h{font-size:17px;font-weight:800;margin:0 0 6px}'+
+'.tct-t{font-size:14px;line-height:1.45;color:#d6dcdf;margin:0}'+
+'.tct-row{display:flex;gap:8px;align-items:center;margin-top:14px}'+
+'.tct-b{flex:1;border:none;border-radius:12px;padding:12px;font-weight:700;font-size:14px;cursor:pointer;background:#fff;color:#111;font-family:inherit}'+
+'.tct-b.g{background:#2b3135;color:#fff;flex:0 0 auto;padding:12px 16px}'+
+'.tct-skip{background:none;border:none;color:#9aa4aa;font-size:13px;cursor:pointer;padding:8px 4px;font-family:inherit}'+
+'.tct-dots{display:flex;gap:5px;justify-content:center;margin:0 0 12px}.tct-dots i{width:7px;height:7px;border-radius:50%;background:#3a4247}.tct-dots i.on{background:#fff}'+
+'.tct-ch{display:block;width:100%;text-align:left;background:#242a2e;color:#fff;border:1px solid #2f3639;border-radius:12px;padding:12px;margin-top:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}'+
+'#tct-dock{position:fixed;left:12px;right:12px;top:68px;z-index:2147482900;max-width:380px;margin:0 auto}'+
+'#tct-dock .tct-card{position:static;max-width:none}'+
+'#tct-q{position:fixed;right:14px;bottom:96px;width:42px;height:42px;border-radius:50%;background:#fff;color:#111;border:none;font-weight:900;font-size:20px;z-index:2147482000;cursor:pointer;font-family:inherit}'+
+'#tct-help{position:fixed;inset:0;z-index:2147483100;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;font-family:Roboto,system-ui,sans-serif}'+
+'#tct-hp{background:#15181a;color:#fff;width:100%;max-width:480px;max-height:86vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px 24px;box-sizing:border-box}'+
+'.tct-bub{max-width:86%;padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.45;margin:8px 0}'+
+'.tct-bub.me{background:#fff;color:#111;margin-left:auto}.tct-bub.bot{background:#242a2e;color:#e6eaec}'+
+'.tct-chip{display:inline-block;background:#242a2e;border:1px solid #333b3f;color:#fff;border-radius:18px;padding:8px 12px;margin:4px 4px 0 0;font-size:13px;cursor:pointer;font-family:inherit}'+
+'.tct-pr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #23282b;font-size:14px}.tct-pr b{width:22px;height:22px;border-radius:50%;border:2px solid #3a4247;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}.tct-pr.ok b{background:#fff;color:#111;border-color:#fff}.tct-pr.off{color:#6d777d}';
+var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+
+var ov=null,dock=null,busy=false;
+function clearOv(){if(ov){ov.remove();ov=null;}if(dock){dock.remove();dock=null;}busy=false;}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* Run a list of steps. step: {sel,title,text,choices,mode:'dock'|'modal'} */
+function run(chapIdx,steps,onEnd,opt){
+  opt=opt||{};clearOv();busy=true;var i=0;
+  function done(skipped){clearOv();try{onEnd&&onEnd(skipped);}catch(e){}}
+  function show(){
+    if(ov){ov.remove();ov=null;}if(dock){dock.remove();dock=null;}
+    var s=steps[i],last=i===steps.length-1;
+    var head='<div class="tct-chap">Chapter '+(chapIdx+1)+' of '+CH.length+' · '+esc(CH[chapIdx])+(steps.length>1?' · '+(i+1)+'/'+steps.length:'')+'</div>';
+    var btns='<div class="tct-row">'+(i>0?'<button class="tct-b g" data-a="b">Back</button>':'')+'<button class="tct-b" data-a="n">'+esc(s.btn||(last?'Got it':'Next'))+'</button></div>'+(steps.length>1||opt.skip!==false?'<div style="text-align:center"><button class="tct-skip" data-a="s">Skip this part</button></div>':'');
+    var ch='';if(s.choices){ch=s.choices.map(function(c,k){return '<button class="tct-ch" data-c="'+k+'">'+esc(c.t)+'</button>';}).join('');btns='<div style="text-align:center"><button class="tct-skip" data-a="n">Not now</button></div>';}
+    var dots='';if(s.dots){dots='<div class="tct-dots">'+s.dots.map(function(d,k){return '<i class="'+(k===s.dot?'on':'')+'"></i>';}).join('')+'</div>';}
+    var inner=dots+head+'<h3 class="tct-h">'+esc(s.title)+'</h3><p class="tct-t">'+esc(s.text)+'</p>'+ch+btns;
+    var el=document.createElement('div');
+    var target=s.sel?$(s.sel):null;
+    if(s.mode==='dock'){
+      dock=document.createElement('div');dock.id='tct-dock';dock.innerHTML='<div class="tct-card">'+inner+'</div>';document.body.appendChild(dock);el=dock;
+    }else{
+      ov=document.createElement('div');ov.id='tct-ov';
+      var card='<div class="tct-card" id="tct-card">'+inner+'</div>';
+      if(target&&vis(target)){
+        try{target.scrollIntoView({block:'center'});}catch(e){}
+        var r=target.getBoundingClientRect(),p=6;
+        ov.innerHTML='<div id="tct-hole" style="left:'+(r.left-p)+'px;top:'+(r.top-p)+'px;width:'+(r.width+2*p)+'px;height:'+(r.height+2*p)+'px"></div><div style="position:fixed;inset:0"></div>'+card;
+        document.body.appendChild(ov);
+        var c=document.getElementById('tct-card'),ch2=c.offsetHeight;
+        var below=r.bottom+p+14+ch2<innerHeight;
+        c.style.top=(below?(r.bottom+p+14):Math.max(12,r.top-p-14-ch2))+'px';
+      }else{
+        ov.innerHTML='<div id="tct-bg"></div>'+card;document.body.appendChild(ov);
+        var c2=document.getElementById('tct-card');c2.style.top=Math.max(20,(innerHeight-c2.offsetHeight)/2)+'px';
+      }
+      el=ov;
+    }
+    el.onclick=function(e){
+      var t=e.target;if(!t||!t.getAttribute)return;
+      var a=t.getAttribute('data-a'),c=t.getAttribute('data-c');
+      if(c!==null){try{s.choices[+c].go();}catch(er){}if(s.choices[+c].next===false)return;i++;if(i>=steps.length)done(false);else show();return;}
+      if(a==='n'){i++;if(i>=steps.length)done(false);else show();}
+      else if(a==='b'){i=Math.max(0,i-1);show();}
+      else if(a==='s'){done(true);}
+    };
+  }
+  show();
+}
+
+/* ---------- Chapter 1: welcome slides + who are you ---------- */
+function ch1(replay){
+  var D=['a','b','c'];
+  run(0,[
+   {title:'Welcome to TruckConnect',text:'You set your own fare with the customer. We take no commission, so you keep what you earn.',dots:D,dot:0,btn:'Next'},
+   {title:'How it works',text:'Customers post loads. You pick the ones you want, agree the price, drive, deliver and get paid by the customer.',dots:D,dot:1},
+   {title:'We will guide you',text:'This short guide walks you through every screen. Tap the ? button any time for help. You can skip it whenever you like.',dots:D,dot:2,btn:'Let’s start'}
+  ],function(){markGuestToo('c1');});
+}
+
+/* ---------- Chapter 2: sign-up tips ---------- */
+var SU=[
+ null,
+ {title:'Your driving licence',text:'Type the licence details exactly as printed on your licence and the expiry date. Admin checks them against your photo.'},
+ {title:'Your truck',text:'Add the vehicle you drive: type, load size and number plate. Customers see this when they pick a driver.'},
+ {title:'Your documents',text:'Take clear, flat photos in good light. Blurry or cut-off photos are the number one reason for a delay in approval.'},
+ {title:'Your selfie',text:'Face the camera in good light, no sunglasses or cap. This is the photo customers will see.'},
+ {title:'Your bank details',text:'This is where you get paid. The account holder name must match your name or your company.'},
+ {title:'Almost done',text:'Read the terms and tick to agree. After that, admin reviews your account. This usually does not take long.'}
+];
+function whoSteps(){
+  function pick(v){return function(){var s=$('#d-accttype');if(s){s.value=v;try{s.dispatchEvent(new Event('change',{bubbles:true}));}catch(e){}try{window._dAcctUI&&window._dAcctUI();}catch(e){}}};}
+  return [{
+   sel:'#d-accttype',title:'Who are you?',
+   text:'Pick the one that fits. It changes the next steps, so choose carefully.',
+   choices:[
+    {t:'I own my truck and drive it myself',go:pick('individual')},
+    {t:'I own a company or several trucks',go:pick('company')},
+    {t:'I drive a truck that belongs to someone else',go:pick('owner_driver')}
+   ]},
+   {mode:'dock',title:'Tell us about you',text:'Use your real name as on your ID. Customers will see it, and your phone number is how they reach you.'}];
+}
+function suTip(step){
+  var k='s2_'+step;if(seen(k))return;
+  var steps;
+  if(step===0){var s=$('#d-accttype');if(!s)return;steps=whoSteps();
+    var ol=steps[0];steps=[ol,steps[1]];
+  }else{if(!SU[step])return;steps=[Object.assign({mode:'dock'},SU[step])];}
+  mark(k);
+  run(1,steps,function(){if(step===6)markGuestToo('c2');});
+}
+
+/* ---------- Chapter 3: waiting ---------- */
+function pendTip(){
+  if(seen('c3'))return;
+  run(2,[
+   {mode:'dock',title:'Your account is being checked',text:'Admin is reviewing your details and documents. You will get a notification as soon as you are approved. You can close the app and come back later.'}
+  ],function(){markGuestToo('c3');});
+}
+
+/* ---------- Chapter 4: home ---------- */
+function homeSteps(){
+  var a=[
+   {sel:'#online-tog-btn',title:'Go online',text:'Tap this when you are ready to work. Online means you can get job requests. Tap it again when you are done for the day.'},
+   {sel:'#driver-map',title:'Your live map',text:'This map shows where you are. The small buttons on it help you find yourself and change the view.'},
+   {sel:'#d-menu-btn',title:'Your menu',text:'Open this for your trucks, logbook, verification QR code and job preferences.'},
+   {sel:'#bell-btn',title:'Notifications',text:'New jobs, approvals and messages arrive here.'}
+  ];
+  a=a.filter(function(s){return vis($(s.sel));});
+  a.push({title:'You are ready',text:'That is the home screen. Tap the ? button any time to ask a question or replay this guide.',btn:'Finish'});
+  return a;
+}
+function homeTour(force){
+  if(!force&&seen('c4'))return;
+  run(3,homeSteps(),function(){markGuestToo('c4');});
+}
+
+/* ---------- Help guide (scripted Q&A) ---------- */
+var QA=[
+ {q:'How do I get paid?',a:'The customer pays you directly for the fare you agreed. TruckConnect takes no commission. You can see who pays and how in the job details.'},
+ {q:'Which account type am I?',a:'Individual: you own the truck you drive. Company: you own a company or several trucks. Truck owner’s driver: you drive a truck that belongs to someone else, and you join with the invite code the owner sends you.'},
+ {q:'I drive for a truck owner. How do I join?',a:'Ask the owner to add you in My trucks under “Driver with app”. They send you a code. At sign-up choose “I drive for a truck owner” and type the code. You still need your licence and PrDP details.'},
+ {q:'Why am I waiting for approval?',a:'Admin checks every driver’s documents before they can take loads. You will get a notification when it is done. Clear photos make it faster.'},
+ {q:'How do I go online?',a:'On the home screen tap the Go online button. You only receive requests while you are online.',show:'#online-tog-btn',showT:'Go online'},
+ {q:'Where are my notifications?',a:'Tap the bell on the home screen.',show:'#bell-btn',showT:'Notifications'},
+ {q:'Where is my verification QR code?',a:'Open the menu on the home screen and choose Verification QR code. Customers can scan it to confirm you are real.',show:'#d-menu-btn',showT:'Menu'}
+];
+var help=null;
+function closeHelp(){if(help){help.remove();help=null;}}
+function openHelp(){
+  closeHelp();clearOv();
+  var a=load(),g=gdone();
+  var keys=['c1','c2','c3','c4'];
+  var rows=CH.map(function(n,i){var ok=i<keys.length&&(a[keys[i]]||g[keys[i]]);var on=i<READY;return '<div class="tct-pr '+(ok?'ok':'')+(on?'':' off')+'"><b>'+(ok?'✓':(i+1))+'</b><span style="flex:1">'+esc(n)+'</span>'+(on?'<button class="tct-chip" data-rep="'+i+'" style="margin:0">'+(ok?'Replay':'Start')+'</button>':'<span style="font-size:12px">Soon</span>')+'</div>';}).join('');
+  help=document.createElement('div');help.id='tct-help';
+  help.innerHTML='<div id="tct-hp"><div style="display:flex;align-items:center;justify-content:space-between"><h3 class="tct-h" style="font-size:19px;margin:0">Help guide</h3><button class="tct-b g" data-x="1" style="padding:8px 14px">Close</button></div>'+
+   '<div id="tct-chat"><div class="tct-bub bot">Hi! Ask me anything below.</div></div><div id="tct-qs">'+QA.map(function(x,i){return '<button class="tct-chip" data-q="'+i+'">'+esc(x.q)+'</button>';}).join('')+'</div>'+
+   '<h3 class="tct-h" style="margin:20px 0 4px">Your tour</h3><div style="font-size:13px;color:#9aa4aa;margin-bottom:4px">'+Object.keys({a:1}).length*[1,2,3,4].filter(function(n){return a['c'+n]||g['c'+n];}).length+' of '+CH.length+' chapters done</div>'+rows+'</div>';
+  document.body.appendChild(help);
+  help.onclick=function(e){
+    var t=e.target;if(t===help){closeHelp();return;}if(!t.getAttribute)return;
+    if(t.getAttribute('data-x')){closeHelp();return;}
+    var q=t.getAttribute('data-q'),rep=t.getAttribute('data-rep');
+    if(q!==null){var it=QA[+q],ch=document.getElementById('tct-chat');
+      var b1=document.createElement('div');b1.className='tct-bub me';b1.textContent=it.q;ch.appendChild(b1);
+      var b2=document.createElement('div');b2.className='tct-bub bot';b2.textContent=it.a;
+      if(it.show){var sb=document.createElement('button');sb.className='tct-chip';sb.style.display='block';sb.style.marginTop='8px';sb.textContent='Show me where';sb.onclick=function(){
+         var el=$(it.show);if(vis(el)){closeHelp();run(3,[{sel:it.show,title:it.showT,text:it.a,btn:'Got it'}],null);}else{b2.appendChild(document.createElement('br'));b2.appendChild(document.createTextNode('Open the home screen first, then ask me again.'));}};b2.appendChild(sb);}
+      ch.appendChild(b2);b2.scrollIntoView({block:'nearest'});return;}
+    if(rep!==null){closeHelp();replay(+rep);}
+  };
+}
+function replay(i){
+  if(i===0){ch1(true);return;}
+  if(i===1){var s=activeScreen();if(s==='s-auth'&&$('#d-accttype')){seenClear('s2_0');suTip(0);}else{run(1,[{title:'Create your account',text:'This chapter shows while you sign up: who you are, licence, truck, documents, selfie, bank and terms. Open the sign-up screen to see it.',btn:'OK'}],null);}return;}
+  if(i===2){pendTip2();return;}
+  if(i===3){if(activeScreen()==='s-driver-home')homeTour(true);else run(3,[{title:'Your home screen',text:'Open the home screen first, then replay this chapter.',btn:'OK'}],null);}
+}
+function seenClear(k){var a=load();delete a[k];save(a);}
+function pendTip2(){run(2,[{mode:'dock',title:'Your account is being checked',text:'Admin is reviewing your details and documents. You will get a notification as soon as you are approved.'}],null);}
+
+/* ---------- Floating ? button and menu entry ---------- */
+function ensureQ(){
+  var s=activeScreen(),want=(s==='s-auth'||s==='s-pending'||s==='s-driver-home')&&!busy&&!help;
+  var q=document.getElementById('tct-q');
+  if(want&&!q){q=document.createElement('button');q.id='tct-q';q.setAttribute('aria-label','Help');q.textContent='?';q.onclick=openHelp;document.body.appendChild(q);}
+  if(q){var hm=s==='s-driver-home';q.style.top=hm?'176px':'';q.style.bottom=hm?'auto':'96px';}
+  else if(!want&&q)q.remove();
+}
+function ensureMenu(){
+  var nav=$('#d-sidemenu .sidemenu-nav');if(!nav||document.getElementById('menu-tour'))return;
+  var ref=document.getElementById('menu-prefs')||nav.lastElementChild;
+  var b=document.createElement('button');b.className='sidemenu-btn';b.id='menu-tour';
+  b.innerHTML='<span class="sm-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><path d="M12 17h.01"/></svg></span><span class="sm-lbl">App tour &amp; help</span>';
+  b.onclick=function(){try{closeMenu&&closeMenu();}catch(e){}openHelp();};
+  if(ref&&ref.parentNode)ref.parentNode.insertBefore(b,ref.nextSibling);else nav.appendChild(b);
+}
+
+/* ---------- Scheduler ---------- */
+var lastKey='';
+function tick(){
+  try{
+    ensureQ();ensureMenu();
+    if(busy||help)return;
+    var s=activeScreen();
+    var k=s+(s==='s-auth'?':'+(window.dStep||0):'');
+    if(k===lastKey)return;lastKey=k;
+    setTimeout(function(){
+      if(busy||help||activeScreen()!==s)return;
+      if(s==='s-landing'){var lw=document.getElementById('land-welcome-view');if(!seen('c1')&&lw&&vis(lw))ch1();}
+      else if(s==='s-auth'){var sw=document.getElementById('signup-wrap');if(sw&&sw.style.display!=='none'&&$('#d-step-body')&&$('#d-step-body').children.length)suTip(window.dStep||0);}
+      else if(s==='s-pending')pendTip();
+      else if(s==='s-driver-home'){if(!seen('c4')&&seen('c3')!==undefined)homeTour(false);}
+    },900);
+  }catch(e){}
+}
+setInterval(tick,700);
+window._tcTour={open:openHelp,replay:replay,reset:function(){try{localStorage.removeItem(key());localStorage.removeItem('tc_tour_v1_guest');}catch(e){}}};
 })();
 </script>
 </body>
