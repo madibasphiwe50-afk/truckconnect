@@ -1,0 +1,196 @@
+name: Build TruckConnect Driver APK
+
+on:
+  workflow_dispatch:
+
+env:
+  APP_FILE: truckconnect-d.html
+  APP_ID: com.truckconnect.driver
+  APP_NAME: TruckConnect Driver
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Prepare web app
+        run: |
+          mkdir -p www
+          cp "$APP_FILE" www/index.html
+
+      - name: Install Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/push-notifications@6
+
+      - name: Add native ring service
+        run: |
+          F=$(find node_modules/@capacitor/push-notifications/android -name MessagingService.java | head -1)
+          D=$(dirname "$F")
+          echo "Plugin folder: $D"
+          cat > "$D/TCRing.java" <<'JAVA'
+          package com.capacitorjs.plugins.pushnotifications;
+
+          import android.app.ActivityManager;
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.media.AudioAttributes;
+          import android.media.RingtoneManager;
+          import android.net.Uri;
+          import android.os.Build;
+          import androidx.core.app.NotificationCompat;
+          import com.google.firebase.messaging.RemoteMessage;
+          import java.util.Map;
+
+          public class TCRing {
+
+              private static final String CHANNEL_ID = "tc_ring_native";
+              private static final int NOTIF_ID = 7001;
+
+              public static boolean handle(Context ctx, RemoteMessage msg) {
+                  try {
+                      if (msg.getNotification() != null) return false;
+                      Map<String, String> data = msg.getData();
+                      if (data == null || !"1".equals(data.get("ring"))) return false;
+                      if (isForeground()) return false;
+                      show(ctx, msg, data);
+                      return true;
+                  } catch (Throwable t) {
+                      return false;
+                  }
+              }
+
+              private static boolean isForeground() {
+                  ActivityManager.RunningAppProcessInfo info = new ActivityManager.RunningAppProcessInfo();
+                  ActivityManager.getMyMemoryState(info);
+                  return info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
+              }
+
+              private static void show(Context ctx, RemoteMessage msg, Map<String, String> data) {
+                  NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+                  Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+                  long[] vib = new long[] {0, 900, 600, 900, 600, 900, 600};
+
+                  if (Build.VERSION.SDK_INT >= 26) {
+                      NotificationChannel ch = nm.getNotificationChannel(CHANNEL_ID);
+                      if (ch == null) {
+                          ch = new NotificationChannel(CHANNEL_ID, "Incoming job ring", NotificationManager.IMPORTANCE_HIGH);
+                          ch.setDescription("Rings when a new job comes in");
+                          AudioAttributes aa = new AudioAttributes.Builder()
+                              .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                              .setContentType(AudioAttributes.CONTENT_TYPE_SONIC)
+                              .build();
+                          ch.setSound(sound, aa);
+                          ch.enableVibration(true);
+                          ch.setVibrationPattern(vib);
+                          ch.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+                          nm.createNotificationChannel(ch);
+                      }
+                  }
+
+                  Intent launch = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
+                  if (launch == null) return;
+                  launch.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                  for (Map.Entry<String, String> e : data.entrySet()) {
+                      launch.putExtra(e.getKey(), e.getValue());
+                  }
+                  String mid = msg.getMessageId();
+                  launch.putExtra("google.message_id", mid != null ? mid : String.valueOf(System.currentTimeMillis()));
+
+                  int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+                  if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
+                  PendingIntent pi = PendingIntent.getActivity(ctx, NOTIF_ID, launch, flags);
+
+                  String title = data.get("title");
+                  if (title == null || title.length() == 0) title = "New job request";
+                  String body = data.get("body");
+                  if (body == null) body = "";
+
+                  NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL_ID)
+                      .setSmallIcon(android.R.drawable.sym_call_incoming)
+                      .setContentTitle(title)
+                      .setContentText(body)
+                      .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                      .setPriority(NotificationCompat.PRIORITY_MAX)
+                      .setCategory(NotificationCompat.CATEGORY_CALL)
+                      .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                      .setAutoCancel(true)
+                      .setTimeoutAfter(45000)
+                      .setContentIntent(pi)
+                      .setFullScreenIntent(pi, true);
+                  if (Build.VERSION.SDK_INT < 26) {
+                      b.setSound(sound);
+                      b.setVibrate(vib);
+                  }
+
+                  Notification n = b.build();
+                  n.flags |= Notification.FLAG_INSISTENT;
+                  nm.notify(NOTIF_ID, n);
+              }
+          }
+          JAVA
+          export MS="$D/MessagingService.java"
+          python3 - <<'PY'
+          import os, re
+          p = os.environ["MS"]
+          s = open(p, encoding="utf-8").read()
+          if "TCRing.handle" not in s:
+              m = re.search(r"onMessageReceived\s*\(\s*(?:@\w+\s+)?RemoteMessage\s+(\w+)\s*\)\s*\{", s)
+              if not m:
+                  raise SystemExit("onMessageReceived not found")
+              inj = "\n        if (TCRing.handle(this, " + m.group(1) + ")) { return; }"
+              s = s[:m.end()] + inj + s[m.end():]
+              open(p, "w", encoding="utf-8").write(s)
+          print(s)
+          PY
+
+      - name: Create Android project
+        run: |
+          echo '{"appId":"'"$APP_ID"'","appName":"'"$APP_NAME"'","webDir":"www"}' > capacitor.config.json
+          npx cap add android
+
+      - name: Add Firebase file and permissions
+        run: |
+          if [ -f google-services.json ]; then cp google-services.json android/app/google-services.json; fi
+          python3 - <<'PY'
+          import re
+          p = "android/app/src/main/AndroidManifest.xml"
+          s = open(p, encoding="utf-8").read()
+          perms = ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "CAMERA", "POST_NOTIFICATIONS", "VIBRATE", "USE_FULL_SCREEN_INTENT", "WAKE_LOCK"]
+          add = ""
+          for x in perms:
+              name = "android.permission." + x
+              if name not in s:
+                  add += '    <uses-permission android:name="' + name + '" />\n'
+          s = s.replace("</manifest>", add + "</manifest>", 1)
+          if "showWhenLocked" not in s:
+              s = re.sub(r"<activity\b", '<activity android:showWhenLocked="true" android:turnScreenOn="true"', s, count=1)
+          open(p, "w", encoding="utf-8").write(s)
+          print(s)
+          PY
+
+      - name: Build APK
+        run: |
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TruckConnect-Driver-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
