@@ -80,6 +80,17 @@ jobs:
                   return info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
               }
 
+              private static PendingIntent actionIntent(Context ctx, String action, String token, String bookingId, int code) {
+                  Intent i = new Intent(ctx, TCActionReceiver.class);
+                  i.setAction("tc.ring." + action);
+                  i.putExtra("tc_action", action);
+                  i.putExtra("tc_token", token);
+                  i.putExtra("tc_booking", bookingId == null ? "" : bookingId);
+                  int f = PendingIntent.FLAG_UPDATE_CURRENT;
+                  if (Build.VERSION.SDK_INT >= 23) f |= PendingIntent.FLAG_IMMUTABLE;
+                  return PendingIntent.getBroadcast(ctx, code, i, f);
+              }
+
               private static void show(Context ctx, RemoteMessage msg, Map<String, String> data) {
                   NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                   Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
@@ -120,6 +131,16 @@ jobs:
                   String body = data.get("body");
                   if (body == null) body = "";
 
+                  String actionToken = data.get("actionToken");
+                  String bookingId = data.get("bookingId");
+                  Intent ringScreen = new Intent(ctx, TCRingActivity.class);
+                  ringScreen.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  ringScreen.putExtra("title", title);
+                  ringScreen.putExtra("body", body);
+                  ringScreen.putExtra("tc_token", actionToken == null ? "" : actionToken);
+                  ringScreen.putExtra("tc_booking", bookingId == null ? "" : bookingId);
+                  PendingIntent fsPi = PendingIntent.getActivity(ctx, 7006, ringScreen, flags);
+
                   NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL_ID)
                       .setSmallIcon(android.R.drawable.sym_call_incoming)
                       .setContentTitle(title)
@@ -131,7 +152,11 @@ jobs:
                       .setAutoCancel(true)
                       .setTimeoutAfter(45000)
                       .setContentIntent(pi)
-                      .setFullScreenIntent(pi, true);
+                      .setFullScreenIntent(fsPi, true);
+                            if (actionToken != null && actionToken.length() > 0) {
+                                b.addAction(0, "Accept", actionIntent(ctx, "accept", actionToken, bookingId, 7002));
+                      b.addAction(0, "Decline", actionIntent(ctx, "decline", actionToken, bookingId, 7003));
+                  }
                   if (Build.VERSION.SDK_INT < 26) {
                       b.setSound(sound);
                       b.setVibrate(vib);
@@ -143,6 +168,270 @@ jobs:
               }
           }
           JAVA
+          cat > "$D/TCActionReceiver.java" <<'JAVA2'
+          package com.capacitorjs.plugins.pushnotifications;
+
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.content.BroadcastReceiver;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.os.Build;
+          import androidx.core.app.NotificationCompat;
+          import java.io.OutputStream;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+          import org.json.JSONObject;
+
+          public class TCActionReceiver extends BroadcastReceiver {
+
+              private static final String WORKER_URL = "https://truckconnect-fcm.madibasphiwe50.workers.dev/notification-action";
+              private static final String RESULT_CHANNEL = "tc_ring_result";
+
+              @Override
+              public void onReceive(final Context ctx, Intent intent) {
+                  final String action = intent.getStringExtra("tc_action");
+                  final String token = intent.getStringExtra("tc_token");
+                  NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+                  nm.cancel(7001);
+                  if (action == null || token == null) return;
+                  final PendingResult pr = goAsync();
+                  new Thread(new Runnable() {
+                      @Override
+                      public void run() {
+                          int code = -1;
+                          try {
+                              JSONObject body = new JSONObject();
+                              body.put("action", action);
+                              body.put("token", token);
+                              HttpURLConnection c = (HttpURLConnection) new URL(WORKER_URL).openConnection();
+                              c.setRequestMethod("POST");
+                              c.setConnectTimeout(8000);
+                              c.setReadTimeout(8000);
+                              c.setDoOutput(true);
+                              c.setRequestProperty("Content-Type", "application/json");
+                              OutputStream os = c.getOutputStream();
+                              os.write(body.toString().getBytes("UTF-8"));
+                              os.close();
+                              code = c.getResponseCode();
+                              c.disconnect();
+                          } catch (Throwable t) {
+                              code = -1;
+                          }
+                          try {
+                              if ("accept".equals(action)) {
+                                  if (code == 200) {
+                                      notifyResult(ctx, "Job accepted", "Tap to open TruckConnect");
+                                  } else if (code == 409) {
+                                      notifyResult(ctx, "Job no longer available", "Another driver may have taken it");
+                                  } else {
+                                      notifyResult(ctx, "Could not accept the job", "Open the app to try again");
+                                  }
+                              }
+                          } catch (Throwable t) {
+                          }
+                          pr.finish();
+                      }
+                  }).start();
+              }
+
+              private static void notifyResult(Context ctx, String title, String text) {
+                  NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+                  if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(RESULT_CHANNEL) == null) {
+                      nm.createNotificationChannel(new NotificationChannel(RESULT_CHANNEL, "Job updates", NotificationManager.IMPORTANCE_DEFAULT));
+                  }
+                  Intent launch = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
+                  PendingIntent pi = null;
+                  if (launch != null) {
+                      launch.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                      int f = PendingIntent.FLAG_UPDATE_CURRENT;
+                      if (Build.VERSION.SDK_INT >= 23) f |= PendingIntent.FLAG_IMMUTABLE;
+                      pi = PendingIntent.getActivity(ctx, 7004, launch, f);
+                  }
+                  NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, RESULT_CHANNEL)
+                      .setSmallIcon(android.R.drawable.sym_call_incoming)
+                      .setContentTitle(title)
+                      .setContentText(text)
+                      .setAutoCancel(true);
+                  if (pi != null) b.setContentIntent(pi);
+                  nm.notify(7005, b.build());
+              }
+          }
+          JAVA2
+          cat > "$D/TCRingActivity.java" <<'JAVA3'
+          package com.capacitorjs.plugins.pushnotifications;
+
+          import android.app.Activity;
+          import android.app.NotificationManager;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.graphics.Color;
+          import android.graphics.Typeface;
+          import android.graphics.drawable.GradientDrawable;
+          import android.os.Bundle;
+          import android.os.Handler;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.view.WindowManager;
+          import android.widget.Button;
+          import android.widget.LinearLayout;
+          import android.widget.TextView;
+
+          public class TCRingActivity extends Activity {
+
+              private final Handler handler = new Handler();
+
+              private int dp(int v) {
+                  return (int) (v * getResources().getDisplayMetrics().density);
+              }
+
+              private static String nz(String s, String d) {
+                  return (s == null || s.length() == 0) ? d : s;
+              }
+
+              private Button makeButton(String text, String color) {
+                  Button b = new Button(this);
+                  b.setText(text);
+                  b.setTextColor(Color.WHITE);
+                  b.setTextSize(18);
+                  b.setAllCaps(false);
+                  GradientDrawable g = new GradientDrawable();
+                  g.setColor(Color.parseColor(color));
+                  g.setCornerRadius(dp(36));
+                  b.setBackground(g);
+                  return b;
+              }
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  getWindow().addFlags(
+                      WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                          | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                          | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                  );
+
+                  final String title = nz(getIntent().getStringExtra("title"), "New Truck Request");
+                  final String body = nz(getIntent().getStringExtra("body"), "");
+                  final String token = nz(getIntent().getStringExtra("tc_token"), "");
+                  final String booking = nz(getIntent().getStringExtra("tc_booking"), "");
+
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setGravity(Gravity.CENTER_HORIZONTAL);
+                  root.setBackgroundColor(Color.parseColor("#0f1115"));
+                  root.setPadding(dp(24), dp(72), dp(24), dp(48));
+
+                  TextView label = new TextView(this);
+                  label.setText("TruckConnect Driver");
+                  label.setTextColor(Color.parseColor("#9aa4b5"));
+                  label.setTextSize(14);
+                  label.setGravity(Gravity.CENTER);
+                  root.addView(label);
+
+                  TextView t = new TextView(this);
+                  t.setText(title);
+                  t.setTextColor(Color.WHITE);
+                  t.setTextSize(28);
+                  t.setTypeface(Typeface.DEFAULT_BOLD);
+                  t.setGravity(Gravity.CENTER);
+                  t.setPadding(0, dp(24), 0, dp(12));
+                  root.addView(t);
+
+                  TextView bd = new TextView(this);
+                  bd.setText(body);
+                  bd.setTextColor(Color.parseColor("#c9d1df"));
+                  bd.setTextSize(17);
+                  bd.setLineSpacing(0f, 1.25f);
+                  bd.setGravity(Gravity.CENTER);
+                  root.addView(bd);
+
+                  View spacer = new View(this);
+                  root.addView(spacer, new LinearLayout.LayoutParams(1, 0, 1f));
+
+                  if (token.length() > 0) {
+                      LinearLayout row = new LinearLayout(this);
+                      row.setOrientation(LinearLayout.HORIZONTAL);
+                      Button decline = makeButton("Decline", "#D93025");
+                      Button accept = makeButton("Accept", "#1E8E3E");
+                      LinearLayout.LayoutParams lp1 = new LinearLayout.LayoutParams(0, dp(72), 1f);
+                      lp1.setMargins(0, 0, dp(8), 0);
+                      LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(0, dp(72), 1f);
+                      lp2.setMargins(dp(8), 0, 0, 0);
+                      row.addView(decline, lp1);
+                      row.addView(accept, lp2);
+                      root.addView(row, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                      decline.setOnClickListener(new View.OnClickListener() {
+                          @Override
+                          public void onClick(View v) {
+                              send("decline", token, booking);
+                          }
+                      });
+                      accept.setOnClickListener(new View.OnClickListener() {
+                          @Override
+                          public void onClick(View v) {
+                              send("accept", token, booking);
+                          }
+                      });
+                  }
+
+                  Button open = makeButton("Open app", "#1677F2");
+                  LinearLayout.LayoutParams lp3 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(60));
+                  lp3.setMargins(0, dp(16), 0, 0);
+                  root.addView(open, lp3);
+                  open.setOnClickListener(new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) {
+                          openApp();
+                      }
+                  });
+
+                  setContentView(root);
+
+                  handler.postDelayed(new Runnable() {
+                      @Override
+                      public void run() {
+                          finish();
+                      }
+                  }, 45000);
+              }
+
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  recreate();
+              }
+
+              @Override
+              protected void onDestroy() {
+                  handler.removeCallbacksAndMessages(null);
+                  super.onDestroy();
+              }
+
+              private void send(String action, String token, String booking) {
+                  Intent i = new Intent(this, TCActionReceiver.class);
+                  i.setAction("tc.ring." + action);
+                  i.putExtra("tc_action", action);
+                  i.putExtra("tc_token", token);
+                  i.putExtra("tc_booking", booking);
+                  sendBroadcast(i);
+                  finish();
+              }
+
+              private void openApp() {
+                  NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                  nm.cancel(7001);
+                  Intent launch = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                  if (launch != null) {
+                      launch.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                      startActivity(launch);
+                  }
+                  finish();
+              }
+          }
+          JAVA3
           export MS="$D/MessagingService.java"
           python3 - <<'PY'
           import os, re
@@ -177,8 +466,14 @@ jobs:
               if name not in s:
                   add += '    <uses-permission android:name="' + name + '" />\n'
           s = s.replace("</manifest>", add + "</manifest>", 1)
+          if "TCActionReceiver" not in s:
+              rcv = '    <receiver android:name="com.capacitorjs.plugins.pushnotifications.TCActionReceiver" android:exported="false" />\n'
+              s = s.replace("</application>", rcv + "    </application>", 1)
           if "showWhenLocked" not in s:
               s = re.sub(r"<activity\b", '<activity android:showWhenLocked="true" android:turnScreenOn="true"', s, count=1)
+          if "TCRingActivity" not in s:
+              act = '    <activity android:name="com.capacitorjs.plugins.pushnotifications.TCRingActivity" android:exported="false" android:launchMode="singleTop" android:excludeFromRecents="true" android:taskAffinity="" android:showWhenLocked="true" android:turnScreenOn="true" android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />\n'
+              s = s.replace("</application>", act + "    </application>", 1)
           open(p, "w", encoding="utf-8").write(s)
           print(s)
           PY
