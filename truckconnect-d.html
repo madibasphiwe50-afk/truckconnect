@@ -2917,7 +2917,6 @@ body.dark-mode #s-driver-chat{--cm-mine-bg:#F0F0F0;--cm-mine-fg:#161C20;}
       <span class="dh-find-txt" id="find-jobs-txt">Find Available Jobs</span>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h16m-6.5-6.5L20 12l-6.5 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
-    <button type="button" id="dh-return-btn" style="width:100%;margin:10px 0 0;padding:10px 14px 10px 10px;border-radius:16px;border:1.5px solid var(--border,rgba(127,127,127,.35));background:transparent;color:inherit;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:12px;text-align:left;"><span style="width:38px;height:38px;border-radius:50%;background:rgba(127,127,127,.13);display:inline-flex;align-items:center;justify-content:center;flex:none;pointer-events:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span><span style="flex:1;min-width:0;pointer-events:none"><span style="display:block;font-size:14px;font-weight:700">Heading back empty?</span><span style="display:block;font-size:12px;opacity:.65;margin-top:1px">Post a return trip</span></span></button>
     <div class="dh-stats">
       <div class="dh-stat">
         <div class="dh-stat-ico"><span class="dh-r">R</span></div>
@@ -6194,7 +6193,7 @@ window._tcLineColor=function(c){if(c==='#00C853')return c;return window._tcCouri
 function _tcApplyCourierUi(){
   try{document.body.classList.toggle('tc-courier',!!_tcCourierOn);}catch(e){}
   var b=$('courier-mode-btn');if(b)b.setAttribute('aria-checked',_tcCourierOn?'true':'false');
-  var sub=$('courier-mode-sub');if(sub)sub.textContent=_tcCourierOn?'On · Fragile goods only':(_tcCourierVeh()?'Off · Truck jobs':(_tcCourierPending()?'Vehicle waiting for approval':'Add a Fragile Care vehicle to use'));
+  var sub=$('courier-mode-sub');if(sub)sub.textContent=_tcCourierOn?'On · Fragile goods only':(_tcCourierVeh()?'Off · Truck jobs':(_tcCourierPending()?'Vehicle waiting for approval':'Add a Fragile Care vehicle'));
   var f=$('find-jobs-txt');if(f)f.textContent=_tcCourierOn?'Find Fragile Care Jobs':'Find Available Jobs';
   try{var _hv=_tcIsHeavyDriver();if(_hv&&_tcCourierOn){_tcCourierOn=false;try{localStorage.setItem('tc_courier_on','0');}catch(e){}document.body.classList.remove('tc-courier');}
     if(b)b.style.display=_hv?'none':'';
