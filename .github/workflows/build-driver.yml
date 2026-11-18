@@ -165,6 +165,16 @@ jobs:
                   Notification n = b.build();
                   n.flags |= Notification.FLAG_INSISTENT;
                   nm.notify(NOTIF_ID, n);
+                  try {
+                      android.app.KeyguardManager km = (android.app.KeyguardManager) ctx.getSystemService(Context.KEYGUARD_SERVICE);
+                      android.os.PowerManager pm = (android.os.PowerManager) ctx.getSystemService(Context.POWER_SERVICE);
+                      boolean idle = (km != null && km.isKeyguardLocked()) || (pm != null && !pm.isInteractive());
+                      if (idle && android.provider.Settings.canDrawOverlays(ctx)) {
+                          ctx.startActivity(ringScreen);
+                      }
+                  } catch (Throwable t) {
+                  }
+
               }
           }
           JAVA
@@ -452,6 +462,49 @@ jobs:
           echo '{"appId":"'"$APP_ID"'","appName":"'"$APP_NAME"'","webDir":"www"}' > capacitor.config.json
           npx cap add android
 
+      - name: Patch MainActivity to ask for lock screen permissions
+        run: |
+          M=$(find android/app/src/main/java -name MainActivity.java | head -1)
+          PKG=$(grep -m1 '^package ' "$M" | sed 's/package \(.*\);/\1/')
+          echo "MainActivity: $M ($PKG)"
+          cat > "$M" <<JAVA4
+          package $PKG;
+
+          import android.app.NotificationManager;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.provider.Settings;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+
+              @Override
+              public void onResume() {
+                  super.onResume();
+                  try {
+                      SharedPreferences sp = getSharedPreferences("tc_native", Context.MODE_PRIVATE);
+                      Uri pkgUri = Uri.parse("package:" + getPackageName());
+                      if (Build.VERSION.SDK_INT >= 34) {
+                          NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                          if (!nm.canUseFullScreenIntent() && !sp.getBoolean("fsi_prompted", false)) {
+                              sp.edit().putBoolean("fsi_prompted", true).apply();
+                              startActivity(new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, pkgUri));
+                              return;
+                          }
+                      }
+                      if (!Settings.canDrawOverlays(this) && !sp.getBoolean("overlay_prompted", false)) {
+                          sp.edit().putBoolean("overlay_prompted", true).apply();
+                          startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri));
+                      }
+                  } catch (Throwable t) {
+                  }
+              }
+          }
+          JAVA4
+
       - name: Add Firebase file and permissions
         run: |
           if [ -f google-services.json ]; then cp google-services.json android/app/google-services.json; fi
@@ -459,7 +512,7 @@ jobs:
           import re
           p = "android/app/src/main/AndroidManifest.xml"
           s = open(p, encoding="utf-8").read()
-          perms = ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "CAMERA", "POST_NOTIFICATIONS", "VIBRATE", "USE_FULL_SCREEN_INTENT", "WAKE_LOCK"]
+          perms = ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "CAMERA", "POST_NOTIFICATIONS", "VIBRATE", "USE_FULL_SCREEN_INTENT", "WAKE_LOCK", "SYSTEM_ALERT_WINDOW"]
           add = ""
           for x in perms:
               name = "android.permission." + x
